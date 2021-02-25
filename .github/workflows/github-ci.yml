@@ -1,0 +1,53 @@
+name: github-ci
+
+on: [push]
+
+jobs:
+  build:
+    container: eguerin/antlr4cpp
+    runs-on: ubuntu-latest
+    steps:
+      - name : Checkout repository
+        uses : actions/checkout@v2 
+
+      - name: Run multiple commands
+        run : |
+          cd compiler
+          make ANTLR4_INCDIR=/usr/include/antlr4-runtime ANTLR4_BINDIR=/bin ANTLR4_LIBDIR=/lib/x86_64-linux-gnu
+
+      - name : Archive build artifact for testing job
+        uses : actions/upload-artifact@v2
+        if: success()
+        with: 
+          name: build
+          path: compiler/ifcc
+          retention-days: 7
+
+  test:
+    container: eguerin/antlr4cpp
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:  
+      - name : Checkout repository
+        uses : actions/checkout@v2 
+
+      - name : Download latest build artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: compiler
+
+      - name: Run multiple commands
+        run: |
+          chmod 755 compiler/ifcc
+          cd tests
+          chmod 755 pld-wrapper.sh
+          python3 pld-test.py tests/Init/
+
+      - name : Archive test artifact
+        uses : actions/upload-artifact@v2
+        if: success()
+        with: 
+          name: test
+          path: tests/pld-test-output
+          retention-days: 7
