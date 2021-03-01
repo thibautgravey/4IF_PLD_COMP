@@ -86,7 +86,7 @@ public:
       }
       *(it->second.val) = (int) visit(ctx->expr());
     } else {
-      std::cout << "[visitAff] Erreur la variable n'a pas été déclarée !";
+      std::cout << "[visitAff] Erreur la variable " << name << " n'a pas été déclarée !" << std::endl;
     }
     return 0;
   }
@@ -103,10 +103,10 @@ public:
         if(ptrVal != nullptr) {
           val = *(it->second.val);
         } else {
-          std::cout << "[visitExpr] Erreur la variable n'a pas de valeur !";
+          std::cout << "[visitExpr] Erreur la variable " << varName << " n'a pas de valeur !" << std::endl;
         }
       } else {
-        std::cout << "[visitExpr] Erreur la variable n'a pas été déclarée !";
+        std::cout << "[visitExpr] Erreur la variable " << varName << " n'a pas été déclarée !" << std::endl;
       }
     }
     return val;
