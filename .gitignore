@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+compiler/ifcc
+
+# Test files
+tests/pld-test-output
+
+# Vs code
+.vscode
+
+compiler/antlr4-generated
