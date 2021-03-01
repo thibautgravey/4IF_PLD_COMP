@@ -31,6 +31,11 @@
 *.out
 *.app
 
+# Test files
+tests/pld-test-output
+
+compiler/antlr4-generated
+
 #### VSCode ####
 .vscode/*
 !.vscode/settings.json
@@ -41,6 +46,7 @@
 
 # Local History for Visual Studio Code
 .history/
+
 
 #### macOS ####
 # General
@@ -69,3 +75,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+compiler/ifcc
