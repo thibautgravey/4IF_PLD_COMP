@@ -10,7 +10,7 @@ decl: TYPE VAR_NAME ;
 
 def: TYPE aff ;
 
-aff: VAR_NAME '=' (CONST | VAR_NAME) ;
+aff: VAR_NAME '=' expr ;
 
 expr: CONST | VAR_NAME ;
 
