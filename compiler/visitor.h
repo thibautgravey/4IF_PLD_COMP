@@ -8,8 +8,10 @@
 #include "antlr4-generated/ifccVisitor.h"
 #include <map>
 
+using namespace std;
+
 typedef struct {
-  std::string type;
+  string type;
   int * val;
 } varInfo;
 
@@ -29,7 +31,7 @@ public:
     //int retval = stoi(ctx->CONST()->getText());
     visitChildren(ctx);
 
-    std::cout<<".globl	main\n"
+    cout<<".globl	main\n"
               " main: \n"
               "  # prologue\n"
               "  pushq %rbp\n"
@@ -42,15 +44,15 @@ public:
               "  popq %rbp\n"
               " 	ret\n";
 
-    std::map<std::string, varInfo>::iterator it;
+    map<string, varInfo>::iterator it;
     for (it = variables.begin(); it!=variables.end(); it++) {
-      std::cout << "Nom : " << it->first << " | Type : " << it->second.type << " | Valeur : ";
+      cout << "Nom : " << it->first << " | Type : " << it->second.type << " | Valeur : ";
       if(it->second.val != nullptr) {
-        std::cout << *(it->second.val);
+        cout << *(it->second.val);
       } else {
-        std::cout << "[Pas de valeur]";
+        cout << "[Pas de valeur]";
       }
-      std::cout << std::endl;
+      cout << endl;
     }
 
     return 0;
@@ -61,8 +63,8 @@ public:
   }
 
   virtual antlrcpp::Any visitDecl(ifccParser::DeclContext *ctx) override {
-    std::string type = ctx->TYPE()->getText();
-    std::string name = ctx->VAR_NAME()->getText();
+    string type = ctx->TYPE()->getText();
+    string name = ctx->VAR_NAME()->getText();
 
     varInfo info = {type, nullptr};
 
@@ -76,9 +78,9 @@ public:
   }
 
   virtual antlrcpp::Any visitAff(ifccParser::AffContext *ctx) override {
-    std::string name = ctx->VAR_NAME()->getText();
+    string name = ctx->VAR_NAME()->getText();
 
-    std::map<std::string, varInfo>::iterator it = variables.find(name);
+    map<string, varInfo>::iterator it = variables.find(name);
 
     if(it != variables.end()) {
       if(it->second.val == nullptr) {
@@ -86,7 +88,7 @@ public:
       }
       *(it->second.val) = (int) visit(ctx->expr());
     } else {
-      std::cout << "[visitAff] Erreur la variable " << name << " n'a pas été déclarée !" << std::endl;
+      cout << "[visitAff] Erreur la variable " << name << " n'a pas été déclarée !" << endl;
     }
     return 0;
   }
@@ -96,24 +98,24 @@ public:
     if(ctx->CONST()) {
       val = stoi(ctx->CONST()->getText());
     } else if(ctx->VAR_NAME()) {
-      std::string varName = ctx->VAR_NAME()->getText();
-      std::map<std::string, varInfo>::iterator it = variables.find(varName);
+      string varName = ctx->VAR_NAME()->getText();
+      map<string, varInfo>::iterator it = variables.find(varName);
       if(it != variables.end()) {
         int * ptrVal = it->second.val;
         if(ptrVal != nullptr) {
           val = *(it->second.val);
         } else {
-          std::cout << "[visitExpr] Erreur la variable " << varName << " n'a pas de valeur !" << std::endl;
+          cout << "[visitExpr] Erreur la variable " << varName << " n'a pas de valeur !" << endl;
         }
       } else {
-        std::cout << "[visitExpr] Erreur la variable " << varName << " n'a pas été déclarée !" << std::endl;
+        cout << "[visitExpr] Erreur la variable " << varName << " n'a pas été déclarée !" << endl;
       }
     }
     return val;
   }
 
 protected:
-  std::map<std::string, varInfo> variables; // key = name
+  map<string, varInfo> variables; // key = name
 
 };
 
