@@ -37,8 +37,7 @@ public:
 
   virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override
   {
-
-    //int retval = stoi(ctx->CONST()->getText());
+    // add prologue
     assembly = ".globl	main\n"
                " main: \n"
                "  # prologue\n"
@@ -58,22 +57,25 @@ public:
       if(it != variables.end()) {
         if(it->second.val == nullptr) {
           cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
-          assembly += "  movl $0, %eax\n";
+          assembly += "  movl $-1, %eax\n";
         } else {
           assembly += "  movl " + to_string(*((int *) it->second.offset)) + "(%rbp), %eax\n";
         }
       } else {
         cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas été déclarée !" << endl;
-        assembly += "  movl $0, %eax\n";
+        assembly += "  movl $-1, %eax\n";
       }
     }
 
+    // add epilogue
     assembly += "\n"
                 "  # epilogue\n"
                 "  popq %rbp\n"
-                " 	ret\n";
+                "  ret\n";
 
-    cout << assembly;
+
+    // write the assembly
+    cout << assembly ;
 
     /*
     map<string, varInfo>::iterator it;
