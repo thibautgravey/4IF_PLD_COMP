@@ -245,11 +245,6 @@ public:
     return ret;
   }
 
-  virtual antlrcpp::Any visitExpr(ifccParser::ExprContext *ctx) override
-  {
-    return visitChildren(ctx);
-  }
-
 protected:
   map<string, varInfo> variables; // key = name
   int variablesOffset = 0;
