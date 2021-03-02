@@ -23,7 +23,7 @@ RETURN : 'return' ;
 
 TYPE : 'int' ;
 
-CONST : [0-9]+ ;
+CONST : '-'?[0-9]+ ;
 
 VAR_NAME : [a-zA-Z_][\\w]*  ;
 
