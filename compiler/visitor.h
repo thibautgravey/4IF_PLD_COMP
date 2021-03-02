@@ -49,7 +49,24 @@ public:
 
     visitChildren(ctx);
 
-    assembly += "  movl $42, %eax\n";
+    exprInfo retExprInfo = visit(ctx->expr());
+
+    if(retExprInfo.isConst) {
+      assembly += "  movl $" + to_string(*((int *) retExprInfo.value)) + ", %eax\n";
+    } else {
+      map<string, varInfo>::iterator it = variables.find(retExprInfo.varExprName);
+      if(it != variables.end()) {
+        if(it->second.val == nullptr) {
+          cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
+          assembly += "  movl $0, %eax\n";
+        } else {
+          assembly += "  movl " + to_string(*((int *) it->second.offset)) + "(%rbp), %eax\n";
+        }
+      } else {
+        cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas été déclarée !" << endl;
+        assembly += "  movl $0, %eax\n";
+      }
+    }
 
     assembly += "\n"
                 "  # epilogue\n"

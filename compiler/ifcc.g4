@@ -2,9 +2,9 @@ grammar ifcc;
 
 axiom : prog ;
 
-prog : 'int' 'main' '(' ')' '{' line* '}' ;
+prog : 'int' 'main' '(' ')' '{' line* RETURN expr ';' '}' ;
 
-line: (var_decl | var_aff | RETURN expr) ';' ;
+line: (var_decl | var_aff) ';' ;
 
 var_decl: TYPE VAR_NAME ('=' expr)? ;
 
