@@ -12,7 +12,14 @@ def: TYPE aff ;
 
 aff: VAR_NAME '=' expr ;
 
-expr: CONST | VAR_NAME ;
+expr: CONST #const
+    | VAR_NAME #var
+    | expr '+' expr # add
+    | expr '-' expr # less
+    | expr '*' expr # mult
+    | expr '/' expr # div
+    | '(' expr ')' # par
+;
 
 RETURN : 'return' ;
 
