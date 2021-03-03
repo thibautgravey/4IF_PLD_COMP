@@ -55,13 +55,13 @@ public:
     } else {
       map<string, varInfo>::iterator it = variables.find(retExprInfo.varExprName);
       if(it != variables.end()) {
-        if(it->second.val == nullptr) {
-          hasError = true;
-          cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
-          assembly += "  movl $-1, %eax\n";
-        } else {
-          assembly += "  movl " + to_string(*((int *) it->second.offset)) + "(%rbp), %eax\n";
+        if(it->second.offset == nullptr) {
+          //cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
+          variablesOffset -= 4; // 4 pour INT
+          it->second.offset = new int;
+          *(it->second.offset) = variablesOffset;
         }
+        assembly += "  movl " + to_string(*((int *) it->second.offset)) + "(%rbp), %eax\n";
       } else {
         hasError = true;
         cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas été déclarée !" << endl;
@@ -123,31 +123,30 @@ public:
 
     if (ctx->expr())
     {
-      variablesOffset -= 4; // 4 pour INT
-      offset = new int;
-      *offset = variablesOffset;
-      val = new int;
       exprInfo retExprInfo = visit(ctx->expr());
 
-      if (retExprInfo.value == nullptr)
-      {
-        hasError = true;
-        cout << "[visitVar_decl] Erreur lors du retour de l'expression !" << endl;
-        val = nullptr;
-      }
-      else
-      {
-        *val = *((int *)retExprInfo.value);
-
-        if (!retExprInfo.isConst)
-        {
-          int exprVarOffset = *(variables.find(retExprInfo.varExprName)->second.offset);
-          assembly += "  movl " + to_string(exprVarOffset) + "(%rbp), %eax\n";
+      if(retExprInfo.isConst) {
+        val = new int;
+        *val = *((int *) retExprInfo.value);
+        variablesOffset -= 4; // 4 pour INT
+        offset = new int;
+        *offset = variablesOffset;
+        assembly += "  movl $" + to_string((*val)) + ", " + to_string(*offset) + "(%rbp)\n";
+      } else {
+        map<string, varInfo>::iterator it = variables.find(retExprInfo.varExprName);
+        if(it != variables.end()) {
+          if(it->second.val != nullptr) {
+            val = new int;
+            *val = *(it->second.val);
+          }
+          variablesOffset -=4;
+          offset = new int;
+          *offset = variablesOffset;
+          assembly += "  movl " + to_string(*(it->second.offset)) + "(%rbp), %eax\n";
           assembly += "  movl %eax, " + to_string(*offset) + "(%rbp)\n";
-        }
-        else
-        {
-          assembly += "  movl $" + to_string((*val)) + ", " + to_string(*offset) + "(%rbp)\n";
+        } else {
+          hasError = true;
+          cout << "[visitVar_decl] Erreur affectation de la variable '" << retExprInfo.varExprName << "' qui n'a pas été déclarée !" << endl;
         }
       }
     }
@@ -166,38 +165,32 @@ public:
 
     if (it != variables.end())
     {
-      if (it->second.val == nullptr)
-      {
-        it->second.val = new int;
-      }
       exprInfo retExprInfo = visit(ctx->expr());
 
-      if (retExprInfo.value == nullptr)
-      {
-        hasError = true;
-        cout << "[visitVar_aff] Erreur lors du retour de l'expression !" << endl;
-        return 0;
-      }
-      *(it->second.val) = *((int *)retExprInfo.value);
-
-      if (it->second.offset == nullptr)
-      {
+      if(retExprInfo.isConst) {
+        it->second.val = new int;
+        *(it->second.val) = *((int *) retExprInfo.value);
         variablesOffset -= 4; // 4 pour INT
         it->second.offset = new int;
         *(it->second.offset) = variablesOffset;
-      }
-
-      if (!retExprInfo.isConst)
-      {
-        int exprVarOffset = *(variables.find(retExprInfo.varExprName)->second.offset);
-        assembly += "  movl " + to_string(exprVarOffset) + "(%rbp), %eax\n";
-        assembly += "  movl %eax, " + to_string(*(it->second.offset)) + "(%rbp)\n";
-      }
-      else
-      {
         assembly += "  movl $" + to_string(*(it->second.val)) + ", " + to_string(*(it->second.offset)) + "(%rbp)\n";
+      } else {
+        map<string, varInfo>::iterator it2 = variables.find(retExprInfo.varExprName);
+        if(it2 != variables.end()) {
+          if(it2->second.val != nullptr) {
+            it->second.val = new int;
+            *(it->second.val) = *(it2->second.val);
+          }
+          variablesOffset -= 4; // 4 pour INT
+          it->second.offset = new int;
+          *(it->second.offset) = variablesOffset;
+          assembly += "  movl " + to_string(*(it2->second.offset)) + "(%rbp), %eax\n";
+          assembly += "  movl %eax, " + to_string(*(it->second.offset)) + "(%rbp)\n";
+        } else {
+          hasError = true;
+          cout << "[visitVar_aff] Erreur affectation de la variable '" << retExprInfo.varExprName << "' qui n'a pas été déclarée !" << endl;
+        }
       }
-
       return *(it->second.val);
     }
     else
@@ -253,16 +246,15 @@ public:
     map<string, varInfo>::iterator it = variables.find(varName);
     if (it != variables.end())
     {
-      int *ptrVal = it->second.val;
-      if (ptrVal != nullptr)
+      if(it->second.val != nullptr)
       {
         ret.value = new int;
         *((int *)ret.value) = *(it->second.val);
       }
-      else
-      {
-        hasError = true;
-        cout << "[visitVar] Erreur la variable '" << varName << "' n'a pas de valeur !" << endl;
+      if(it->second.offset == nullptr) {
+        variablesOffset -= 4; // 4 pour INT
+        it->second.offset = new int;
+        *(it->second.offset) = variablesOffset;
       }
     }
     else
