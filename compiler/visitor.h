@@ -254,12 +254,12 @@ public:
       }
       else
       {
-        cout << "[visitExpr] Erreur la variable '" << varName << "' n'a pas de valeur !" << endl;
+        cout << "[visitVar] Erreur la variable '" << varName << "' n'a pas de valeur !" << endl;
       }
     }
     else
     {
-      cout << "[visitExpr] Erreur la variable '" << varName << "' n'a pas été déclarée !" << endl;
+      cout << "[visitVar] Erreur la variable '" << varName << "' n'a pas été déclarée !" << endl;
     }
     return ret;
   }
