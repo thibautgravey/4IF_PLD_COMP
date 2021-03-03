@@ -31,12 +31,12 @@ int main(int argn, const char **argv) {
   tree::ParseTree* tree = parser.axiom();
 
   Visitor visitor;
-  visitor.visit(tree);
+  bool visitorError = visitor.visit(tree);
 
   int lexerErrors = lexer.getNumberOfSyntaxErrors();
   int parserErrors = parser.getNumberOfSyntaxErrors();
 
-  if(lexerErrors || parserErrors) return 1;
+  if(lexerErrors || parserErrors || visitorError) return 1;
 
   return 0;
 }

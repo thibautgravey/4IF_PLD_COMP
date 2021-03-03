@@ -56,12 +56,14 @@ public:
       map<string, varInfo>::iterator it = variables.find(retExprInfo.varExprName);
       if(it != variables.end()) {
         if(it->second.val == nullptr) {
+          hasError = true;
           cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
           assembly += "  movl $-1, %eax\n";
         } else {
           assembly += "  movl " + to_string(*((int *) it->second.offset)) + "(%rbp), %eax\n";
         }
       } else {
+        hasError = true;
         cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas été déclarée !" << endl;
         assembly += "  movl $-1, %eax\n";
       }
@@ -74,8 +76,8 @@ public:
                 "  ret\n";
 
 
-    // write the assembly
-    cout << assembly ;
+    // write the assembly if there is no error
+    if (!hasError) cout << assembly ;
 
     /*
     map<string, varInfo>::iterator it;
@@ -94,7 +96,7 @@ public:
     }
     */
 
-    return 0;
+    return hasError;
   }
 
   virtual antlrcpp::Any visitLine(ifccParser::LineContext *ctx) override
@@ -111,6 +113,7 @@ public:
 
     if (it != variables.end())
     {
+      hasError = true;
       cout << "[visitVar_decl] Erreur la variable '" << name << "' a déjà été déclarée !" << endl;
       return 0;
     }
@@ -128,6 +131,7 @@ public:
 
       if (retExprInfo.value == nullptr)
       {
+        hasError = true;
         cout << "[visitVar_decl] Erreur lors du retour de l'expression !" << endl;
         val = nullptr;
       }
@@ -170,6 +174,7 @@ public:
 
       if (retExprInfo.value == nullptr)
       {
+        hasError = true;
         cout << "[visitVar_aff] Erreur lors du retour de l'expression !" << endl;
         return 0;
       }
@@ -197,6 +202,7 @@ public:
     }
     else
     {
+      hasError = true;
       cout << "[visitVar_aff] Erreur la variable '" << name << "' n'a pas été déclarée !" << endl;
     }
     return 0;
@@ -255,11 +261,13 @@ public:
       }
       else
       {
+        hasError = true;
         cout << "[visitVar] Erreur la variable '" << varName << "' n'a pas de valeur !" << endl;
       }
     }
     else
     {
+      hasError = true;
       cout << "[visitVar] Erreur la variable '" << varName << "' n'a pas été déclarée !" << endl;
     }
     return ret;
@@ -269,4 +277,5 @@ protected:
   map<string, varInfo> variables; // key = name
   int variablesOffset = 0;
   string assembly;
+  bool hasError = false;
 };
