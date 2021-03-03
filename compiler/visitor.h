@@ -243,6 +243,7 @@ public:
     ret.isConst = false;
     string varName = ctx->VAR_NAME()->getText();
     ret.varExprName = varName;
+    ret.value = nullptr;
     map<string, varInfo>::iterator it = variables.find(varName);
     if (it != variables.end())
     {
