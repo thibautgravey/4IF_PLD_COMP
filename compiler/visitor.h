@@ -94,6 +94,7 @@ public:
     // add epilogue
     assembly += "\n"
                 "  # epilogue\n"
+                "  addq $" + to_string(spaceNeeded) + ", %rsp\n"
                 "  popq %rbp\n"
                 "  ret\n";
 
