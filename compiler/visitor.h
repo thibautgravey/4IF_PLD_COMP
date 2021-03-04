@@ -48,6 +48,28 @@ public:
 
     visitChildren(ctx);
 
+    // calculate space needed for variables
+    int spaceNeeded = 0;
+    map<string, varInfo>::iterator it;
+    for(it = variables.begin(); it != variables.end(); it++) {
+      if(it->second.offset != nullptr) {
+        // if offset is not null, it means the variable need space
+        spaceNeeded += 4; // 4 for INT
+      }
+      else {
+        cout << "[Warning] La variable '" << it->first << "' a été déclarée mais n'est pas utilisée." << endl;
+      }
+    }
+
+    // round space to the nearest multiple of 16
+    if(spaceNeeded % 16) {
+      spaceNeeded = ((spaceNeeded / 16) + 1) * 16;
+    }
+
+    assembly += "  subq $" + to_string(spaceNeeded) + ", %rsp\n";
+
+    assembly += assemblyTmpBuf;
+
     exprInfo retExprInfo = visit(ctx->expr());
 
     if(retExprInfo.isConst) {
@@ -131,7 +153,7 @@ public:
         variablesOffset -= 4; // 4 pour INT
         offset = new int;
         *offset = variablesOffset;
-        assembly += "  movl $" + to_string((*val)) + ", " + to_string(*offset) + "(%rbp)\n";
+        assemblyTmpBuf += "  movl $" + to_string((*val)) + ", " + to_string(*offset) + "(%rbp)\n";
       } else {
         map<string, varInfo>::iterator it = variables.find(retExprInfo.varExprName);
         if(it != variables.end()) {
@@ -142,8 +164,8 @@ public:
           variablesOffset -=4;
           offset = new int;
           *offset = variablesOffset;
-          assembly += "  movl " + to_string(*(it->second.offset)) + "(%rbp), %eax\n";
-          assembly += "  movl %eax, " + to_string(*offset) + "(%rbp)\n";
+          assemblyTmpBuf += "  movl " + to_string(*(it->second.offset)) + "(%rbp), %eax\n";
+          assemblyTmpBuf += "  movl %eax, " + to_string(*offset) + "(%rbp)\n";
         } else {
           hasError = true;
           cout << "[visitVar_decl] Erreur affectation de la variable '" << retExprInfo.varExprName << "' qui n'a pas été déclarée !" << endl;
@@ -173,7 +195,7 @@ public:
         variablesOffset -= 4; // 4 pour INT
         it->second.offset = new int;
         *(it->second.offset) = variablesOffset;
-        assembly += "  movl $" + to_string(*(it->second.val)) + ", " + to_string(*(it->second.offset)) + "(%rbp)\n";
+        assemblyTmpBuf += "  movl $" + to_string(*(it->second.val)) + ", " + to_string(*(it->second.offset)) + "(%rbp)\n";
       } else {
         map<string, varInfo>::iterator it2 = variables.find(retExprInfo.varExprName);
         if(it2 != variables.end()) {
@@ -184,8 +206,8 @@ public:
           variablesOffset -= 4; // 4 pour INT
           it->second.offset = new int;
           *(it->second.offset) = variablesOffset;
-          assembly += "  movl " + to_string(*(it2->second.offset)) + "(%rbp), %eax\n";
-          assembly += "  movl %eax, " + to_string(*(it->second.offset)) + "(%rbp)\n";
+          assemblyTmpBuf += "  movl " + to_string(*(it2->second.offset)) + "(%rbp), %eax\n";
+          assemblyTmpBuf += "  movl %eax, " + to_string(*(it->second.offset)) + "(%rbp)\n";
         } else {
           hasError = true;
           cout << "[visitVar_aff] Erreur affectation de la variable '" << retExprInfo.varExprName << "' qui n'a pas été déclarée !" << endl;
@@ -269,5 +291,6 @@ protected:
   map<string, varInfo> variables; // key = name
   int variablesOffset = 0;
   string assembly;
+  string assemblyTmpBuf;
   bool hasError = false;
 };
