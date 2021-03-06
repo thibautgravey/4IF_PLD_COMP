@@ -3,6 +3,7 @@
 import argparse
 import glob
 import os
+import re
 import shutil
 import sys
 import subprocess
@@ -71,7 +72,7 @@ else:
     if not os.path.isdir('pld-test-output'):
         os.mkdir('pld-test-output')
     DEST='pld-test-output'
-    
+
 ## Then we process the inputs arguments i.e. filenames or subtrees
 inputfilenames=[]
 for path in args.input:
@@ -124,7 +125,7 @@ if not os.path.isfile(wrapper):
 
 if args.debug:
     print("debug: wrapper path: "+wrapper)
-        
+
 ######################################################################################
 ## PREPARE step: copy all test-cases under DEST
 
@@ -164,12 +165,25 @@ if args.debug:
 ######################################################################################
 ## TEST step: actually compile all test-cases with both compilers
 
+# Sort jobs by jobname (to have a better visualisation)
+def job_key(job):
+    job_match = re.search("[0-9]+", job)
+    return int(job[job_match.span()[0]:job_match.span()[1]])
+
+jobs.sort(key=job_key)
+
+# Colors for visualisation
+OK_COLOR = "\033[92m"
+FAIL_COLOR = "\033[91m"
+END_COLOR = "\033[0m"
+
 for jobname in jobs:
     os.chdir(orig_cwd)
 
-    print('TEST-CASE: '+jobname)
+    # print('TEST-CASE: '+jobname)
+    print(jobname + " : ", end="")
     os.chdir(jobname)
-    
+
     ## JEDI compiler, aka GCC
     gccstatus=command("gcc -S -o asm-gcc.s input.c", "gcc-compile.txt")
     if gccstatus == 0:
@@ -181,21 +195,21 @@ for jobname in jobs:
         exegccstatus=command("./exe-gcc", "gcc-execute.txt")
         if args.verbose >=2:
             dumpfile("gcc-execute.txt")
-            
+
     ## PADAWAN compiler
     pldstatus=command(wrapper+" asm-pld.s input.c", "pld-compile.txt")
-    
+
     if gccstatus != 0 and pldstatus != 0:
         ## padawan correctly rejects invalid program -> test-case ok
-        print("TEST OK")
+        print(OK_COLOR + "TEST OK" + END_COLOR)
         continue
     elif gccstatus != 0 and pldstatus == 0:
         ## padawan wrongly accepts invalid program -> error
-        print("TEST FAIL (your compiler accepts an invalid program)")
+        print(FAIL_COLOR + "TEST FAIL (your compiler accepts an invalid program)" + END_COLOR)
         continue
     elif gccstatus == 0 and pldstatus != 0:
         ## padawan wrongly rejects valid program -> error
-        print("TEST FAIL (your compiler rejects a valid program)")
+        print(FAIL_COLOR + "TEST FAIL (your compiler rejects a valid program)" + END_COLOR)
         if args.verbose:
             dumpfile("pld-compile.txt")
         continue
@@ -203,17 +217,17 @@ for jobname in jobs:
         ## padawan accepts to compile valid program -> let's link it
         ldstatus=command("gcc -o exe-pld asm-pld.s", "pld-link.txt")
         if ldstatus:
-            print("TEST FAIL (your compiler produces incorrect assembly)")
+            print(OK_COLOR + "TEST FAIL (your compiler produces incorrect assembly)" + END_COLOR)
             if args.verbose:
                 dumpfile("pld-link.txt")
             continue
 
     ## both compilers  did produce an  executable, so now we  run both
     ## these executables and compare the results.
-        
+
     exepldstatus=command("./exe-pld","pld-execute.txt")
     if open("gcc-execute.txt").read() != open("pld-execute.txt").read() :
-        print("TEST FAIL (different results at execution)")
+        print(FAIL_COLOR + "TEST FAIL (different results at execution)" + END_COLOR)
         if args.verbose:
             print("GCC:")
             dumpfile("gcc-execute.txt")
@@ -222,4 +236,4 @@ for jobname in jobs:
         continue
 
     ## last but not least
-    print("TEST OK")
+    print(OK_COLOR + "TEST OK" + END_COLOR)
