@@ -245,8 +245,8 @@ class Visitor : public ifccVisitor {
     }
 
     virtual antlrcpp::Any visitAdd(ifccParser::AddContext *ctx) override {
-        Expr *op1 = visit(ctx->expr(0));
-        Expr *op2 = visit(ctx->expr(1));
+        Expr *op1 = (Expr *)visit(ctx->expr(0));
+        Expr *op2 = (Expr *)visit(ctx->expr(1));
         BinaryOperator binaryOperatorPlus = PLUS;
 
         return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
@@ -254,8 +254,8 @@ class Visitor : public ifccVisitor {
 
     virtual antlrcpp::Any visitLess(ifccParser::LessContext *ctx) override {
         //return (int)visit(ctx->expr(0)) - (int)visit(ctx->expr(1));
-        Expr *op1 = visit(ctx->expr(0));
-        Expr *op2 = visit(ctx->expr(1));
+        Expr *op1 = (Expr *)visit(ctx->expr(0));
+        Expr *op2 = (Expr *)visit(ctx->expr(1));
 
         BinaryOperator binaryOperatorMinus = MINUS;
 
@@ -264,8 +264,8 @@ class Visitor : public ifccVisitor {
 
     virtual antlrcpp::Any visitDiv(ifccParser::DivContext *ctx) override {
         //return (int)visit(ctx->expr(0)) / (int)visit(ctx->expr(1));
-        Expr *op1 = visit(ctx->expr(0));
-        Expr *op2 = visit(ctx->expr(1));
+        Expr *op1 = (Expr *)visit(ctx->expr(0));
+        Expr *op2 = (Expr *)visit(ctx->expr(1));
 
         BinaryOperator binaryOperatorDiv = DIV;
 
@@ -273,8 +273,8 @@ class Visitor : public ifccVisitor {
     }
 
     virtual antlrcpp::Any visitMult(ifccParser::MultContext *ctx) override {
-        Expr *op1 = visit(ctx->expr(0));
-        Expr *op2 = visit(ctx->expr(1));
+        Expr *op1 = (Expr *)visit(ctx->expr(0));
+        Expr *op2 = (Expr *)visit(ctx->expr(1));
 
         BinaryOperator binaryOperatorMult = MULT;
 
