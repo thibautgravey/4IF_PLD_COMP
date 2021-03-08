@@ -26,13 +26,13 @@ enum Type {
 
 struct ContextVariable {
     Type type;
-    int offset;
-    bool used;
+    int offset = 0;
+    bool used = false;
 };
 
 struct ContextTable {
     map<string, ContextVariable> contextVariable;
-    int offsetContext;
+    int offsetContext = 0;
     Type returnType;
 };
 
@@ -50,28 +50,33 @@ class SymbolTable {
 
 public:
     //----------------------------------------------------- Méthodes publiques
-    bool DefineVariable(string function, string scope, string name, string type);
+    bool DefineFunction(string name, Type type);
+
+    bool DefineVariable(string function, string name, Type type, string scope = "");
 
     bool LookUp(string function, string name, string scope = "") const;
 
-    struct variable Get(fstream &) const;
+    struct ContextVariable GetVariable(string function, string name, string scope = "") const;
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable();
     // Mode d'emploi :
-    //   startPoint correspond au point de départ du SymbolTable
-    //   endPoint correspond au point d'arrivé du SymbolTable
+    //
     // Contrat :
-    //   les chaines pointées par startPoint et endPoint doivent être allouées
+    //
 
     virtual ~SymbolTable();
 
     //------------------------------------------------------------------ PRIVE
 
 protected:
+    //----------------------------------------------------- Méthodes privées
+    void printError(string error);
+
+
     //----------------------------------------------------- Attributs protégés
 
-    map<string, ContextTable> globalTable;
+    map<string, ContextTable> globalFunctionTable;
 
 };
 //-------------------------------- Autres définitions dépendantes de <SymbolTable>
