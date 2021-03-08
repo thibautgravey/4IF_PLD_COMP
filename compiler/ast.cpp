@@ -64,4 +64,5 @@ void Program::AddInstr(Instr *instr) {
 
 string Program::GenerateAsm() {
     // TO DO
+    return string("");
 }
