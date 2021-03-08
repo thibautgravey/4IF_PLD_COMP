@@ -4,14 +4,16 @@ axiom : prog ;
 
 prog : 'int' 'main' '(' ')' '{' line* '}' ;
 
-line: var_decl ';' # varDecl
-    | var_aff ';' # varAff
-    | 'return' expr ';' # ret
+line: var_decl
+    | var_aff
+    | return_stmt
 ;
 
-var_decl: TYPE VAR_NAME ('=' expr)? ;
+var_decl: TYPE VAR_NAME ('=' expr)? ';' ;
 
-var_aff: VAR_NAME '=' expr ;
+var_aff: VAR_NAME '=' expr ';' ;
+
+return_stmt: 'return' expr ';' ;
 
 expr: CONST #const
     | VAR_NAME #var
