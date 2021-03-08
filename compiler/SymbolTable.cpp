@@ -37,6 +37,23 @@ bool SymbolTable::DefineFunction(string name, Type type) {
 } //----- Fin de DefineFunction
 
 bool SymbolTable::DefineVariable(string function, string name, Type type, string scope) {
+    globalFunctionTable::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
+    if(globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function "+name+" does not exist in globalFunctionTable");
+        return false;
+    }
+
+    name = scope+name;
+    ContextTable* contextTable = globalFunctionTableIterator->second;
+    contextTable->contextVariableTable::iterator it = contextTable->contextVariableTable.find(name);
+    if(it != contextTable->contextVariableTable.end()) {
+        printError("variable "+name+" already exist in contextVariableTable from "+function);
+        return false;
+    }
+
+    ContextVariable* contextVariable = new ContextVariable;
+    contextVariable->type = type;
+    contextTable->contextVariableTable.insert(contextVariable);
 
 } //----- Fin de DefineVariable
 
