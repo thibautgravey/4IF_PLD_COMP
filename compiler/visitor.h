@@ -7,17 +7,17 @@
 #include "antlr4-runtime.h"
 #include <map>
 
+#include "ast.h"
+
 using namespace std;
 
-typedef struct
-{
+typedef struct {
     string type;
     int *val;
     int *offset;
 } varInfo;
 
-typedef struct
-{
+typedef struct {
     bool isConst;
     void *value;
     string varExprName;
@@ -25,18 +25,25 @@ typedef struct
 
 /**
  * This class provides an empty implementation of ifccVisitor, which can be
- * extended to create a visitor which only needs to handle a subset of the available methods.
+ * extended to create a visitor which only needs to handle a subset of the
+ * available methods.
  */
-class Visitor : public ifccVisitor
-{
-public:
-    virtual antlrcpp::Any visitAxiom(ifccParser::AxiomContext *ctx) override
-    {
+class Visitor : public ifccVisitor {
+  public:
+    virtual antlrcpp::Any visitAxiom(ifccParser::AxiomContext *ctx) override {
         return visit(ctx->prog());
     }
 
-    virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override
-    {
+    virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override {
+        Program *program = new Program(ctx->start->getLine());
+
+        for (int i = 0; i < ctx->line().size(); i++) {
+            Instr *instr = (Instr *)visit(ctx->line(i));
+            if (instr != nullptr) {
+                program->AddInstr(instr);
+            }
+        }
+
         /*
         // add prologue
         assembly = ".globl	main\n"
@@ -47,7 +54,7 @@ public:
                    "\n"
                    "  # body\n";
 
-        visitChildren(ctx);
+        visitor.visit(tree);visitChildren(ctx);
 
         // calculate space needed for variables
         int spaceNeeded = 0;
@@ -57,7 +64,8 @@ public:
                 // if offset is not null, it means the variable need space
                 spaceNeeded += 4; // 4 for INT
             } else {
-                cout << "[Warning] La variable '" << it->first << "' a été déclarée mais n'est pas utilisée." << endl;
+                cout << "[Warning] La variable '" << it->first << "' a été
+        déclarée mais n'est pas utilisée." << endl;
             }
         }
 
@@ -73,21 +81,20 @@ public:
         exprInfo retExprInfo = visit(ctx->expr());
 
         if (retExprInfo.isConst) {
-            assembly += "  movl $" + to_string(*((int *)retExprInfo.value)) + ", %eax\n";
-        } else {
-            map<string, varInfo>::iterator it = variables.find(retExprInfo.varExprName);
-            if (it != variables.end()) {
-                if (it->second.offset == nullptr) {
-                    //cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
-                    variablesOffset -= 4; // 4 pour INT
-                    it->second.offset = new int;
+            assembly += "  movl $" + to_string(*((int *)retExprInfo.value)) + ",
+        %eax\n"; } else { map<string, varInfo>::iterator it =
+        variables.find(retExprInfo.varExprName); if (it != variables.end()) { if
+        (it->second.offset == nullptr) {
+                    //cout << "[visitProg] Erreur la variable '" <<
+        retExprInfo.varExprName << "' n'a pas de valeur !" << endl;
+        variablesOffset
+        -= 4; // 4 pour INT it->second.offset = new int;
                     *(it->second.offset) = variablesOffset;
                 }
-                assembly += "  movl " + to_string(*((int *)it->second.offset)) + "(%rbp), %eax\n";
-            } else {
-                hasError = true;
-                cout << "[visitProg] Erreur la variable '" << retExprInfo.varExprName << "' n'a pas été déclarée !" << endl;
-                assembly += "  movl $-1, %eax\n";
+                assembly += "  movl " + to_string(*((int *)it->second.offset)) +
+        "(%rbp), %eax\n"; } else { hasError = true; cout << "[visitProg] Erreur
+        la variable '" << retExprInfo.varExprName << "' n'a pas été déclarée !"
+        << endl; assembly += "  movl $-1, %eax\n";
             }
         }
 
@@ -105,16 +112,35 @@ public:
 
         return hasError;
         */
-        return false;
+        return program;
     }
 
-    virtual antlrcpp::Any visitLine(ifccParser::LineContext *ctx) override
-    {
-        return visitChildren(ctx);
+    virtual antlrcpp::Any visitLine(ifccParser::LineContext *ctx) override {
+        Instr *instr;
+        if (ctx->var_aff()) {
+            instr = (Instr *)visit(ctx->var_aff());
+            //instr = new VarAffInstr(0, ctx->VAR_NAME()->getText(), visit(ctx->expr()));
+        } else if (ctx->return_stmt()) {
+            instr = (Instr *)visit(ctx->return_stmt());
+            //instr = new ReturnInstr(0, visit(ctx->expr()));
+        } else if (ctx->var_decl()) {
+            instr = (Instr *)visit(ctx->var_decl());
+        }
+
+        return instr; // si déclaration aller dans la table des symboles etc...
     }
 
-    virtual antlrcpp::Any visitVar_decl(ifccParser::Var_declContext *ctx) override
-    {
+    virtual antlrcpp::Any visitVar_decl(ifccParser::Var_declContext *ctx) override {
+        // TO DO : Ajouter à la table des symboles
+
+        Expr *expr;
+        if (ctx->expr()) {
+            expr = (Expr *)visit(ctx->expr());
+            Instr *ret = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+            return ret;
+        }
+        return nullptr;
+        /*
         string type = ctx->TYPE()->getText();
         string name = ctx->VAR_NAME()->getText();
 
@@ -162,10 +188,13 @@ public:
 
         variables.insert(make_pair(name, info));
         return 0;
+        */
     }
 
-    virtual antlrcpp::Any visitVar_aff(ifccParser::Var_affContext *ctx) override
-    {
+    virtual antlrcpp::Any visitVar_aff(ifccParser::Var_affContext *ctx) override {
+        Expr *expr = (Expr *)visit(ctx->expr());
+        return new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+        /*
         string name = ctx->VAR_NAME()->getText();
 
         map<string, varInfo>::iterator it = variables.find(name);
@@ -203,35 +232,35 @@ public:
             cout << "[visitVar_aff] Erreur la variable '" << name << "' n'a pas été déclarée !" << endl;
         }
         return 0;
+        */
     }
 
-    virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override
-    {
-        return visitChildren(ctx);
+    virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override {
+        Expr *expr = (Expr *)visit(ctx->expr());
+        return new ReturnInstr(ctx->start->getLine(), expr);
     }
 
-    virtual antlrcpp::Any visitPar(ifccParser::ParContext *ctx) override
-    {
+    virtual antlrcpp::Any visitPar(ifccParser::ParContext *ctx) override {
         return (int)visit(ctx->expr());
     }
 
-    virtual antlrcpp::Any visitAdd(ifccParser::AddContext *ctx) override
-    {
-        return (int)visit(ctx->expr(0)) + (int)visit(ctx->expr(1));
+    virtual antlrcpp::Any visitAdd(ifccParser::AddContext *ctx) override {
+        Expr *op1 = visit(ctx->expr(0));
+        Expr *op2 = visit(ctx->expr(1));
+        BinaryOperator binaryOperatorPlus = PLUS;
+
+        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
     }
 
-    virtual antlrcpp::Any visitLess(ifccParser::LessContext *ctx) override
-    {
+    virtual antlrcpp::Any visitLess(ifccParser::LessContext *ctx) override {
         return (int)visit(ctx->expr(0)) - (int)visit(ctx->expr(1));
     }
 
-    virtual antlrcpp::Any visitDiv(ifccParser::DivContext *ctx) override
-    {
+    virtual antlrcpp::Any visitDiv(ifccParser::DivContext *ctx) override {
         return (int)visit(ctx->expr(0)) / (int)visit(ctx->expr(1));
     }
 
-    virtual antlrcpp::Any visitMult(ifccParser::MultContext *ctx) override
-    {
+    virtual antlrcpp::Any visitMult(ifccParser::MultContext *ctx) override {
         exprInfo ret0 = visit(ctx->expr(0));
         exprInfo ret1 = visit(ctx->expr(1));
 
@@ -281,8 +310,9 @@ public:
         if (it->second.val != nullptr && it2->second.val != nullptr)
         {
           //à quoi sert cette vérif ?
-          assemblyTmpBuf += "  movl " + to_string(*(it->second.offset)) + "(%rbp), %eax\n";
-          assemblyTmpBuf += "  imul $" + to_string(ret0.value) + ", %eax\n";
+          assemblyTmpBuf += "  movl " + to_string(*(it->second.offset)) +
+    "(%rbp), %eax\n"; assemblyTmpBuf += "  imul $" + to_string(ret0.value) + ",
+    %eax\n";
         }
       }
 
@@ -291,7 +321,8 @@ public:
         hasError = true;
         if (it == variables.end())
         {
-          cout << "[visitMult] Erreur multiplication de la variable '" << retExprInfo.varExprName << "' qui n'a pas été déclarée !" << endl;
+          cout << "[visitMult] Erreur multiplication de la variable '" <<
+    retExprInfo.varExprName << "' qui n'a pas été déclarée !" << endl;
         }
 
         //2 variables
@@ -301,19 +332,25 @@ public:
         return ret;
     }
 
-    virtual antlrcpp::Any visitConst(ifccParser::ConstContext *ctx) override
-    {
-        exprInfo ret;
+    virtual antlrcpp::Any visitConst(ifccParser::ConstContext *ctx) override {
+
+        Expr *test = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
+
+        return test;
+
+        /*exprInfo ret;
 
         ret.isConst = true;
         ret.value = new int;
         *((int *)ret.value) = stoi(ctx->CONST()->getText());
         return ret;
+        */
     }
 
-    virtual antlrcpp::Any visitVar(ifccParser::VarContext *ctx) override
-    {
-        exprInfo ret;
+    virtual antlrcpp::Any visitVar(ifccParser::VarContext *ctx) override {
+
+        return new Var(ctx->start->getLine(), ctx->getText());
+        /*exprInfo ret;
         ret.isConst = false;
         string varName = ctx->VAR_NAME()->getText();
         ret.varExprName = varName;
@@ -331,12 +368,14 @@ public:
             }
         } else {
             hasError = true;
-            cout << "[visitVar] Erreur la variable '" << varName << "' n'a pas été déclarée !" << endl;
+            cout << "[visitVar] Erreur la variable '" << varName
+                 << "' n'a pas été déclarée !" << endl;
         }
         return ret;
+        */
     }
 
-protected:
+  protected:
     map<string, varInfo> variables; // key = name
     int variablesOffset = 0;
     string assembly;
