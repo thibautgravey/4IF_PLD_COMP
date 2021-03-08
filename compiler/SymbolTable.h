@@ -26,13 +26,13 @@ enum Type {
 
 struct ContextVariable {
     Type type;
-    int64_t offset;
+    int offset;
     bool used;
 };
 
 struct ContextTable {
     map<string, ContextVariable> contextVariable;
-    int64_t offsetContext;
+    int offsetContext;
     Type returnType;
 };
 
