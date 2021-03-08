@@ -1,7 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
-//#include "SymbolTable.h"
+#include "SymbolTable.h"
 
 #include <string>
 #include <vector>
@@ -128,7 +128,7 @@ class Program : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     vector<Instr *> GetListInstr();
-    //SymbolTable GetSymbolTable();
+    SymbolTable GetSymbolTable();
     void AddInstr(Instr *instr);
     string GenerateAsm();
     //-------------------------------------------- Constructeurs - destructeur
@@ -138,7 +138,7 @@ class Program : public Node {
 
   protected:
     vector<Instr *> listInstr;
-    //SymbolTable symbolTable;
+    SymbolTable symbolTable;
 };
 
 #endif

@@ -51,12 +51,11 @@ vector<Instr *> Program::GetListInstr() {
     return this->listInstr;
 }
 
-/*
+
 SymbolTable Program::GetSymbolTable()
 {
     return this->symbolTable;
 }
-*/
 
 void Program::AddInstr(Instr *instr) {
     this->listInstr.push_back(instr);
