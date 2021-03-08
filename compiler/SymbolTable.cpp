@@ -97,6 +97,17 @@ SymbolTable::~SymbolTable(){
     cout << "Appel au destructeur de <SymbolTable>" << endl;
 #endif
 
+    for(globalFunctionTable::iterator it = globalFunctionTable.begin(); it != globalFunctionTable.end(); ++it) {
+
+        ContextTable* contextTable = it->second;
+
+        for(contextTable->contextVariableTable::iterator it2 = contextTable->contextVariableTable ; it2 != contextTable->contextVariableTable.end(); ++it2){
+            delete(it2->second);
+        }
+
+        delete(contextTable);
+    }
+
 } //----- Fin de ~SymbolTable
 
 //------------------------------------------------------------------ PRIVE
