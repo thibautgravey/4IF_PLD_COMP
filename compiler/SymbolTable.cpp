@@ -73,8 +73,22 @@ bool SymbolTable::LookUp(string function, string name, string scope) const {
     return true;
 } //----- Fin de LookUp
 
-struct ContextVariable SymbolTable::GetVariable(string function, string name, string scope) const {
+struct ContextVariable* SymbolTable::GetVariable(string function, string name, string scope) const {
+    globalFunctionTable::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
+    if(globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function "+name+" does not exist in globalFunctionTable");
+        return nullptr;
+    }
 
+    name = scope+name;
+    ContextTable* contextTable = globalFunctionTableIterator->second;
+    contextTable->contextVariableTable::iterator it = contextTable->contextVariableTable.find(name);
+    if(it == contextTable->contextVariableTable.end()) {
+        printError("variable "+name+" does not exist in contextVariableTable from "+function);
+        return nullptr;
+    }
+
+    return it->second;
 } //----- Fin de GetVariable
 
 //-------------------------------------------- Constructeurs - destructeur
