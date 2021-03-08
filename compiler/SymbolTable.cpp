@@ -28,8 +28,8 @@ bool SymbolTable::DefineFunction(string name, Type type) {
         return false;
     }
 
-    ContextTable contextTable;
-    contextTable.returnType = type;
+    ContextTable* contextTable = new ContextTable;
+    contextTable->returnType = type;
     globalFunctionTable.insert(name, contextTable);
 
     return true;
