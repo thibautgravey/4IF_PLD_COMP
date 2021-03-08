@@ -59,7 +59,7 @@ public:
     struct ContextVariable* GetVariable(string function, string name, string scope = "") const;
 
     //-------------------------------------------- Constructeurs - destructeur
-    SymbolTable();
+    SymbolTable() {}
     // Mode d'emploi :
     //
     // Contrat :
