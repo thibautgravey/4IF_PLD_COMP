@@ -2,9 +2,12 @@ grammar ifcc;
 
 axiom : prog ;
 
-prog : 'int' 'main' '(' ')' '{' line* RETURN expr ';' '}' ;
+prog : 'int' 'main' '(' ')' '{' line* '}' ;
 
-line: (var_decl | var_aff) ';' ;
+line: var_decl ';' # varDecl
+    | var_aff ';' # varAff
+    | 'return' expr ';' # ret
+;
 
 var_decl: TYPE VAR_NAME ('=' expr)? ;
 
@@ -19,13 +22,11 @@ expr: CONST #const
     | '(' expr ')' # par
 ;
 
-RETURN : 'return' ;
-
 TYPE : 'int' ;
 
 CONST : '-'?[0-9]+ ;
 
-VAR_NAME : [a-zA-Z_][\\w]*  ;
+VAR_NAME : [a-zA-Z_][\\w]* ;
 
 COMMENT : '/*' .*? '*/' -> skip ;
 
