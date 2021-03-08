@@ -58,7 +58,19 @@ bool SymbolTable::DefineVariable(string function, string name, Type type, string
 } //----- Fin de DefineVariable
 
 bool SymbolTable::LookUp(string function, string name, string scope) const {
+    globalFunctionTable::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
+    if(globalFunctionTableIterator == globalFunctionTable.end()) {
+        return false;
+    }
 
+    name = scope+name;
+    ContextTable* contextTable = globalFunctionTableIterator->second;
+    contextTable->contextVariableTable::iterator it = contextTable->contextVariableTable.find(name);
+    if(it == contextTable->contextVariableTable.end()) {
+        return false;
+    }
+
+    return true;
 } //----- Fin de LookUp
 
 struct ContextVariable SymbolTable::GetVariable(string function, string name, string scope) const {
