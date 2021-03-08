@@ -129,6 +129,8 @@ public:
     //----------------------------------------------------- Méthodes publiques
     vector<Instr *> GetListInstr();
     SymbolTable GetSymbolTable();
+    void AddInstr(Instr *instr);
+    string GenerateAsm();
     //-------------------------------------------- Constructeurs - destructeur
     Program(int l) : Node(l) {}
     ~Program() {}

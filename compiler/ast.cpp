@@ -65,3 +65,13 @@ SymbolTable Program::GetSymbolTable()
 {
     return this->symbolTable;
 }
+
+void Program::AddInstr(Instr *instr)
+{
+    this->listInstr.push_back(instr);
+}
+
+string Program::GenerateAsm()
+{
+    // TO DO
+}
