@@ -65,7 +65,7 @@ public:
     // Contrat :
     //
 
-    virtual ~SymbolTable();
+    ~SymbolTable();
 
     //------------------------------------------------------------------ PRIVE
 
