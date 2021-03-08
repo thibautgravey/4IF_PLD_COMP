@@ -31,7 +31,7 @@ struct ContextVariable {
 };
 
 struct ContextTable {
-    map<string, ContextVariable> contextVariable;
+    map<string, ContextVariable*> contextVariableTable;
     int offsetContext = 0;
     Type returnType;
 };
@@ -56,7 +56,7 @@ public:
 
     bool LookUp(string function, string name, string scope = "") const;
 
-    struct ContextVariable GetVariable(string function, string name, string scope = "") const;
+    struct ContextVariable* GetVariable(string function, string name, string scope = "") const;
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable();
@@ -76,7 +76,7 @@ protected:
 
     //----------------------------------------------------- Attributs protégés
 
-    map<string, ContextTable> globalFunctionTable;
+    map<string, ContextTable*> globalFunctionTable;
 
 };
 //-------------------------------- Autres définitions dépendantes de <SymbolTable>
