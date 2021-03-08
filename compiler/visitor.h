@@ -253,14 +253,33 @@ class Visitor : public ifccVisitor {
     }
 
     virtual antlrcpp::Any visitLess(ifccParser::LessContext *ctx) override {
-        return (int)visit(ctx->expr(0)) - (int)visit(ctx->expr(1));
+        //return (int)visit(ctx->expr(0)) - (int)visit(ctx->expr(1));
+        Expr *op1 = visit(ctx->expr(0));
+        Expr *op2 = visit(ctx->expr(1));
+
+        BinaryOperator binaryOperatorMinus = MINUS;
+
+        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMinus);
     }
 
     virtual antlrcpp::Any visitDiv(ifccParser::DivContext *ctx) override {
-        return (int)visit(ctx->expr(0)) / (int)visit(ctx->expr(1));
+        //return (int)visit(ctx->expr(0)) / (int)visit(ctx->expr(1));
+        Expr *op1 = visit(ctx->expr(0));
+        Expr *op2 = visit(ctx->expr(1));
+
+        BinaryOperator binaryOperatorDiv = DIV;
+
+        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorDiv);
     }
 
     virtual antlrcpp::Any visitMult(ifccParser::MultContext *ctx) override {
+        Expr *op1 = visit(ctx->expr(0));
+        Expr *op2 = visit(ctx->expr(1));
+
+        BinaryOperator binaryOperatorMult = MULT;
+
+        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMult);
+        /*
         exprInfo ret0 = visit(ctx->expr(0));
         exprInfo ret1 = visit(ctx->expr(1));
 
@@ -297,6 +316,7 @@ class Visitor : public ifccVisitor {
                 cout << "[visitMult] Erreur multiplication de la variable '" << retCopie.varExprName << "' qui n'a pas été déclarée !" << endl;
             }
         }
+        */
 
         /*
     if (!ret0.isConst && !ret1.isConst)
@@ -329,7 +349,7 @@ class Visitor : public ifccVisitor {
       }
     }
     */
-        return ret;
+        //return ret;
     }
 
     virtual antlrcpp::Any visitConst(ifccParser::ConstContext *ctx) override {

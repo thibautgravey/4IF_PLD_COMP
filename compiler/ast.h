@@ -10,7 +10,8 @@ using namespace std;
 enum BinaryOperator {
     PLUS,
     MINUS,
-    MULT
+    MULT,
+    DIV
 };
 
 //---------- Interface de la classe <Node> ----------------
