@@ -236,7 +236,7 @@ class Visitor : public ifccVisitor {
     }
 
     virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override {
-        Expr *expr = (Expr *)visit(ctx->expr());
+        Expr * expr = (Expr *)visit(ctx->expr());
         return new ReturnInstr(ctx->start->getLine(), expr);
     }
 
@@ -249,7 +249,9 @@ class Visitor : public ifccVisitor {
         Expr *op2 = (Expr *)visit(ctx->expr(1));
         BinaryOperator binaryOperatorPlus = PLUS;
 
-        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
+        Expr * ret = new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
+
+        return ret;
     }
 
     virtual antlrcpp::Any visitLess(ifccParser::LessContext *ctx) override {
@@ -259,7 +261,9 @@ class Visitor : public ifccVisitor {
 
         BinaryOperator binaryOperatorMinus = MINUS;
 
-        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMinus);
+        Expr * ret = new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMinus);
+
+        return ret;
     }
 
     virtual antlrcpp::Any visitDiv(ifccParser::DivContext *ctx) override {
@@ -269,7 +273,9 @@ class Visitor : public ifccVisitor {
 
         BinaryOperator binaryOperatorDiv = DIV;
 
-        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorDiv);
+        Expr * ret = new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorDiv);
+
+        return ret;
     }
 
     virtual antlrcpp::Any visitMult(ifccParser::MultContext *ctx) override {
@@ -278,7 +284,9 @@ class Visitor : public ifccVisitor {
 
         BinaryOperator binaryOperatorMult = MULT;
 
-        return new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMult);
+        Expr * ret = new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMult);
+
+        return ret;
         /*
         exprInfo ret0 = visit(ctx->expr(0));
         exprInfo ret1 = visit(ctx->expr(1));
@@ -368,8 +376,8 @@ class Visitor : public ifccVisitor {
     }
 
     virtual antlrcpp::Any visitVar(ifccParser::VarContext *ctx) override {
-
-        return new Var(ctx->start->getLine(), ctx->getText());
+        Expr * ret = new Var(ctx->start->getLine(), ctx->getText());
+        return ret;
         /*exprInfo ret;
         ret.isConst = false;
         string varName = ctx->VAR_NAME()->getText();
