@@ -237,7 +237,8 @@ class Visitor : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext * ctx) override {
         Expr * expr = (Expr *)visit(ctx->expr());
-        return new ReturnInstr(ctx->start->getLine(), expr);
+        Instr* ret = new ReturnInstr(ctx->start->getLine(), expr);
+        return ret;
     }
 
     virtual antlrcpp::Any visitPar(ifccParser::ParContext * ctx) override {
