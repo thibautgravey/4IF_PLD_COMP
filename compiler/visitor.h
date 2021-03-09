@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "antlr4-generated/ifccVisitor.h"
+#include "antlr4-generated/ifccBaseVisitor.h"
 #include "antlr4-runtime.h"
 #include <map>
 
@@ -28,7 +28,7 @@ typedef struct {
  * extended to create a visitor which only needs to handle a subset of the
  * available methods.
  */
-class Visitor : public ifccVisitor {
+class Visitor : public ifccBaseVisitor {
   public:
     virtual antlrcpp::Any visitAxiom(ifccParser::AxiomContext *ctx) override {
         return visit(ctx->prog());
