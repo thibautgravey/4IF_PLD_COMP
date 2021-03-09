@@ -21,7 +21,8 @@ using namespace std;
 //------------------------------------------------------------------ Types
 
 enum Type {
-    INT, ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
+    INT,
+    ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
 };
 
 struct ContextVariable {
@@ -31,7 +32,7 @@ struct ContextVariable {
 };
 
 struct ContextTable {
-    map<string, ContextVariable*> contextVariableTable;
+    map<string, ContextVariable *> contextVariableTable;
     int offsetContext = 0;
     Type returnType;
 };
@@ -48,7 +49,7 @@ struct ContextTable {
 class SymbolTable {
     //----------------------------------------------------------------- PUBLIC
 
-public:
+  public:
     //----------------------------------------------------- Méthodes publiques
     bool DefineFunction(string name, Type type);
 
@@ -75,16 +76,15 @@ public:
 
     //------------------------------------------------------------------ PRIVE
 
-protected:
+  protected:
     //----------------------------------------------------- Méthodes privées
-    struct ContextVariable* getVariable(string function, string name, string scope = "") const;
+    struct ContextVariable * getVariable(string function, string name, string scope = "") const;
 
-    void printError(string error);
+    void printError(string error) const;
 
     //----------------------------------------------------- Attributs protégés
 
-    map<string, ContextTable*> globalFunctionTable;
-
+    map<string, ContextTable *> globalFunctionTable;
 };
 //-------------------------------- Autres définitions dépendantes de <SymbolTable>
 

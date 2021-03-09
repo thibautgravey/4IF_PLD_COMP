@@ -22,51 +22,51 @@ using namespace std;
 
 //----------------------------------------------------- Méthodes publiques
 bool SymbolTable::DefineFunction(string name, Type type) {
-    globalFunctionTable::iterator iterator = globalFunctionTable.find(name);
-    if(iterator != globalFunctionTable.end()) {
-        printError("function "+name+" already exist in globalFunctionTable");
+    map<string, ContextTable *>::iterator iterator = globalFunctionTable.find(name);
+    if (iterator != globalFunctionTable.end()) {
+        printError("function " + name + " already exist in globalFunctionTable");
         return false;
     }
 
-    ContextTable* contextTable = new ContextTable;
+    ContextTable * contextTable = new ContextTable;
     contextTable->returnType = type;
-    globalFunctionTable.insert(name, contextTable);
+    globalFunctionTable.insert(make_pair(name, contextTable));
 
     return true;
 
 } //----- Fin de DefineFunction
 
 bool SymbolTable::DefineVariable(string function, string name, Type type, string scope) {
-    globalFunctionTable::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
-    if(globalFunctionTableIterator == globalFunctionTable.end()) {
-        printError("function "+name+" does not exist in globalFunctionTable");
+    map<string, ContextTable *>::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + name + " does not exist in globalFunctionTable");
         return false;
     }
 
-    name = scope+name;
-    ContextTable* contextTable = globalFunctionTableIterator->second;
-    contextTable->contextVariableTable::iterator it = contextTable->contextVariableTable.find(name);
-    if(it != contextTable->contextVariableTable.end()) {
-        printError("variable "+name+" already exist in contextVariableTable from "+function);
+    name = scope + name;
+    ContextTable * contextTable = globalFunctionTableIterator->second;
+    map<string, ContextVariable *>::iterator it = contextTable->contextVariableTable.find(name);
+    if (it != contextTable->contextVariableTable.end()) {
+        printError("variable " + name + " already exist in contextVariableTable from " + function);
         return false;
     }
 
-    ContextVariable* contextVariable = new ContextVariable;
+    ContextVariable * contextVariable = new ContextVariable;
     contextVariable->type = type;
-    contextTable->contextVariableTable.insert(contextVariable);
+    contextTable->contextVariableTable.insert(make_pair(name, contextVariable));
 
 } //----- Fin de DefineVariable
 
 bool SymbolTable::LookUp(string function, string name, string scope) const {
-    globalFunctionTable::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
-    if(globalFunctionTableIterator == globalFunctionTable.end()) {
+    map<string, ContextTable *>::const_iterator globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
         return false;
     }
 
-    name = scope+name;
-    ContextTable* contextTable = globalFunctionTableIterator->second;
-    contextTable->contextVariableTable::iterator it = contextTable->contextVariableTable.find(name);
-    if(it == contextTable->contextVariableTable.end()) {
+    name = scope + name;
+    ContextTable * contextTable = globalFunctionTableIterator->second;
+    map<string, ContextVariable *>::iterator it = contextTable->contextVariableTable.find(name);
+    if (it == contextTable->contextVariableTable.end()) {
         return false;
     }
 
@@ -74,8 +74,8 @@ bool SymbolTable::LookUp(string function, string name, string scope) const {
 } //----- Fin de LookUp
 
 Type SymbolTable::GetVariableType(string function, string name, string scope) const {
-    ContextVariable* variable = getVariable(function, name, scope);
-    if(variable == nullptr) {
+    ContextVariable * variable = getVariable(function, name, scope);
+    if (variable == nullptr) {
         return ERROR;
     }
 
@@ -83,8 +83,8 @@ Type SymbolTable::GetVariableType(string function, string name, string scope) co
 } //----- Fin de GetVariableType
 
 int SymbolTable::GetVariableOffset(string function, string name, string scope) const {
-    ContextVariable* variable = getVariable(function, name, scope);
-    if(variable == nullptr) {
+    ContextVariable * variable = getVariable(function, name, scope);
+    if (variable == nullptr) {
         return -1;
     }
 
@@ -92,8 +92,8 @@ int SymbolTable::GetVariableOffset(string function, string name, string scope) c
 } //----- Fin de GetVariableOffset
 
 bool SymbolTable::IsUsedVariable(string function, string name, string scope) const {
-    ContextVariable* variable = getVariable(function, name, scope);
-    if(variable == nullptr) {
+    ContextVariable * variable = getVariable(function, name, scope);
+    if (variable == nullptr) {
         return false;
     }
 
@@ -106,20 +106,20 @@ string SymbolTable::CreateTempVar(Type type) {
 } //----- Fin de CreateTempVar
 
 //-------------------------------------------- Constructeurs - destructeur
-SymbolTable::~SymbolTable(){
+SymbolTable::~SymbolTable() {
 #ifdef MAP
     cout << "Appel au destructeur de <SymbolTable>" << endl;
 #endif
 
-    for(globalFunctionTable::iterator it = globalFunctionTable.begin(); it != globalFunctionTable.end(); ++it) {
+    for (map<string, ContextTable *>::iterator it = globalFunctionTable.begin(); it != globalFunctionTable.end(); ++it) {
 
-        ContextTable* contextTable = it->second;
+        ContextTable * contextTable = it->second;
 
-        for(contextTable->contextVariableTable::iterator it2 = contextTable->contextVariableTable ; it2 != contextTable->contextVariableTable.end(); ++it2){
-            delete(it2->second);
+        for (map<string, ContextVariable *>::iterator it2 = contextTable->contextVariableTable.begin(); it2 != contextTable->contextVariableTable.end(); ++it2) {
+            delete (it2->second);
         }
 
-        delete(contextTable);
+        delete (contextTable);
     }
 
 } //----- Fin de ~SymbolTable
@@ -128,24 +128,24 @@ SymbolTable::~SymbolTable(){
 
 //----------------------------------------------------- Méthodes privées
 
-struct ContextVariable* SymbolTable::getVariable(string function, string name, string scope) const {
-    globalFunctionTable::iterator globalFunctionTableIterator = globalFunctionTable.find(function);
-    if(globalFunctionTableIterator == globalFunctionTable.end()) {
-        printError("function "+name+" does not exist in globalFunctionTable");
+struct ContextVariable * SymbolTable::getVariable(string function, string name, string scope) const {
+    map<string, ContextTable *>::const_iterator globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + name + " does not exist in globalFunctionTable");
         return nullptr;
     }
 
-    name = scope+name;
-    ContextTable* contextTable = globalFunctionTableIterator->second;
-    contextTable->contextVariableTable::iterator it = contextTable->contextVariableTable.find(name);
-    if(it == contextTable->contextVariableTable.end()) {
-        printError("variable "+name+" does not exist in contextVariableTable from "+function);
+    name = scope + name;
+    ContextTable * contextTable = globalFunctionTableIterator->second;
+    map<string, ContextVariable *>::iterator it = contextTable->contextVariableTable.find(name);
+    if (it == contextTable->contextVariableTable.end()) {
+        printError("variable " + name + " does not exist in contextVariableTable from " + function);
         return nullptr;
     }
 
     return it->second;
 } //----- Fin de getVariable
 
-void SymbolTable::printError(string error) {
+void SymbolTable::printError(string error) const {
     cerr << error << endl;
 } //----- Fin de printError
