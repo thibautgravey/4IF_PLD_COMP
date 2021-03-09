@@ -1,12 +1,8 @@
-#include <cstdlib>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 #include "ASTGenerator.h"
-#include "antlr4-generated/ifccBaseVisitor.h"
-#include "antlr4-generated/ifccLexer.h"
-#include "antlr4-generated/ifccParser.h"
+#include "ifccLexer.h"
+#include "ifccParser.h"
 #include "antlr4-runtime.h"
 
 #include "ast.h"

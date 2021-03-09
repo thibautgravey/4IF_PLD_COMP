@@ -1,7 +1,7 @@
 #include "ast.h"
 
 //------- Réalisation de la classe <Node> ---
-int Node::GetLine() {
+int Node::GetLine() const {
     return this->line;
 }
 
@@ -13,7 +13,7 @@ string Var::GetName() {
 }
 
 //------- Réalisation de la classe <ConstLiteral> ---
-int ConstLiteral::GetValue() {
+int ConstLiteral::GetValue() const {
     return this->value;
 }
 

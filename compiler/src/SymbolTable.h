@@ -51,22 +51,22 @@ class SymbolTable {
 
   public:
     //----------------------------------------------------- Méthodes publiques
-    bool DefineFunction(string name, Type type);
+    bool DefineFunction(const string& name, Type type);
 
-    bool DefineVariable(string function, string name, Type type, string scope = "");
+    bool DefineVariable(const string& function, const string& name, Type type, const string& scope = "");
 
-    bool LookUp(string function, string name, string scope = "") const;
+    bool LookUp(const string& function, const string& name, const string& scope = "") const;
 
     string CreateTempVar(Type type);
 
-    Type GetVariableType(string function, string name, string scope = "") const;
+    Type GetVariableType(const string& function, const string& name, const string& scope = "") const;
 
-    int GetVariableOffset(string function, string name, string scope = "") const;
+    int GetVariableOffset(const string& function, const string& name, const string& scope = "") const;
 
-    bool IsUsedVariable(string function, string name, string scope = "") const;
+    bool IsUsedVariable(const string& function, const string& name, const string& scope = "") const;
 
     //-------------------------------------------- Constructeurs - destructeur
-    SymbolTable() {}
+    SymbolTable() = default;
     // Mode d'emploi :
     //
     // Contrat :
@@ -78,9 +78,9 @@ class SymbolTable {
 
   protected:
     //----------------------------------------------------- Méthodes privées
-    struct ContextVariable * getVariable(string function, string name, string scope = "") const;
+    struct ContextVariable * getVariable(const string& function, const string& name, const string& scope = "") const;
 
-    void printError(string error) const;
+    static void printError(const string& error) ;
 
     //----------------------------------------------------- Attributs protégés
 

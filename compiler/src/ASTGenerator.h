@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "antlr4-generated/ifccBaseVisitor.h"
+#include "ifccBaseVisitor.h"
 #include "antlr4-runtime.h"
 #include <map>
 

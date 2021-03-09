@@ -1,5 +1,6 @@
 OUTPUT=output
 GENERATED=antlr4-generated
+SOURCES=src
 GRAMMAR=ifcc.g4
 
 #override with your local installation
@@ -16,15 +17,15 @@ LDARGS=-g
 
 all: ifcc
 
-ifcc: dirs antlr  main.cpp ASTGenerator.cpp ASTGenerator.h
-	$(CC) $(CCARGS) main.cpp  -o $(OUTPUT)/main.o
+ifcc: dirs antlr $(SOURCES)/main.cpp $(SOURCES)/ASTGenerator.cpp $(SOURCES)/ASTGenerator.h $(SOURCES)/SymbolTable.cpp $(SOURCES)/SymbolTable.h
+	$(CC) $(CCARGS) $(SOURCES)/main.cpp  -o $(OUTPUT)/main.o
 	$(CC) $(CCARGS) $(GENERATED)/ifccBaseVisitor.cpp -o $(OUTPUT)/ifccBaseVisitor.o
 	$(CC) $(CCARGS) $(GENERATED)/ifccLexer.cpp -o $(OUTPUT)/ifccLexer.o
 	$(CC) $(CCARGS) $(GENERATED)/ifccVisitor.cpp -o $(OUTPUT)/ifccVisitor.o
 	$(CC) $(CCARGS) $(GENERATED)/ifccParser.cpp -o $(OUTPUT)/ifccParser.o
-	$(CC) $(CCARGS) ASTGenerator.cpp -o $(OUTPUT)/ASTGenerator.o
-	$(CC) $(CCARGS) ast.cpp -o $(OUTPUT)/ast.o
-	$(CC) $(CCARGS) SymbolTable.cpp -o $(OUTPUT)/SymbolTable.o
+	$(CC) $(CCARGS) $(SOURCES)/ASTGenerator.cpp -o $(OUTPUT)/ASTGenerator.o
+	$(CC) $(CCARGS) $(SOURCES)/ast.cpp -o $(OUTPUT)/ast.o
+	$(CC) $(CCARGS) $(SOURCES)/SymbolTable.cpp -o $(OUTPUT)/SymbolTable.o
 	$(CC) $(LDARGS) $(OUTPUT)/main.o $(OUTPUT)/ifccBaseVisitor.o $(OUTPUT)/ifccLexer.o $(OUTPUT)/ifccVisitor.o $(OUTPUT)/ifccParser.o $(OUTPUT)/ASTGenerator.o $(OUTPUT)/ast.o $(OUTPUT)/SymbolTable.o $(ANTLR4_LIBDIR)/libantlr4-runtime.a -o ifcc
 
 antlr: $(GRAMMAR)

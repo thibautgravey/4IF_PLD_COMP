@@ -18,7 +18,7 @@ enum BinaryOperator {
 class Node {
   public:
     //----------------------------------------------------- Méthodes publiques
-    int GetLine();
+    int GetLine() const;
     //-------------------------------------------- Constructeurs - destructeur
     Node(int line)
         : line(line){};
@@ -55,7 +55,7 @@ class Var : public Expr {
 class ConstLiteral : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
-    int GetValue();
+    int GetValue() const;
     //-------------------------------------------- Constructeurs - destructeur
     ConstLiteral(int line, int value)
         : Expr(line), value(value){};
