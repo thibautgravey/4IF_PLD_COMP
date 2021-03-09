@@ -21,7 +21,7 @@ using namespace std;
 //------------------------------------------------------------------ Types
 
 enum Type {
-    INT //, BITE, LONG, DOUBLE, CHAR, STRING
+    INT, ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
 };
 
 struct ContextVariable {
@@ -56,7 +56,13 @@ public:
 
     bool LookUp(string function, string name, string scope = "") const;
 
-    struct ContextVariable* GetVariable(string function, string name, string scope = "") const;
+    string CreateTempVar(Type type);
+
+    Type GetVariableType(string function, string name, string scope = "") const;
+
+    int GetVariableOffset(string function, string name, string scope = "") const;
+
+    bool IsUsedVariable(string function, string name, string scope = "") const;
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() {}
@@ -71,8 +77,9 @@ public:
 
 protected:
     //----------------------------------------------------- Méthodes privées
-    void printError(string error);
+    struct ContextVariable* getVariable(string function, string name, string scope = "") const;
 
+    void printError(string error);
 
     //----------------------------------------------------- Attributs protégés
 
