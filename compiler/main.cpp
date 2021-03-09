@@ -7,7 +7,7 @@
 #include "antlr4-generated/ifccLexer.h"
 #include "antlr4-generated/ifccParser.h"
 #include "antlr4-runtime.h"
-#include "visitor.h"
+#include "ASTGenerator.h"
 
 #include "ast.h"
 
@@ -34,17 +34,17 @@ int main(int argn, const char **argv) {
 
     //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST
 
-    Visitor visitor;
+    ASTGenerator astGenerator;
 
-    Program *program = visitor.visit(tree);
+    Program *program = astGenerator.visit(tree);
 
-    // TO DO : detect if there are errors
-    bool visitorError = false;
+    // TODO : detect if there are errors
+    bool astGeneratorError = false;
 
     int lexerErrors = lexer.getNumberOfSyntaxErrors();
     int parserErrors = parser.getNumberOfSyntaxErrors();
 
-    if (lexerErrors || parserErrors || visitorError)
+    if (lexerErrors || parserErrors || astGeneratorError)
         return 1;
 
     //TODO : Create an IR and generate ASM
