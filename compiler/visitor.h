@@ -13,13 +13,13 @@ using namespace std;
 
 typedef struct {
     string type;
-    int *val;
-    int *offset;
+    int * val;
+    int * offset;
 } varInfo;
 
 typedef struct {
     bool isConst;
-    void *value;
+    void * value;
     string varExprName;
 } exprInfo;
 
@@ -30,15 +30,15 @@ typedef struct {
  */
 class Visitor : public ifccBaseVisitor {
   public:
-    virtual antlrcpp::Any visitAxiom(ifccParser::AxiomContext *ctx) override {
+    virtual antlrcpp::Any visitAxiom(ifccParser::AxiomContext * ctx) override {
         return visit(ctx->prog());
     }
 
-    virtual antlrcpp::Any visitProg(ifccParser::ProgContext *ctx) override {
-        Program *program = new Program(ctx->start->getLine());
+    virtual antlrcpp::Any visitProg(ifccParser::ProgContext * ctx) override {
+        Program * program = new Program(ctx->start->getLine());
 
         for (int i = 0; i < ctx->line().size(); i++) {
-            Instr *instr = (Instr *)visit(ctx->line(i));
+            Instr * instr = (Instr *)visit(ctx->line(i));
             if (instr != nullptr) {
                 program->AddInstr(instr);
             }
@@ -115,8 +115,8 @@ class Visitor : public ifccBaseVisitor {
         return program;
     }
 
-    virtual antlrcpp::Any visitLine(ifccParser::LineContext *ctx) override {
-        Instr *instr;
+    virtual antlrcpp::Any visitLine(ifccParser::LineContext * ctx) override {
+        Instr * instr;
         if (ctx->var_aff()) {
             instr = (Instr *)visit(ctx->var_aff());
             //instr = new VarAffInstr(0, ctx->VAR_NAME()->getText(), visit(ctx->expr()));
@@ -130,13 +130,13 @@ class Visitor : public ifccBaseVisitor {
         return instr; // si déclaration aller dans la table des symboles etc...
     }
 
-    virtual antlrcpp::Any visitVar_decl(ifccParser::Var_declContext *ctx) override {
+    virtual antlrcpp::Any visitVar_decl(ifccParser::Var_declContext * ctx) override {
         // TO DO : Ajouter à la table des symboles
 
-        Expr *expr;
+        Expr * expr;
         if (ctx->expr()) {
             expr = (Expr *)visit(ctx->expr());
-            Instr *ret = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+            Instr * ret = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
             return ret;
         }
         return nullptr;
@@ -191,8 +191,8 @@ class Visitor : public ifccBaseVisitor {
         */
     }
 
-    virtual antlrcpp::Any visitVar_aff(ifccParser::Var_affContext *ctx) override {
-        Expr *expr = (Expr *)visit(ctx->expr());
+    virtual antlrcpp::Any visitVar_aff(ifccParser::Var_affContext * ctx) override {
+        Expr * expr = (Expr *)visit(ctx->expr());
         return new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
         /*
         string name = ctx->VAR_NAME()->getText();
@@ -235,18 +235,18 @@ class Visitor : public ifccBaseVisitor {
         */
     }
 
-    virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext *ctx) override {
+    virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext * ctx) override {
         Expr * expr = (Expr *)visit(ctx->expr());
         return new ReturnInstr(ctx->start->getLine(), expr);
     }
 
-    virtual antlrcpp::Any visitPar(ifccParser::ParContext *ctx) override {
+    virtual antlrcpp::Any visitPar(ifccParser::ParContext * ctx) override {
         return (int)visit(ctx->expr());
     }
 
-    virtual antlrcpp::Any visitAdd(ifccParser::AddContext *ctx) override {
-        Expr *op1 = (Expr *)visit(ctx->expr(0));
-        Expr *op2 = (Expr *)visit(ctx->expr(1));
+    virtual antlrcpp::Any visitAdd(ifccParser::AddContext * ctx) override {
+        Expr * op1 = (Expr *)visit(ctx->expr(0));
+        Expr * op2 = (Expr *)visit(ctx->expr(1));
         BinaryOperator binaryOperatorPlus = PLUS;
 
         Expr * ret = new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
@@ -254,10 +254,10 @@ class Visitor : public ifccBaseVisitor {
         return ret;
     }
 
-    virtual antlrcpp::Any visitLess(ifccParser::LessContext *ctx) override {
+    virtual antlrcpp::Any visitLess(ifccParser::LessContext * ctx) override {
         //return (int)visit(ctx->expr(0)) - (int)visit(ctx->expr(1));
-        Expr *op1 = (Expr *)visit(ctx->expr(0));
-        Expr *op2 = (Expr *)visit(ctx->expr(1));
+        Expr * op1 = (Expr *)visit(ctx->expr(0));
+        Expr * op2 = (Expr *)visit(ctx->expr(1));
 
         BinaryOperator binaryOperatorMinus = MINUS;
 
@@ -266,10 +266,10 @@ class Visitor : public ifccBaseVisitor {
         return ret;
     }
 
-    virtual antlrcpp::Any visitDiv(ifccParser::DivContext *ctx) override {
+    virtual antlrcpp::Any visitDiv(ifccParser::DivContext * ctx) override {
         //return (int)visit(ctx->expr(0)) / (int)visit(ctx->expr(1));
-        Expr *op1 = (Expr *)visit(ctx->expr(0));
-        Expr *op2 = (Expr *)visit(ctx->expr(1));
+        Expr * op1 = (Expr *)visit(ctx->expr(0));
+        Expr * op2 = (Expr *)visit(ctx->expr(1));
 
         BinaryOperator binaryOperatorDiv = DIV;
 
@@ -278,9 +278,9 @@ class Visitor : public ifccBaseVisitor {
         return ret;
     }
 
-    virtual antlrcpp::Any visitMult(ifccParser::MultContext *ctx) override {
-        Expr *op1 = (Expr *)visit(ctx->expr(0));
-        Expr *op2 = (Expr *)visit(ctx->expr(1));
+    virtual antlrcpp::Any visitMult(ifccParser::MultContext * ctx) override {
+        Expr * op1 = (Expr *)visit(ctx->expr(0));
+        Expr * op2 = (Expr *)visit(ctx->expr(1));
 
         BinaryOperator binaryOperatorMult = MULT;
 
@@ -360,9 +360,9 @@ class Visitor : public ifccBaseVisitor {
         //return ret;
     }
 
-    virtual antlrcpp::Any visitConst(ifccParser::ConstContext *ctx) override {
+    virtual antlrcpp::Any visitConst(ifccParser::ConstContext * ctx) override {
 
-        Expr *test = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
+        Expr * test = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
 
         return test;
 
@@ -375,7 +375,7 @@ class Visitor : public ifccBaseVisitor {
         */
     }
 
-    virtual antlrcpp::Any visitVar(ifccParser::VarContext *ctx) override {
+    virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override {
         Expr * ret = new Var(ctx->start->getLine(), ctx->getText());
         return ret;
         /*exprInfo ret;
