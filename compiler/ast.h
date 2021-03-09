@@ -69,18 +69,18 @@ class ConstLiteral : public Expr {
 class OpBin : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
-    Expr *GetOperand1();
-    Expr *GetOperand2();
+    Expr * GetOperand1();
+    Expr * GetOperand2();
     BinaryOperator GetOp();
 
     //-------------------------------------------- Constructeurs - destructeur
-    OpBin(int line, Expr *operand1, Expr *operand2, BinaryOperator op)
+    OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
         : Expr(line), operand1(operand1), operand2(operand2), op(op){};
     ~OpBin() {}
 
   protected:
-    Expr *operand1;
-    Expr *operand2;
+    Expr * operand1;
+    Expr * operand2;
     BinaryOperator op;
 };
 
@@ -97,14 +97,14 @@ class Instr : public Node {
 class ReturnInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
-    Expr *GetReturnExpr();
+    Expr * GetReturnExpr();
     //-------------------------------------------- Constructeurs - destructeur
-    ReturnInstr(int line, Expr *expr)
+    ReturnInstr(int line, Expr * expr)
         : Instr(line), returnExpr(expr){};
     ~ReturnInstr() {}
 
   protected:
-    Expr *returnExpr;
+    Expr * returnExpr;
 };
 
 //---------- Interface de la classe <VarAffInstr> ----------------
@@ -112,15 +112,15 @@ class VarAffInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
     string GetName();
-    Expr *GetRightExpr();
+    Expr * GetRightExpr();
     //-------------------------------------------- Constructeurs - destructeur
-    VarAffInstr(int line, string name, Expr *rightExpr)
+    VarAffInstr(int line, string name, Expr * rightExpr)
         : Instr(line), name(name), rightExpr(rightExpr){};
     ~VarAffInstr() {}
 
   protected:
     string name;
-    Expr *rightExpr;
+    Expr * rightExpr;
 };
 
 //---------- Interface de la classe <Program> ----------------
@@ -129,7 +129,7 @@ class Program : public Node {
     //----------------------------------------------------- Méthodes publiques
     vector<Instr *> GetListInstr();
     SymbolTable GetSymbolTable();
-    void AddInstr(Instr *instr);
+    void AddInstr(Instr * instr);
     string GenerateAsm();
     //-------------------------------------------- Constructeurs - destructeur
     Program(int l)

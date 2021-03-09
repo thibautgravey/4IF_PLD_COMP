@@ -18,11 +18,11 @@ int ConstLiteral::GetValue() {
 }
 
 //------- Réalisation de la classe <OpBin> ---
-Expr *OpBin::GetOperand1() {
+Expr * OpBin::GetOperand1() {
     return this->operand1;
 }
 
-Expr *OpBin::GetOperand2() {
+Expr * OpBin::GetOperand2() {
     return this->operand2;
 }
 
@@ -33,7 +33,7 @@ BinaryOperator OpBin::GetOp() {
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
-Expr *ReturnInstr::GetReturnExpr() {
+Expr * ReturnInstr::GetReturnExpr() {
     return this->returnExpr;
 }
 
@@ -42,7 +42,7 @@ string VarAffInstr::GetName() {
     return this->name;
 }
 
-Expr *VarAffInstr::GetRightExpr() {
+Expr * VarAffInstr::GetRightExpr() {
     return this->rightExpr;
 }
 
@@ -51,13 +51,11 @@ vector<Instr *> Program::GetListInstr() {
     return this->listInstr;
 }
 
-
-SymbolTable Program::GetSymbolTable()
-{
+SymbolTable Program::GetSymbolTable() {
     return this->symbolTable;
 }
 
-void Program::AddInstr(Instr *instr) {
+void Program::AddInstr(Instr * instr) {
     this->listInstr.push_back(instr);
 }
 

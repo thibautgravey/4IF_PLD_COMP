@@ -237,7 +237,7 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitReturn_stmt(ifccParser::Return_stmtContext * ctx) override {
         Expr * expr = (Expr *)visit(ctx->expr());
-        Instr* ret = new ReturnInstr(ctx->start->getLine(), expr);
+        Instr * ret = new ReturnInstr(ctx->start->getLine(), expr);
         return ret;
     }
 

@@ -3,18 +3,18 @@
 #include <iostream>
 #include <sstream>
 
+#include "ASTGenerator.h"
 #include "antlr4-generated/ifccBaseVisitor.h"
 #include "antlr4-generated/ifccLexer.h"
 #include "antlr4-generated/ifccParser.h"
 #include "antlr4-runtime.h"
-#include "ASTGenerator.h"
 
 #include "ast.h"
 
 using namespace antlr4;
 using namespace std;
 
-int main(int argn, const char **argv) {
+int main(int argn, const char ** argv) {
     stringstream in;
     if (argn >= 2) {
         ifstream lecture(argv[1]);
@@ -30,13 +30,13 @@ int main(int argn, const char **argv) {
     //  }
 
     ifccParser parser(&tokens);
-    tree::ParseTree *tree = parser.axiom();
+    tree::ParseTree * tree = parser.axiom();
 
     //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST
 
     ASTGenerator astGenerator;
 
-    Program *program = astGenerator.visit(tree);
+    Program * program = astGenerator.visit(tree);
 
     // TODO : detect if there are errors
     bool astGeneratorError = false;
