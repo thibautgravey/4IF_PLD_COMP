@@ -100,6 +100,11 @@ bool SymbolTable::IsUsedVariable(string function, string name, string scope) con
     return variable->used;
 } //----- Fin de IsUsedVariable
 
+string SymbolTable::CreateTempVar(Type type) {
+    //TODO : for treeWalk algorithm later in the PLD
+    return "";
+} //----- Fin de CreateTempVar
+
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable(){
 #ifdef MAP
