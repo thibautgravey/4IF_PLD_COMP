@@ -21,7 +21,7 @@ using namespace std;
 //----------------------------------------------------------------- PUBLIC
 
 //----------------------------------------------------- Méthodes publiques
-bool SymbolTable::DefineFunction(const string& name, Type type) {
+bool SymbolTable::DefineFunction(const string & name, Type type) {
     auto iterator = globalFunctionTable.find(name);
     if (iterator != globalFunctionTable.end()) {
         printError("function " + name + " already exist in globalFunctionTable");
@@ -36,10 +36,10 @@ bool SymbolTable::DefineFunction(const string& name, Type type) {
 
 } //----- Fin de DefineFunction
 
-bool SymbolTable::DefineVariable(const string& function, const string& name, Type type, const string& scope) {
+bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, const string & scope) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
-        printError("function " + name + " does not exist in globalFunctionTable");
+        printError("function " + function + " does not exist in globalFunctionTable");
         return false;
     }
 
@@ -58,7 +58,7 @@ bool SymbolTable::DefineVariable(const string& function, const string& name, Typ
     return true;
 } //----- Fin de DefineVariable
 
-bool SymbolTable::LookUp(const string& function, const string& name, const string& scope) const {
+bool SymbolTable::LookUp(const string & function, const string & name, const string & scope) const {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         return false;
@@ -74,7 +74,7 @@ bool SymbolTable::LookUp(const string& function, const string& name, const strin
     return true;
 } //----- Fin de LookUp
 
-Type SymbolTable::GetVariableType(const string& function, const string& name, const string& scope) const {
+Type SymbolTable::GetVariableType(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable == nullptr) {
         return ERROR;
@@ -83,7 +83,7 @@ Type SymbolTable::GetVariableType(const string& function, const string& name, co
     return variable->type;
 } //----- Fin de GetVariableType
 
-int SymbolTable::GetVariableOffset(const string& function, const string& name, const string& scope) const {
+int SymbolTable::GetVariableOffset(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable == nullptr) {
         return -1;
@@ -92,7 +92,7 @@ int SymbolTable::GetVariableOffset(const string& function, const string& name, c
     return variable->offset;
 } //----- Fin de GetVariableOffset
 
-bool SymbolTable::IsUsedVariable(const string& function, const string& name, const string& scope) const {
+bool SymbolTable::IsUsedVariable(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable == nullptr) {
         return false;
@@ -129,7 +129,7 @@ SymbolTable::~SymbolTable() {
 
 //----------------------------------------------------- Méthodes privées
 
-struct ContextVariable * SymbolTable::getVariable(const string& function, const string& name, const string& scope) const {
+struct ContextVariable * SymbolTable::getVariable(const string & function, const string & name, const string & scope) const {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         printError("function " + name + " does not exist in globalFunctionTable");
@@ -147,6 +147,6 @@ struct ContextVariable * SymbolTable::getVariable(const string& function, const 
     return it->second;
 } //----- Fin de getVariable
 
-void SymbolTable::printError(const string& error) {
+void SymbolTable::printError(const string & error) {
     cerr << error << endl;
 } //----- Fin de printError

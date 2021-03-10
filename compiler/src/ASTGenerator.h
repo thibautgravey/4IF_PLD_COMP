@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "ifccBaseVisitor.h"
 #include "antlr4-runtime.h"
+#include "ifccBaseVisitor.h"
 #include <map>
 
 #include "ast.h"
@@ -35,7 +35,8 @@ class ASTGenerator : public ifccBaseVisitor {
     }
 
     virtual antlrcpp::Any visitProg(ifccParser::ProgContext * ctx) override {
-        Program * program = new Program(ctx->start->getLine());
+        program = new Program(ctx->start->getLine());
+        program->GetSymbolTable().DefineFunction("main", INT);
 
         for (int i = 0; i < ctx->line().size(); i++) {
             Instr * instr = (Instr *)visit(ctx->line(i));
@@ -131,15 +132,18 @@ class ASTGenerator : public ifccBaseVisitor {
     }
 
     virtual antlrcpp::Any visitVar_decl(ifccParser::Var_declContext * ctx) override {
-        // TO DO : Ajouter à la table des symboles
-
-        Expr * expr;
-        if (ctx->expr()) {
-            expr = (Expr *)visit(ctx->expr());
-            Instr * ret = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
-            return ret;
+        Instr * ret = nullptr;
+        if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT)) {
+            Expr * expr;
+            if (ctx->expr()) {
+                expr = (Expr *)visit(ctx->expr());
+                ret = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+            }
+        } else {
+            program->SetErrorFlag(true);
         }
-        return nullptr;
+
+        return ret;
         /*
         string type = ctx->TYPE()->getText();
         string name = ctx->VAR_NAME()->getText();
@@ -377,8 +381,16 @@ class ASTGenerator : public ifccBaseVisitor {
     }
 
     virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override {
-        Expr * ret = new Var(ctx->start->getLine(), ctx->getText());
+        Expr * ret = nullptr;
+        if (program->GetSymbolTable().LookUp("main", ctx->VAR_NAME()->getText())) {
+            ret = new Var(ctx->start->getLine(), ctx->VAR_NAME()->getText());
+        } else {
+            program->SetErrorFlag(true);
+            cerr << "variable " + ctx->VAR_NAME()->getText() + " does not exist in contextVariableTable from " + "main";
+        }
+
         return ret;
+
         /*exprInfo ret;
         ret.isConst = false;
         string varName = ctx->VAR_NAME()->getText();
@@ -410,4 +422,5 @@ class ASTGenerator : public ifccBaseVisitor {
     string assembly;
     string assemblyTmpBuf;
     bool hasError = false;
+    Program * program;
 };

@@ -1,9 +1,9 @@
 #include <iostream>
 
 #include "ASTGenerator.h"
+#include "antlr4-runtime.h"
 #include "ifccLexer.h"
 #include "ifccParser.h"
-#include "antlr4-runtime.h"
 
 #include "ast.h"
 
@@ -34,16 +34,14 @@ int main(int argn, const char ** argv) {
 
     Program * program = astGenerator.visit(tree);
 
-    // TODO : detect if there are errors
-    bool astGeneratorError = false;
-
     int lexerErrors = lexer.getNumberOfSyntaxErrors();
     int parserErrors = parser.getNumberOfSyntaxErrors();
 
-    if (lexerErrors || parserErrors || astGeneratorError)
+    if (lexerErrors || parserErrors || program->GetErrorFlag())
         return 1;
 
     //TODO : Create an IR and generate ASM
+    cout << program->GenerateAsm();
 
     //Create the output path
     string outPath(argv[1]);

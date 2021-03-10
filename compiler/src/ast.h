@@ -22,7 +22,7 @@ class Node {
     //-------------------------------------------- Constructeurs - destructeur
     Node(int line)
         : line(line){};
-    ~Node() {}
+    virtual ~Node() {}
 
   protected:
     int line;
@@ -34,7 +34,7 @@ class Expr : public Node {
     //-------------------------------------------- Constructeurs - destructeur
     Expr(int line)
         : Node(line){};
-    ~Expr() {}
+    virtual ~Expr() {}
 };
 
 //---------- Interface de la classe <Var> ----------------
@@ -45,7 +45,7 @@ class Var : public Expr {
     //-------------------------------------------- Constructeurs - destructeur
     Var(int line, string name)
         : Expr(line), name(name){};
-    ~Var() {}
+    virtual ~Var() {}
 
   protected:
     string name;
@@ -59,7 +59,7 @@ class ConstLiteral : public Expr {
     //-------------------------------------------- Constructeurs - destructeur
     ConstLiteral(int line, int value)
         : Expr(line), value(value){};
-    ~ConstLiteral() {}
+    virtual ~ConstLiteral() {}
 
   protected:
     int value;
@@ -76,7 +76,7 @@ class OpBin : public Expr {
     //-------------------------------------------- Constructeurs - destructeur
     OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
         : Expr(line), operand1(operand1), operand2(operand2), op(op){};
-    ~OpBin() {}
+    virtual ~OpBin() {}
 
   protected:
     Expr * operand1;
@@ -87,10 +87,12 @@ class OpBin : public Expr {
 //---------- Interface de la classe <Instr> ----------------
 class Instr : public Node {
   public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual string GenerateAsm(SymbolTable & symbolTable) = 0;
     //-------------------------------------------- Constructeurs - destructeur
     Instr(int line)
         : Node(line){};
-    ~Instr() {}
+    virtual ~Instr() {}
 };
 
 //---------- Interface de la classe <ReturnInstr> ----------------
@@ -98,10 +100,11 @@ class ReturnInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
     Expr * GetReturnExpr();
+    virtual string GenerateAsm(SymbolTable & symbolTable);
     //-------------------------------------------- Constructeurs - destructeur
     ReturnInstr(int line, Expr * expr)
         : Instr(line), returnExpr(expr){};
-    ~ReturnInstr() {}
+    virtual ~ReturnInstr() {}
 
   protected:
     Expr * returnExpr;
@@ -113,10 +116,11 @@ class VarAffInstr : public Instr {
     //----------------------------------------------------- Méthodes publiques
     string GetName();
     Expr * GetRightExpr();
+    virtual string GenerateAsm(SymbolTable & symbolTable);
     //-------------------------------------------- Constructeurs - destructeur
     VarAffInstr(int line, string name, Expr * rightExpr)
         : Instr(line), name(name), rightExpr(rightExpr){};
-    ~VarAffInstr() {}
+    virtual ~VarAffInstr() {}
 
   protected:
     string name;
@@ -128,17 +132,20 @@ class Program : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     vector<Instr *> GetListInstr();
-    SymbolTable GetSymbolTable();
+    SymbolTable & GetSymbolTable();
     void AddInstr(Instr * instr);
     string GenerateAsm();
+    void SetErrorFlag(bool flag);
+    bool GetErrorFlag();
     //-------------------------------------------- Constructeurs - destructeur
     Program(int l)
         : Node(l) {}
-    ~Program() {}
+    virtual ~Program() {}
 
   protected:
     vector<Instr *> listInstr;
     SymbolTable symbolTable;
+    bool errorFlag;
 };
 
 #endif
