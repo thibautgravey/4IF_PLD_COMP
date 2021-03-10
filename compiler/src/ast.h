@@ -72,6 +72,7 @@ class OpBin : public Expr {
     Expr * GetOperand1();
     Expr * GetOperand2();
     BinaryOperator GetOp();
+    string GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly);
 
     //-------------------------------------------- Constructeurs - destructeur
     OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)

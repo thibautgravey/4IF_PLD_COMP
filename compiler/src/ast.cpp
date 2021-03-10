@@ -30,6 +30,55 @@ BinaryOperator OpBin::GetOp() {
     return this->op;
 }
 
+string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
+    string tmpVar1;
+    string tmpVar2;
+
+    if (dynamic_cast<OpBin *>(operand1)) {
+        OpBin * opBin = dynamic_cast<OpBin *>(operand1);
+        tmpVar1 = opBin->GenerateAsmOpBin(symbolTable, assembly);
+
+    } else if (dynamic_cast<ConstLiteral *>(operand1)) {
+        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand1);
+        tmpVar1 = symbolTable.CreateTempVar(INT);
+        assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
+
+    } else if (dynamic_cast<Var *>(operand1)) {
+        Var * var = dynamic_cast<Var *>(operand1);
+        tmpVar1 = var->GetName();
+    }
+
+    if (dynamic_cast<OpBin *>(operand2)) {
+        OpBin * opBin = dynamic_cast<OpBin *>(operand2);
+        tmpVar2 = opBin->GenerateAsmOpBin(symbolTable, assembly);
+
+    } else if (dynamic_cast<ConstLiteral *>(operand2)) {
+        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand2);
+        tmpVar2 = symbolTable.CreateTempVar(INT);
+        assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp)\n";
+
+    } else if (dynamic_cast<Var *>(operand2)) {
+        Var * var = dynamic_cast<Var *>(operand2);
+        tmpVar2 = var->GetName();
+    }
+
+    string tmpVarRes = symbolTable.CreateTempVar(INT);
+    assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
+
+    switch (op) {
+    case PLUS:
+        assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+        break;
+    case MULT:
+        assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+        break;
+    }
+
+    assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
+
+    return tmpVarRes;
+}
+
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
@@ -79,6 +128,12 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
                          "(%rbp)\n";
     } else if (dynamic_cast<OpBin *>(rightExpr)) {
         OpBin * opBin = dynamic_cast<OpBin *>(rightExpr);
+        string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
+        instrAssembly += "   movl " +
+                         to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
+                         "(%rbp), " +
+                         to_string(symbolTable.GetVariableOffset("main", name)) +
+                         "(%rbp)\n";
     }
 
     return instrAssembly;
