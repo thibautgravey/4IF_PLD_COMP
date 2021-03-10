@@ -37,12 +37,8 @@ tests/pld-test-output
 compiler/antlr4-generated
 
 #### VSCode ####
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
+.vscode
+.code-workspace
 
 # Local History for Visual Studio Code
 .history/
