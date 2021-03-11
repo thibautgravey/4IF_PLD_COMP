@@ -51,8 +51,11 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
         return false;
     }
 
+    decreaseContextOffset(function);
+
     ContextVariable * contextVariable = new ContextVariable;
     contextVariable->type = type;
+    contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
     contextTable->contextVariableTable.insert(make_pair(completeName, contextVariable));
 
     return true;
@@ -110,12 +113,13 @@ string SymbolTable::CreateTempVar(const string & function, Type type) {
 
     decreaseContextOffset(function);
 
-    string completeName = "tmp" + to_string(globalFunctionTableIterator->second->offsetContext);
+    string completeName = "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
 
     ContextTable * contextTable = globalFunctionTableIterator->second;
 
     ContextVariable * contextVariable = new ContextVariable;
     contextVariable->type = type;
+    contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
     contextTable->contextVariableTable.insert(make_pair(completeName, contextVariable));
 
     return completeName;
@@ -163,11 +167,8 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
 } //----- Fin de getVariable
 
 void SymbolTable::decreaseContextOffset(const string & function) {
+    // In this function, we've already check the existence of the function
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
-    if (globalFunctionTableIterator == globalFunctionTable.end()) {
-        printError("function " + function + " does not exist in globalFunctionTable");
-    }
-
     globalFunctionTableIterator->second->offsetContext -= 8;
 } //----- Fin de decreaseContextOffset
 
