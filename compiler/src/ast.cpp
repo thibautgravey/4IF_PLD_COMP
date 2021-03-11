@@ -102,6 +102,10 @@ string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
         instrAssembly = "   movl " + to_string(symbolTable.GetVariableOffset("main", var->GetName())) + "(%rbp), %eax\n";
     } else if (dynamic_cast<OpBin *>(returnExpr)) {
         OpBin * opBin = dynamic_cast<OpBin *>(returnExpr);
+        string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
+        instrAssembly += "   movl " +
+                         to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
+                         "(%rbp), %eax\n";
     }
     return instrAssembly;
 }
