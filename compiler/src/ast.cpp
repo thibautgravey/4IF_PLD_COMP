@@ -66,12 +66,18 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
     assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
 
     switch (op) {
-    case PLUS:
-        assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-        break;
-    case MULT:
-        assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-        break;
+        case PLUS:
+            assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+            break;
+        case MULT:
+            assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+            break;
+        case MINUS:
+            //TODO : Minus op
+            break;
+        case DIV:
+            //TODO : Div op
+            break;
     }
 
     assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
