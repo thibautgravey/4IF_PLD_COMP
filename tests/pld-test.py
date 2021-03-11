@@ -217,7 +217,7 @@ for jobname in jobs:
         ## padawan accepts to compile valid program -> let's link it
         ldstatus=command("gcc -o exe-pld asm-pld.s", "pld-link.txt")
         if ldstatus:
-            print(OK_COLOR + "TEST FAIL (your compiler produces incorrect assembly)" + END_COLOR)
+            print(FAIL_COLOR + "TEST FAIL (your compiler produces incorrect assembly)" + END_COLOR)
             if args.verbose:
                 dumpfile("pld-link.txt")
             continue
