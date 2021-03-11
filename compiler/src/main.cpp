@@ -57,11 +57,10 @@ int main(int argn, const char ** argv) {
     outPath.append(".s");
 
     ofstream out(outPath);
-    if(out.bad()) {
-        cout << "An error occured when writing Generated ASM to "+outPath << endl;
+    if (out.bad()) {
+        cerr << "An error occured when writing Generated ASM to " + outPath << endl;
     } else {
         out << generatedAsm;
-        cout << "Generated ASM has been written to "+outPath << endl;
     }
 
     out.close();
