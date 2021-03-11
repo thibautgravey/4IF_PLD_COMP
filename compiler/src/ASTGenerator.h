@@ -246,7 +246,7 @@ class ASTGenerator : public ifccBaseVisitor {
     }
 
     virtual antlrcpp::Any visitPar(ifccParser::ParContext * ctx) override {
-        return (int)visit(ctx->expr());
+        return visit(ctx->expr());
     }
 
     virtual antlrcpp::Any visitAdd(ifccParser::AddContext * ctx) override {
