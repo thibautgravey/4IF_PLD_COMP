@@ -17,11 +17,11 @@ return_stmt: 'return' expr ';' ;
 
 expr: CONST #const
     | VAR_NAME #var
-    | expr '+' expr # add
-    | expr '-' expr # less
-    | expr '*' expr # mult
-    | expr '/' expr # div
     | '(' expr ')' # par
+    | expr '/' expr # div
+    | expr '*' expr # mult
+    | expr '-' expr # less
+    | expr '+' expr # add
 ;
 
 TYPE : 'int' ;
