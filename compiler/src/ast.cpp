@@ -73,7 +73,7 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
             assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
             break;
         case MINUS:
-            //TODO : Minus op
+            assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
             break;
         case DIV:
             //TODO : Div op
