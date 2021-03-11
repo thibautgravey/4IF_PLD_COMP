@@ -40,7 +40,7 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
 
     } else if (dynamic_cast<ConstLiteral *>(operand1)) {
         ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand1);
-        tmpVar1 = symbolTable.CreateTempVar(INT);
+        tmpVar1 = symbolTable.CreateTempVar("main",INT);
         assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
 
     } else if (dynamic_cast<Var *>(operand1)) {
@@ -54,7 +54,7 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
 
     } else if (dynamic_cast<ConstLiteral *>(operand2)) {
         ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand2);
-        tmpVar2 = symbolTable.CreateTempVar(INT);
+        tmpVar2 = symbolTable.CreateTempVar("main",INT);
         assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp)\n";
 
     } else if (dynamic_cast<Var *>(operand2)) {
@@ -62,7 +62,7 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
         tmpVar2 = var->GetName();
     }
 
-    string tmpVarRes = symbolTable.CreateTempVar(INT);
+    string tmpVarRes = symbolTable.CreateTempVar("main",INT);
     assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
 
     switch (op) {
