@@ -137,7 +137,8 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
         string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
         instrAssembly += "   movl " +
                          to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
-                         "(%rbp), " +
+                         "(%rbp), %eax\n";
+        instrAssembly += "   movl %eax, " +
                          to_string(symbolTable.GetVariableOffset("main", name)) +
                          "(%rbp)\n";
     }
