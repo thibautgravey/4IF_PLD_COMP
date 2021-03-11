@@ -51,7 +51,7 @@ int main(int argn, const char ** argv) {
     }
 
     size_t dotPosition = outPath.find('.');
-    if(dotPosition!=string::npos){
+    if (dotPosition != string::npos) {
         outPath.erase(outPath.find('.'));
     }
     outPath.append(".s");
