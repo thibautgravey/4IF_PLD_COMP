@@ -169,7 +169,7 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
 void SymbolTable::decreaseContextOffset(const string & function) {
     // In this function, we've already check the existence of the function
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
-    globalFunctionTableIterator->second->offsetContext -= 8;
+    globalFunctionTableIterator->second->offsetContext -= 4;
 } //----- Fin de decreaseContextOffset
 
 void SymbolTable::printError(const string & error) {
