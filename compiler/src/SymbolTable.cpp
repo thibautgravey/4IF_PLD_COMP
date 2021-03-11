@@ -101,9 +101,24 @@ bool SymbolTable::IsUsedVariable(const string & function, const string & name, c
     return variable->used;
 } //----- Fin de IsUsedVariable
 
-string SymbolTable::CreateTempVar(Type type) {
-    //TODO : for treeWalk algorithm later in the PLD
-    return "";
+string SymbolTable::CreateTempVar(const string & function, Type type) {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + function + " does not exist in globalFunctionTable");
+        return "";
+    }
+
+    decreaseContextOffset(function);
+
+    string completeName = "tmp" + to_string(globalFunctionTableIterator->second->offsetContext);
+
+    ContextTable * contextTable = globalFunctionTableIterator->second;
+
+    ContextVariable * contextVariable = new ContextVariable;
+    contextVariable->type = type;
+    contextTable->contextVariableTable.insert(make_pair(completeName, contextVariable));
+
+    return completeName;
 } //----- Fin de CreateTempVar
 
 //-------------------------------------------- Constructeurs - destructeur
@@ -132,7 +147,7 @@ SymbolTable::~SymbolTable() {
 struct ContextVariable * SymbolTable::getVariable(const string & function, const string & name, const string & scope) const {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
-        printError("function " + name + " does not exist in globalFunctionTable");
+        printError("function " + function + " does not exist in globalFunctionTable");
         return nullptr;
     }
 
@@ -146,6 +161,15 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
 
     return it->second;
 } //----- Fin de getVariable
+
+void SymbolTable::decreaseContextOffset(const string & function) {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + function + " does not exist in globalFunctionTable");
+    }
+
+    globalFunctionTableIterator->second->offsetContext -= 8;
+} //----- Fin de decreaseContextOffset
 
 void SymbolTable::printError(const string & error) {
     cerr << error << endl;

@@ -57,7 +57,7 @@ class SymbolTable {
 
     bool LookUp(const string& function, const string& name, const string& scope = "") const;
 
-    string CreateTempVar(Type type);
+    string CreateTempVar(const string& function, Type type);
 
     Type GetVariableType(const string& function, const string& name, const string& scope = "") const;
 
@@ -79,6 +79,8 @@ class SymbolTable {
   protected:
     //----------------------------------------------------- Méthodes privées
     struct ContextVariable * getVariable(const string& function, const string& name, const string& scope = "") const;
+
+    void decreaseContextOffset(const string& function);
 
     static void printError(const string& error) ;
 
