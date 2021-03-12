@@ -28,11 +28,17 @@ int main(int argn, const char ** argv) {
     ifccParser parser(&tokens);
     tree::ParseTree * tree = parser.axiom();
 
-    //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST
+    //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST with first static analysis
 
     ASTGenerator astGenerator;
 
     Program * program = astGenerator.visit(tree);
+
+    //TODO : Other static analysis
+
+    program->UnusedVariableAnalysis();
+
+    //TODO : Check error
 
     int lexerErrors = lexer.getNumberOfSyntaxErrors();
     int parserErrors = parser.getNumberOfSyntaxErrors();

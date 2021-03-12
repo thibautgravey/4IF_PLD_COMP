@@ -21,7 +21,7 @@ using namespace std;
 //----------------------------------------------------------------- PUBLIC
 
 //----------------------------------------------------- Méthodes publiques
-bool SymbolTable::DefineFunction(const string & name, Type type) {
+bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLine) {
     auto iterator = globalFunctionTable.find(name);
     if (iterator != globalFunctionTable.end()) {
         printError("function " + name + " already exist in globalFunctionTable");
@@ -30,13 +30,14 @@ bool SymbolTable::DefineFunction(const string & name, Type type) {
 
     ContextTable * contextTable = new ContextTable;
     contextTable->returnType = type;
+    contextTable->declaredLine = declaredLine;
     globalFunctionTable.insert(make_pair(name, contextTable));
 
     return true;
 
 } //----- Fin de DefineFunction
 
-bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, const string & scope) {
+bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         printError("function " + function + " does not exist in globalFunctionTable");
@@ -55,6 +56,7 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
 
     ContextVariable * contextVariable = new ContextVariable;
     contextVariable->type = type;
+    contextVariable->declaredLine = declaredLine;
     contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
     contextTable->contextVariableTable.insert(make_pair(completeName, contextVariable));
 
@@ -171,6 +173,23 @@ void SymbolTable::decreaseContextOffset(const string & function) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     globalFunctionTableIterator->second->offsetContext -= 4;
 } //----- Fin de decreaseContextOffset
+
+
+void SymbolTable::UnusedVariableAnalysis() const {
+    for (const auto & function : globalFunctionTable) {
+
+        map<string, ContextVariable *> contextVariables = function.second->contextVariableTable;
+
+        for (auto & contextVariable : contextVariables) {
+
+            if (!contextVariable.second->used) {
+                printError("WARN : variable " + contextVariable.first + " is declared at line " + to_string(contextVariable.second->declaredLine) + " but never used in the program");
+            }
+
+        }
+    }
+} //----- Fin de UnusedVariableAnalysis
+
 
 void SymbolTable::printError(const string & error) {
     cerr << error << endl;

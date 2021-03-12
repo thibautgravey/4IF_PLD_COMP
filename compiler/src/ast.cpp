@@ -157,11 +157,11 @@ vector<Instr *> Program::GetListInstr() {
 
 SymbolTable & Program::GetSymbolTable() {
     return this->symbolTable;
-}
+} //----- Fin de GetSymbolTable
 
 void Program::AddInstr(Instr * instr) {
     this->listInstr.push_back(instr);
-}
+} //----- Fin de AddInstr
 
 string Program::GenerateAsm() {
     string assembly = "   .globl main\n"
@@ -185,12 +185,16 @@ string Program::GenerateAsm() {
                 "   ret\n";
 
     return assembly;
-}
+} //----- Fin de GenerateAsm
+
+void Program::UnusedVariableAnalysis() const {
+    this->symbolTable.UnusedVariableAnalysis();
+} //----- Fin de UnusedVariableAnalysis
 
 void Program::SetErrorFlag(bool flag) {
     this->errorFlag = flag;
-}
+} //----- Fin de SetErrorFlag
 
 bool Program::GetErrorFlag() {
     return this->errorFlag;
-}
+} //----- Fin de GetErrorFlag

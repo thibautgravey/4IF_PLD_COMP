@@ -136,6 +136,7 @@ class Program : public Node {
     SymbolTable & GetSymbolTable();
     void AddInstr(Instr * instr);
     string GenerateAsm();
+    void UnusedVariableAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();
     //-------------------------------------------- Constructeurs - destructeur

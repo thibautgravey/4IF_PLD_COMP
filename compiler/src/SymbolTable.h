@@ -27,12 +27,14 @@ enum Type {
 
 struct ContextVariable {
     Type type;
+    int declaredLine;
     int offset = 0;
     bool used = false;
 };
 
 struct ContextTable {
     map<string, ContextVariable *> contextVariableTable;
+    int declaredLine;
     int offsetContext = 0;
     Type returnType;
 };
@@ -51,9 +53,9 @@ class SymbolTable {
 
   public:
     //----------------------------------------------------- Méthodes publiques
-    bool DefineFunction(const string& name, Type type);
+    bool DefineFunction(const string& name, Type type, int declaredLine);
 
-    bool DefineVariable(const string& function, const string& name, Type type, const string& scope = "");
+    bool DefineVariable(const string& function, const string& name, Type type, int declaredLine, const string& scope = "");
 
     bool LookUp(const string& function, const string& name, const string& scope = "") const;
 
@@ -64,6 +66,8 @@ class SymbolTable {
     int GetVariableOffset(const string& function, const string& name, const string& scope = "") const;
 
     bool IsUsedVariable(const string& function, const string& name, const string& scope = "") const;
+
+    void UnusedVariableAnalysis() const;
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;

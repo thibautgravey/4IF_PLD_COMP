@@ -36,7 +36,7 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitProg(ifccParser::ProgContext * ctx) override {
         program = new Program(ctx->start->getLine());
-        program->GetSymbolTable().DefineFunction("main", INT);
+        program->GetSymbolTable().DefineFunction("main", INT, ctx->start->getLine());
 
         for (int i = 0; i < ctx->line().size(); i++) {
             Instr * instr = (Instr *)visit(ctx->line(i));
@@ -133,7 +133,7 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitVar_decl(ifccParser::Var_declContext * ctx) override {
         Instr * ret = nullptr;
-        if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT)) {
+        if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
             Expr * expr;
             if (ctx->expr()) {
                 expr = (Expr *)visit(ctx->expr());
