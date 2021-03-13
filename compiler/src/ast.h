@@ -22,7 +22,8 @@ class Node {
     //-------------------------------------------- Constructeurs - destructeur
     Node(int line)
         : line(line){};
-    virtual ~Node() {}
+
+    virtual ~Node() = default;
 
   protected:
     int line;
@@ -34,7 +35,8 @@ class Expr : public Node {
     //-------------------------------------------- Constructeurs - destructeur
     Expr(int line)
         : Node(line){};
-    virtual ~Expr() {}
+
+    virtual ~Expr() = default;
 };
 
 //---------- Interface de la classe <Var> ----------------
@@ -45,7 +47,8 @@ class Var : public Expr {
     //-------------------------------------------- Constructeurs - destructeur
     Var(int line, string name)
         : Expr(line), name(name){};
-    virtual ~Var() {}
+
+    virtual ~Var() = default;
 
   protected:
     string name;
@@ -59,7 +62,8 @@ class ConstLiteral : public Expr {
     //-------------------------------------------- Constructeurs - destructeur
     ConstLiteral(int line, int value)
         : Expr(line), value(value){};
-    virtual ~ConstLiteral() {}
+
+    virtual ~ConstLiteral() = default;
 
   protected:
     int value;
@@ -77,7 +81,8 @@ class OpBin : public Expr {
     //-------------------------------------------- Constructeurs - destructeur
     OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
         : Expr(line), operand1(operand1), operand2(operand2), op(op){};
-    virtual ~OpBin() {}
+
+    virtual ~OpBin();
 
   protected:
     Expr * operand1;
@@ -93,7 +98,8 @@ class Instr : public Node {
     //-------------------------------------------- Constructeurs - destructeur
     Instr(int line)
         : Node(line){};
-    virtual ~Instr() {}
+
+    virtual ~Instr() = default;
 };
 
 //---------- Interface de la classe <ReturnInstr> ----------------
@@ -105,7 +111,8 @@ class ReturnInstr : public Instr {
     //-------------------------------------------- Constructeurs - destructeur
     ReturnInstr(int line, Expr * expr)
         : Instr(line), returnExpr(expr){};
-    virtual ~ReturnInstr() {}
+
+    virtual ~ReturnInstr();
 
   protected:
     Expr * returnExpr;
@@ -121,7 +128,8 @@ class VarAffInstr : public Instr {
     //-------------------------------------------- Constructeurs - destructeur
     VarAffInstr(int line, string name, Expr * rightExpr)
         : Instr(line), name(name), rightExpr(rightExpr){};
-    virtual ~VarAffInstr() {}
+
+    virtual ~VarAffInstr();
 
   protected:
     string name;
@@ -141,8 +149,9 @@ class Program : public Node {
     bool GetErrorFlag();
     //-------------------------------------------- Constructeurs - destructeur
     Program(int l)
-        : Node(l) {}
-    virtual ~Program() {}
+        : Node(l), errorFlag(false) {}
+
+    virtual ~Program();
 
   protected:
     vector<Instr *> listInstr;

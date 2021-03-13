@@ -85,6 +85,11 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
     return tmpVarRes;
 }
 
+OpBin::~OpBin() {
+    delete(operand1);
+    delete(operand2);
+}
+
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
@@ -108,6 +113,10 @@ string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
                          "(%rbp), %eax\n";
     }
     return instrAssembly;
+}
+
+ReturnInstr::~ReturnInstr() {
+    delete(returnExpr);
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -148,6 +157,10 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
     }
 
     return instrAssembly;
+}
+
+VarAffInstr::~VarAffInstr() {
+    delete(rightExpr);
 }
 
 //------- Réalisation de la classe <Program> ---
@@ -212,3 +225,9 @@ void Program::SetErrorFlag(bool flag) {
 bool Program::GetErrorFlag() {
     return this->errorFlag;
 } //----- Fin de GetErrorFlag
+
+Program::~Program() {
+    for(const auto& instr: listInstr) {
+        delete(instr);
+    }
+} //----- Fin de ~Program
