@@ -384,6 +384,7 @@ class ASTGenerator : public ifccBaseVisitor {
         Expr * ret = nullptr;
         if (program->GetSymbolTable().LookUp("main", ctx->VAR_NAME()->getText())) {
             ret = new Var(ctx->start->getLine(), ctx->VAR_NAME()->getText());
+            program->GetSymbolTable().SetUsedVariable("main", ctx->VAR_NAME()->getText());
         } else {
             program->SetErrorFlag(true);
             cerr << "variable " + ctx->VAR_NAME()->getText() + " does not exist in contextVariableTable from " + "main";

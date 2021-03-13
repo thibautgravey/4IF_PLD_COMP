@@ -127,6 +127,13 @@ string SymbolTable::CreateTempVar(const string & function, Type type) {
     return completeName;
 } //----- Fin de CreateTempVar
 
+void SymbolTable::SetUsedVariable(const string & function, const string & name, const string & scope) {
+    ContextVariable * variable = getVariable(function, name, scope);
+    if (variable != nullptr) {
+        variable->used = true;
+    }
+}
+
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable() {
 #ifdef MAP

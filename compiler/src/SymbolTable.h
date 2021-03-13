@@ -69,6 +69,8 @@ class SymbolTable {
 
     void UnusedVariableAnalysis() const;
 
+    void SetUsedVariable(const string & function, const string & name, const string & scope = "");
+
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;
     // Mode d'emploi :
