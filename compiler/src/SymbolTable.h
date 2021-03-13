@@ -39,8 +39,6 @@ struct ContextTable {
     Type returnType;
 };
 
-// struct function {} ?
-
 //------------------------------------------------------------------------
 // Rôle de la classe <SymbolTable>
 // Classe modélisant un SymbolTable défini par une table de fonctions

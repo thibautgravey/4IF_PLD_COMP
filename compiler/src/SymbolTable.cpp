@@ -127,6 +127,20 @@ string SymbolTable::CreateTempVar(const string & function, Type type) {
     return completeName;
 } //----- Fin de CreateTempVar
 
+void SymbolTable::UnusedVariableAnalysis() const {
+    for (const auto & function : globalFunctionTable) {
+
+        map<string, ContextVariable *> contextVariables = function.second->contextVariableTable;
+
+        for (auto & contextVariable : contextVariables) {
+
+            if (!contextVariable.second->used) {
+                printError("WARN : variable " + contextVariable.first + " is declared at line " + to_string(contextVariable.second->declaredLine) + " but never used in the program");
+            }
+        }
+    }
+} //----- Fin de UnusedVariableAnalysis
+
 void SymbolTable::SetUsedVariable(const string & function, const string & name, const string & scope) {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable != nullptr) {
@@ -191,20 +205,6 @@ void SymbolTable::decreaseContextOffset(const string & function) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     globalFunctionTableIterator->second->offsetContext -= 4;
 } //----- Fin de decreaseContextOffset
-
-void SymbolTable::UnusedVariableAnalysis() const {
-    for (const auto & function : globalFunctionTable) {
-
-        map<string, ContextVariable *> contextVariables = function.second->contextVariableTable;
-
-        for (auto & contextVariable : contextVariables) {
-
-            if (!contextVariable.second->used) {
-                printError("WARN : variable " + contextVariable.first + " is declared at line " + to_string(contextVariable.second->declaredLine) + " but never used in the program");
-            }
-        }
-    }
-} //----- Fin de UnusedVariableAnalysis
 
 void SymbolTable::printError(const string & error) {
     cerr << error << endl;
