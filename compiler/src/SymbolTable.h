@@ -53,19 +53,19 @@ class SymbolTable {
 
   public:
     //----------------------------------------------------- Méthodes publiques
-    bool DefineFunction(const string& name, Type type, int declaredLine);
+    bool DefineFunction(const string & name, Type type, int declaredLine);
 
-    bool DefineVariable(const string& function, const string& name, Type type, int declaredLine, const string& scope = "");
+    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope = "");
 
-    bool LookUp(const string& function, const string& name, const string& scope = "") const;
+    bool LookUp(const string & function, const string & name, const string & scope = "") const;
 
-    string CreateTempVar(const string& function, Type type);
+    string CreateTempVar(const string & function, Type type);
 
-    Type GetVariableType(const string& function, const string& name, const string& scope = "") const;
+    Type GetVariableType(const string & function, const string & name, const string & scope = "") const;
 
-    int GetVariableOffset(const string& function, const string& name, const string& scope = "") const;
+    int GetVariableOffset(const string & function, const string & name, const string & scope = "") const;
 
-    bool IsUsedVariable(const string& function, const string& name, const string& scope = "") const;
+    bool IsUsedVariable(const string & function, const string & name, const string & scope = "") const;
 
     void UnusedVariableAnalysis() const;
 
@@ -84,11 +84,11 @@ class SymbolTable {
 
   protected:
     //----------------------------------------------------- Méthodes privées
-    struct ContextVariable * getVariable(const string& function, const string& name, const string& scope = "") const;
+    struct ContextVariable * getVariable(const string & function, const string & name, const string & scope = "") const;
 
-    void decreaseContextOffset(const string& function);
+    void decreaseContextOffset(const string & function);
 
-    static void printError(const string& error) ;
+    static void printError(const string & error);
 
     //----------------------------------------------------- Attributs protégés
 

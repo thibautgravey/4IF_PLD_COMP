@@ -181,7 +181,6 @@ void SymbolTable::decreaseContextOffset(const string & function) {
     globalFunctionTableIterator->second->offsetContext -= 4;
 } //----- Fin de decreaseContextOffset
 
-
 void SymbolTable::UnusedVariableAnalysis() const {
     for (const auto & function : globalFunctionTable) {
 
@@ -192,11 +191,9 @@ void SymbolTable::UnusedVariableAnalysis() const {
             if (!contextVariable.second->used) {
                 printError("WARN : variable " + contextVariable.first + " is declared at line " + to_string(contextVariable.second->declaredLine) + " but never used in the program");
             }
-
         }
     }
 } //----- Fin de UnusedVariableAnalysis
-
 
 void SymbolTable::printError(const string & error) {
     cerr << error << endl;
