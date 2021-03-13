@@ -169,9 +169,20 @@ string Program::GenerateAsm() {
                       "main: \n"
                       "   # prologue\n"
                       "   pushq %rbp\n"
-                      "   movq %rsp, %rbp\n"
-                      "\n"
-                      "   # body\n";
+                      "   movq %rsp, %rbp\n";
+
+    // Calculate space needed for variables (main function)
+    int spaceNeeded = symbolTable.CalculateSpaceForFunction("main");
+
+    // Round space to the nearest multiple of 16
+    if (spaceNeeded % 16) {
+        spaceNeeded = ((spaceNeeded / 16) + 1) * 16;
+    }
+
+    assembly += "   subq $" + to_string(spaceNeeded) + ", %rsp\n";
+
+    assembly += "\n"
+                "   # body\n";
 
     // AST walk
     vector<Instr *>::iterator it;
@@ -181,6 +192,9 @@ string Program::GenerateAsm() {
 
     assembly += "\n"
                 "   # epilogue\n"
+                "   addq $" +
+                to_string(spaceNeeded) +
+                ", %rsp\n"
                 "   popq %rbp\n"
                 "   ret\n";
 

@@ -134,6 +134,17 @@ void SymbolTable::SetUsedVariable(const string & function, const string & name, 
     }
 }
 
+int SymbolTable::CalculateSpaceForFunction(const string & function) {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + function + " does not exist in globalFunctionTable");
+        return -1;
+    }
+
+    ContextTable * contextTable = globalFunctionTableIterator->second;
+    return -contextTable->offsetContext;
+}
+
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable() {
 #ifdef MAP

@@ -71,6 +71,8 @@ class SymbolTable {
 
     void SetUsedVariable(const string & function, const string & name, const string & scope = "");
 
+    int CalculateSpaceForFunction(const string & function);
+
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;
     // Mode d'emploi :
