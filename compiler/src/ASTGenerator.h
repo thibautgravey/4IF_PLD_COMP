@@ -60,6 +60,8 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override;
 
+    virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
+
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator() = default;
     // Mode d'emploi :

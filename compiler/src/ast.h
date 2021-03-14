@@ -125,15 +125,18 @@ class VarAffInstr : public Instr {
     string GetName();
     Expr * GetRightExpr();
     virtual string GenerateAsm(SymbolTable & symbolTable);
+    void setVarAffInstrNext(Instr * next);
+
     //-------------------------------------------- Constructeurs - destructeur
-    VarAffInstr(int line, string name, Expr * rightExpr)
-        : Instr(line), name(name), rightExpr(rightExpr){};
+    VarAffInstr(int line, string name, Expr * rightExpr, Instr * next = nullptr)
+        : Instr(line), name(name), rightExpr(rightExpr), varAffInstrNext(next){};
 
     virtual ~VarAffInstr();
 
   protected:
     string name;
     Expr * rightExpr;
+    Instr * varAffInstrNext;
 };
 
 //---------- Interface de la classe <Program> ----------------

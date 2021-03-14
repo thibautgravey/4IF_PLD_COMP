@@ -66,18 +66,18 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
     assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
 
     switch (op) {
-        case PLUS:
-            assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case MULT:
-            assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case MINUS:
-            assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case DIV:
-            //TODO : Div op
-            break;
+    case PLUS:
+        assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+        break;
+    case MULT:
+        assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+        break;
+    case MINUS:
+        assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+        break;
+    case DIV:
+        //TODO : Div op
+        break;
     }
 
     assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
@@ -86,8 +86,8 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
 }
 
 OpBin::~OpBin() {
-    delete(operand1);
-    delete(operand2);
+    delete (operand1);
+    delete (operand2);
 }
 
 //------- Réalisation de la classe <Instr> ---
@@ -116,7 +116,7 @@ string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
 }
 
 ReturnInstr::~ReturnInstr() {
-    delete(returnExpr);
+    delete (returnExpr);
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -126,6 +126,10 @@ string VarAffInstr::GetName() {
 
 Expr * VarAffInstr::GetRightExpr() {
     return this->rightExpr;
+}
+
+void VarAffInstr::setVarAffInstrNext(Instr * next) {
+    this->varAffInstrNext = next;
 }
 
 string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
@@ -160,7 +164,7 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
 }
 
 VarAffInstr::~VarAffInstr() {
-    delete(rightExpr);
+    delete (rightExpr);
 }
 
 //------- Réalisation de la classe <Program> ---
@@ -227,7 +231,7 @@ bool Program::GetErrorFlag() {
 } //----- Fin de GetErrorFlag
 
 Program::~Program() {
-    for(const auto& instr: listInstr) {
-        delete(instr);
+    for (const auto & instr : listInstr) {
+        delete (instr);
     }
 } //----- Fin de ~Program

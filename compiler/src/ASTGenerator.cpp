@@ -55,17 +55,42 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
 
 antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
     Instr * ret = nullptr;
+
+    Instr * retCopie = ret;
+
     if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
+
             ret = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+
+            for (int i = 0; i < ctx->inline_var_decl().size(); i++) {
+                Instr * instr = (Instr *)visit(ctx->inline_var_decl(i));
+                ((VarAffInstr *)ret)->setVarAffInstrNext(instr);
+                ret = instr;
+            }
+        }
+    } else {
+        program->SetErrorFlag(true);
+    }
+
+    return retCopie;
+}
+
+antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
+    Instr * ret = nullptr;
+
+    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
+        if (ctx->expr()) {
+            Expr * expr = (Expr *)visit(ctx->expr());
+            ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
         }
     } else {
         program->SetErrorFlag(true);
     }
 
     return ret;
-} //----- Fin de visitVar_decl
+}
 
 antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
     Expr * expr = (Expr *)visit(ctx->expr());
@@ -133,7 +158,7 @@ antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
 //-------------------------------------------- Constructeurs - destructeur
 
 ASTGenerator::~ASTGenerator() {
-    delete(program);
+    delete (program);
 } //----- Fin de ~ASTGenerator
 
 //------------------------------------------------------------------ PRIVE
