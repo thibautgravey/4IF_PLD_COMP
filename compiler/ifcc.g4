@@ -1,37 +1,36 @@
 grammar ifcc;
 
-axiom : prog ;
+axiom: prog;
 
-prog : 'int' 'main' '(' ')' '{' line* '}' ;
+prog: 'int' 'main' '(' ')' '{' line* '}';
 
-line: var_decl
-    | var_aff
-    | return_stmt
-;
+line: var_decl | var_aff | return_stmt;
 
-var_decl: TYPE VAR_NAME ('=' expr)? ';' ;
+var_decl: TYPE VAR_NAME ('=' expr)? (inline_var_decl)* ';';
 
-var_aff: VAR_NAME '=' expr ';' ;
+inline_var_decl: (',' VAR_NAME ('=' expr)?);
 
-return_stmt: 'return' expr ';' ;
+var_aff: VAR_NAME '=' expr ';';
 
-expr: CONST #const
-    | VAR_NAME #var
-    | '(' expr ')' # par
-    | expr '/' expr # div
-    | expr '*' expr # mult
-    | expr '-' expr # less
-    | expr '+' expr # add
-;
+return_stmt: 'return' expr ';';
 
-TYPE : 'int' ;
+expr:
+	CONST			# const
+	| VAR_NAME		# var
+	| '(' expr ')'	# par
+	| expr '/' expr	# div
+	| expr '*' expr	# mult
+	| expr '-' expr	# less
+	| expr '+' expr	# add;
 
-CONST : '-'?[0-9]+ ;
+TYPE: 'int';
 
-VAR_NAME : [a-zA-Z_][\\w]* ;
+CONST: '-'? [0-9]+;
 
-COMMENT : '/*' .*? '*/' -> skip ;
+VAR_NAME: [a-zA-Z_][\\w]*;
 
-DIRECTIVE : '#' .*? '\n' -> skip ;
+COMMENT: '/*' .*? '*/' -> skip;
 
-WS : [ \t\r\n] -> channel(HIDDEN);
+DIRECTIVE: '#' .*? '\n' -> skip;
+
+WS: [ \t\r\n] -> channel(HIDDEN);
