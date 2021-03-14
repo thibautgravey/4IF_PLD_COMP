@@ -98,6 +98,7 @@ Expr * ReturnInstr::GetReturnExpr() {
 }
 
 string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
+
     string instrAssembly;
     if (dynamic_cast<ConstLiteral *>(returnExpr)) {
         ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(returnExpr);
@@ -128,36 +129,51 @@ Expr * VarAffInstr::GetRightExpr() {
     return this->rightExpr;
 }
 
-void VarAffInstr::setVarAffInstrNext(Instr * next) {
+void VarAffInstr::SetVarAffInstrNext(Instr * next) {
     this->varAffInstrNext = next;
 }
 
+Instr * VarAffInstr::GetvarAffInstrNext() {
+    return this->varAffInstrNext;
+}
+
 string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
-    string instrAssembly;
-    if (dynamic_cast<ConstLiteral *>(rightExpr)) {
-        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(rightExpr);
-        instrAssembly = "   movl $" +
-                        to_string(constLiteral->GetValue()) +
-                        ", " +
-                        to_string(symbolTable.GetVariableOffset("main", name)) +
-                        "(%rbp)\n";
-    } else if (dynamic_cast<Var *>(rightExpr)) {
-        Var * var = dynamic_cast<Var *>(rightExpr);
-        instrAssembly = "   movl " +
-                        to_string(symbolTable.GetVariableOffset("main", var->GetName())) +
-                        "(%rbp), %eax\n";
-        instrAssembly += "   movl %eax, " +
-                         to_string(symbolTable.GetVariableOffset("main", name)) +
-                         "(%rbp)\n";
-    } else if (dynamic_cast<OpBin *>(rightExpr)) {
-        OpBin * opBin = dynamic_cast<OpBin *>(rightExpr);
-        string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
-        instrAssembly += "   movl " +
-                         to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
-                         "(%rbp), %eax\n";
-        instrAssembly += "   movl %eax, " +
-                         to_string(symbolTable.GetVariableOffset("main", name)) +
-                         "(%rbp)\n";
+    string instrAssembly = "";
+
+    VarAffInstr * instr = this;
+    Expr * rightExpression;
+    string nameVar;
+
+    while (instr != nullptr) {
+        rightExpression = instr->GetRightExpr();
+        nameVar = instr->GetName();
+
+        if (dynamic_cast<ConstLiteral *>(rightExpression)) {
+            ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(rightExpression);
+            instrAssembly += "   movl $" +
+                             to_string(constLiteral->GetValue()) +
+                             ", " +
+                             to_string(symbolTable.GetVariableOffset("main", nameVar)) +
+                             "(%rbp)\n";
+        } else if (dynamic_cast<Var *>(rightExpression)) {
+            Var * var = dynamic_cast<Var *>(rightExpression);
+            instrAssembly += "   movl " +
+                             to_string(symbolTable.GetVariableOffset("main", var->GetName())) +
+                             "(%rbp), %eax\n";
+            instrAssembly += "   movl %eax, " +
+                             to_string(symbolTable.GetVariableOffset("main", nameVar)) +
+                             "(%rbp)\n";
+        } else if (dynamic_cast<OpBin *>(rightExpression)) {
+            OpBin * opBin = dynamic_cast<OpBin *>(rightExpression);
+            string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
+            instrAssembly += "   movl " +
+                             to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
+                             "(%rbp), %eax\n";
+            instrAssembly += "   movl %eax, " +
+                             to_string(symbolTable.GetVariableOffset("main", nameVar)) +
+                             "(%rbp)\n";
+        }
+        instr = (VarAffInstr *)(instr->GetvarAffInstrNext());
     }
 
     return instrAssembly;
@@ -181,6 +197,7 @@ void Program::AddInstr(Instr * instr) {
 } //----- Fin de AddInstr
 
 string Program::GenerateAsm() {
+
     string assembly = "   .globl main\n"
                       "\n"
                       "main: \n"
@@ -204,6 +221,7 @@ string Program::GenerateAsm() {
     // AST walk
     vector<Instr *>::iterator it;
     for (it = this->listInstr.begin(); it != this->listInstr.end(); it++) {
+
         assembly += (*it)->GenerateAsm(this->symbolTable);
     }
 

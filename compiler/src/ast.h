@@ -124,8 +124,9 @@ class VarAffInstr : public Instr {
     //----------------------------------------------------- Méthodes publiques
     string GetName();
     Expr * GetRightExpr();
+    void SetVarAffInstrNext(Instr * next);
+    Instr * GetvarAffInstrNext();
     virtual string GenerateAsm(SymbolTable & symbolTable);
-    void setVarAffInstrNext(Instr * next);
 
     //-------------------------------------------- Constructeurs - destructeur
     VarAffInstr(int line, string name, Expr * rightExpr, Instr * next = nullptr)
