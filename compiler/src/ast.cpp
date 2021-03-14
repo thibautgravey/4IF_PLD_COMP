@@ -66,18 +66,18 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
     assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
 
     switch (op) {
-    case PLUS:
-        assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-        break;
-    case MULT:
-        assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-        break;
-    case MINUS:
-        assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-        break;
-    case DIV:
-        //TODO : Div op
-        break;
+        case PLUS:
+            assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+            break;
+        case MULT:
+            assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+            break;
+        case MINUS:
+            assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
+            break;
+        case DIV:
+            //TODO : Div op
+            break;
     }
 
     assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
@@ -142,18 +142,18 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
 
     VarAffInstr * instr = this;
     Expr * rightExpression;
-    string nameVar;
+    string varAffName;
 
     while (instr != nullptr) {
         rightExpression = instr->GetRightExpr();
-        nameVar = instr->GetName();
+        varAffName = instr->GetName();
 
         if (dynamic_cast<ConstLiteral *>(rightExpression)) {
             ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(rightExpression);
             instrAssembly += "   movl $" +
                              to_string(constLiteral->GetValue()) +
                              ", " +
-                             to_string(symbolTable.GetVariableOffset("main", nameVar)) +
+                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
                              "(%rbp)\n";
         } else if (dynamic_cast<Var *>(rightExpression)) {
             Var * var = dynamic_cast<Var *>(rightExpression);
@@ -161,7 +161,7 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
                              to_string(symbolTable.GetVariableOffset("main", var->GetName())) +
                              "(%rbp), %eax\n";
             instrAssembly += "   movl %eax, " +
-                             to_string(symbolTable.GetVariableOffset("main", nameVar)) +
+                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
                              "(%rbp)\n";
         } else if (dynamic_cast<OpBin *>(rightExpression)) {
             OpBin * opBin = dynamic_cast<OpBin *>(rightExpression);
@@ -170,7 +170,7 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
                              to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
                              "(%rbp), %eax\n";
             instrAssembly += "   movl %eax, " +
-                             to_string(symbolTable.GetVariableOffset("main", nameVar)) +
+                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
                              "(%rbp)\n";
         }
         instr = (VarAffInstr *)(instr->GetvarAffInstrNext());
