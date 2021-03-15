@@ -8,7 +8,6 @@
 
 // Declarations from the parser -- replace with your own
 #include "SymbolTable.h"
-#include "ast.h"
 
 class BasicBlock;
 class CFG;
@@ -30,7 +29,8 @@ class IRInstr {
         call,
         cmp_eq,
         cmp_lt,
-        cmp_le
+        cmp_le,
+        ret
     } Operation;
 
     /**  constructor */
@@ -102,9 +102,8 @@ class BasicBlock {
  */
 class CFG {
   public:
-    CFG(DefFonction * ast);
-
-    DefFonction * ast; /**< The AST this CFG comes from */
+    CFG(SymbolTable * symbolTable)
+        : nextBBnumber(0), symbolTable(symbolTable){};
 
     void add_bb(BasicBlock * bb);
 
@@ -113,21 +112,23 @@ class CFG {
     string IR_reg_to_asm(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
     void gen_asm_prologue(ostream & o);
     void gen_asm_epilogue(ostream & o);
+    BasicBlock * GetCurrentBB();
+    SymbolTable * GetSymbolTable();
 
     // basic block management
     string new_BB_name();
-    BasicBlock * current_bb;
 
   protected:
-    int nextBBnumber; /**< just for naming */
-
+    int nextBBnumber;         /**< just for naming */
     vector<BasicBlock *> bbs; /**< all the basic blocks of this CFG*/
+    BasicBlock * current_bb;
+    SymbolTable * symbolTable;
 };
 
 class IR {
   public:
-    void BuildIR(Program * ast);
     string GenerateAsmX86();
+    void AddCFG(CFG * newCFG);
 
     IR() = default;
     virtual ~IR() = default;

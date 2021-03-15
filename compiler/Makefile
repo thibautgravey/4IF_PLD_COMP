@@ -26,7 +26,8 @@ ifcc: dirs antlr $(SOURCES)/main.cpp $(SOURCES)/ASTGenerator.cpp $(SOURCES)/ASTG
 	$(CC) $(CCARGS) $(SOURCES)/ASTGenerator.cpp -o $(OUTPUT)/ASTGenerator.o
 	$(CC) $(CCARGS) $(SOURCES)/ast.cpp -o $(OUTPUT)/ast.o
 	$(CC) $(CCARGS) $(SOURCES)/SymbolTable.cpp -o $(OUTPUT)/SymbolTable.o
-	$(CC) $(LDARGS) $(OUTPUT)/main.o $(OUTPUT)/ifccBaseVisitor.o $(OUTPUT)/ifccLexer.o $(OUTPUT)/ifccVisitor.o $(OUTPUT)/ifccParser.o $(OUTPUT)/ASTGenerator.o $(OUTPUT)/ast.o $(OUTPUT)/SymbolTable.o $(ANTLR4_LIBDIR)/libantlr4-runtime.a -o ifcc
+	$(CC) $(CCARGS) $(SOURCES)/IR.cpp -o $(OUTPUT)/IR.o
+	$(CC) $(LDARGS) $(OUTPUT)/main.o $(OUTPUT)/ifccBaseVisitor.o $(OUTPUT)/ifccLexer.o $(OUTPUT)/ifccVisitor.o $(OUTPUT)/ifccParser.o $(OUTPUT)/ASTGenerator.o $(OUTPUT)/ast.o $(OUTPUT)/SymbolTable.o $(OUTPUT)/IR.o $(ANTLR4_LIBDIR)/libantlr4-runtime.a -o ifcc
 
 antlr: $(GRAMMAR)
 	$(ANTLR4_BINDIR)/antlr4 -visitor -no-listener -Dlanguage=Cpp -o $(GENERATED) $(GRAMMAR)

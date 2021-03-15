@@ -5,6 +5,7 @@
 #include "ifccLexer.h"
 #include "ifccParser.h"
 
+#include "IR.h"
 #include "ast.h"
 
 using namespace antlr4;
@@ -44,6 +45,8 @@ int main(int argn, const char ** argv) {
         return 1;
 
     //TODO : Create an IR and generate ASM
+    IR * ir = program->GenerateIR();
+
     string generatedAsm = program->GenerateAsm();
     cout << generatedAsm << endl;
 

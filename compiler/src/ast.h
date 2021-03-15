@@ -1,6 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
+#include "IR.h"
 #include "SymbolTable.h"
 
 #include <string>
@@ -32,6 +33,8 @@ class Node {
 //---------- Interface de la classe <Expr> ----------------
 class Expr : public Node {
   public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual string GenerateIR(CFG * cfg) = 0;
     //-------------------------------------------- Constructeurs - destructeur
     Expr(int line)
         : Node(line){};
@@ -44,6 +47,7 @@ class Var : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
     string GetName();
+    virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     Var(int line, string name)
         : Expr(line), name(name){};
@@ -59,6 +63,7 @@ class ConstLiteral : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
     int GetValue() const;
+    virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     ConstLiteral(int line, int value)
         : Expr(line), value(value){};
@@ -77,6 +82,7 @@ class OpBin : public Expr {
     Expr * GetOperand2();
     BinaryOperator GetOp();
     string GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly);
+    virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
     OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
@@ -95,6 +101,7 @@ class Instr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     virtual string GenerateAsm(SymbolTable & symbolTable) = 0;
+    virtual void GenerateIR(CFG * cfg) = 0;
     //-------------------------------------------- Constructeurs - destructeur
     Instr(int line)
         : Node(line){};
@@ -108,6 +115,7 @@ class ReturnInstr : public Instr {
     //----------------------------------------------------- Méthodes publiques
     Expr * GetReturnExpr();
     virtual string GenerateAsm(SymbolTable & symbolTable);
+    virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     ReturnInstr(int line, Expr * expr)
         : Instr(line), returnExpr(expr){};
@@ -127,6 +135,7 @@ class VarAffInstr : public Instr {
     void SetVarAffInstrNext(Instr * next);
     Instr * GetvarAffInstrNext();
     virtual string GenerateAsm(SymbolTable & symbolTable);
+    virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
     VarAffInstr(int line, string name, Expr * rightExpr, Instr * next = nullptr)
@@ -151,6 +160,7 @@ class Program : public Node {
     void UnusedVariableAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();
+    IR * GenerateIR();
     //-------------------------------------------- Constructeurs - destructeur
     Program(int l)
         : Node(l), errorFlag(false) {}

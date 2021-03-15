@@ -12,9 +12,19 @@ string Var::GetName() {
     return this->name;
 }
 
+string Var::GenerateIR(CFG * cfg) {
+    return this->name;
+}
+
 //------- Réalisation de la classe <ConstLiteral> ---
 int ConstLiteral::GetValue() const {
     return this->value;
+}
+
+string ConstLiteral::GenerateIR(CFG * cfg) {
+    string tmpVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT, {tmpVar, to_string(this->GetValue())});
+    return tmpVar;
 }
 
 //------- Réalisation de la classe <OpBin> ---
@@ -90,6 +100,28 @@ OpBin::~OpBin() {
     delete (operand2);
 }
 
+string OpBin::GenerateIR(CFG * cfg) {
+    string tmpVar1 = this->operand1->GenerateIR(cfg);
+    string tmpVar2 = this->operand2->GenerateIR(cfg);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    switch (this->op) {
+        case BinaryOperator::PLUS:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::MINUS:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::MULT:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::DIV:
+            break;
+        default:
+            break;
+    }
+    return tmpResVar;
+}
+
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
@@ -118,6 +150,11 @@ string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
 
 ReturnInstr::~ReturnInstr() {
     delete (returnExpr);
+}
+
+void ReturnInstr::GenerateIR(CFG * cfg) {
+    string tmpRetVar = this->returnExpr->GenerateIR(cfg);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType("main", tmpRetVar), {tmpRetVar});
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -181,6 +218,11 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
 
 VarAffInstr::~VarAffInstr() {
     delete (rightExpr);
+}
+
+void VarAffInstr::GenerateIR(CFG * cfg) {
+    string tmpVar = this->rightExpr->GenerateIR(cfg);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType("main", this->name), {this->name, tmpVar});
 }
 
 //------- Réalisation de la classe <Program> ---
@@ -257,3 +299,31 @@ Program::~Program() {
         delete (instr);
     }
 } //----- Fin de ~Program
+
+IR * Program::GenerateIR() {
+    IR * ir = new IR();
+
+    // TO DO : foreach function definition
+    CFG * tmpCFG = new CFG(&(this->symbolTable));
+
+    BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
+    // TO DO : VOIR POUR LES INSTRUCTIONS DU PROLOGUE
+
+    tmpCFG->add_bb(entry);
+
+    BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
+
+    tmpCFG->add_bb(body);
+
+    // TO DO : move this into GenerateIR of function definition
+    for (Instr * instr : this->listInstr) {
+        instr->GenerateIR(tmpCFG);
+    }
+
+    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
+    // TO DO : VOIR POUR LES INSTRUCTIONS DE L'EPILOGUE
+
+    ir->AddCFG(tmpCFG);
+
+    return ir;
+}
