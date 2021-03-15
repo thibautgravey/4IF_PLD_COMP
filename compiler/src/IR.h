@@ -8,6 +8,7 @@
 
 // Declarations from the parser -- replace with your own
 #include "SymbolTable.h"
+#include "ast.h"
 
 class BasicBlock;
 class CFG;
@@ -121,6 +122,18 @@ class CFG {
     int nextBBnumber; /**< just for naming */
 
     vector<BasicBlock *> bbs; /**< all the basic blocks of this CFG*/
+};
+
+class IR {
+  public:
+    void BuildIR(Program * ast);
+    string GenerateAsmX86();
+
+    IR() = default;
+    virtual ~IR() = default;
+
+  protected:
+    CFG * cfg;
 };
 
 #endif

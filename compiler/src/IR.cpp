@@ -61,6 +61,14 @@ Type CFG::get_var_type(string name) {
 string CFG::new_BB_name() {
 } //fin de new_BB_name
 
+void IR::BuildIR(Program * ast) {
+
+} //----- Fin de BuildIR
+
+string IR::GenerateAsmX86() {
+
+} //----- Fin de GenerateAsmX86
+
 //-------------------------------------------- Constructeurs - destructeur
 
 IRInstr::IRInstr(BasicBlock * bb_, Operation op, Type t, vector<string> params) {
