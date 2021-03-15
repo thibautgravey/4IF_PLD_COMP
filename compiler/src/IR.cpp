@@ -52,7 +52,8 @@ void CFG::gen_asm_epilogue(ostream & o) {
 
 string CFG::new_BB_name() {
     string functionName = "main"; // TO DO : change this when implementing function
-    if (this->nextBBnumber++ == 0) {
+    if (this->nextBBnumber == 0) {
+        this->nextBBnumber++;
         return functionName;
     } else {
         return functionName + "BB" + to_string(this->nextBBnumber++);

@@ -323,6 +323,8 @@ IR * Program::GenerateIR() {
     BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
     // TO DO : VOIR POUR LES INSTRUCTIONS DE L'EPILOGUE
 
+    tmpCFG->add_bb(output);
+
     ir->AddCFG(tmpCFG);
 
     return ir;
