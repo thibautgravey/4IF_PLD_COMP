@@ -205,6 +205,14 @@ string Program::GenerateAsm() {
                       "   pushq %rbp\n"
                       "   movq %rsp, %rbp\n";
 
+    // AST walk
+    string tmpAssembly;
+    vector<Instr *>::iterator it;
+    for (it = this->listInstr.begin(); it != this->listInstr.end(); it++) {
+
+        tmpAssembly += (*it)->GenerateAsm(this->symbolTable);
+    }
+
     // Calculate space needed for variables (main function)
     int spaceNeeded = symbolTable.CalculateSpaceForFunction("main");
 
@@ -218,12 +226,8 @@ string Program::GenerateAsm() {
     assembly += "\n"
                 "   # body\n";
 
-    // AST walk
-    vector<Instr *>::iterator it;
-    for (it = this->listInstr.begin(); it != this->listInstr.end(); it++) {
-
-        assembly += (*it)->GenerateAsm(this->symbolTable);
-    }
+    // Add temporary assembly
+    assembly += tmpAssembly;
 
     assembly += "\n"
                 "   # epilogue\n"
