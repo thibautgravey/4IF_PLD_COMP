@@ -133,7 +133,7 @@ class IR {
     virtual ~IR() = default;
 
   protected:
-    CFG * cfg;
+    vector<CFG *> allCFG;
 };
 
 #endif
