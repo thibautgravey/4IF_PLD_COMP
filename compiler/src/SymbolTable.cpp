@@ -22,13 +22,15 @@ using namespace std;
 
 //----------------------------------------------------- Méthodes publiques
 bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLine) {
-    if (type == ERROR) {
-        return false;
-    }
 
     auto iterator = globalFunctionTable.find(name);
     if (iterator != globalFunctionTable.end()) {
         printError("function " + name + " already exist in globalFunctionTable");
+        return false;
+    }
+
+    if (type == ERROR) {
+        printError("function " + name + " has a bad return type");
         return false;
     }
 
@@ -42,9 +44,6 @@ bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLin
 } //----- Fin de DefineFunction
 
 bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope) {
-    if (type == ERROR) {
-        return false;
-    }
 
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
@@ -54,6 +53,12 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
 
     string completeName = scope + name;
     ContextTable * contextTable = globalFunctionTableIterator->second;
+
+    if (type == ERROR) {
+        printError("variable " + completeName + " has a bad type");
+        return false;
+    }
+
     auto it = contextTable->contextVariableTable.find(completeName);
     if (it != contextTable->contextVariableTable.end()) {
         printError("variable " + completeName + " already exist in contextVariableTable from " + function);
