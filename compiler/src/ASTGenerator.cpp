@@ -29,7 +29,9 @@ antlrcpp::Any ASTGenerator::visitAxiom(ifccParser::AxiomContext * ctx) {
 antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
     program = new Program(ctx->start->getLine());
 
-    if(program->GetSymbolTable().DefineFunction("main", INT, ctx->start->getLine())) {
+    Type declaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+
+    if(program->GetSymbolTable().DefineFunction("main", declaredType, ctx->start->getLine())) {
 
         for (int i = 0; i < ctx->line().size(); i++) {
             Instr * instr = (Instr *)visit(ctx->line(i));
