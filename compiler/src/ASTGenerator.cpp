@@ -28,14 +28,21 @@ antlrcpp::Any ASTGenerator::visitAxiom(ifccParser::AxiomContext * ctx) {
 
 antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
     program = new Program(ctx->start->getLine());
-    program->GetSymbolTable().DefineFunction("main", INT, ctx->start->getLine());
 
-    for (int i = 0; i < ctx->line().size(); i++) {
-        Instr * instr = (Instr *)visit(ctx->line(i));
+    Type returnType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
-        if (instr != nullptr) {
-            program->AddInstr(instr);
+    if(returnType != ERROR && program->GetSymbolTable().DefineFunction("main", returnType, ctx->start->getLine())) {
+
+        for (int i = 0; i < ctx->line().size(); i++) {
+            Instr * instr = (Instr *)visit(ctx->line(i));
+
+            if (instr != nullptr) {
+                program->AddInstr(instr);
+            }
         }
+
+    } else {
+        program->SetErrorFlag(true);
     }
 
     return program;
@@ -58,7 +65,10 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
     Instr * tmpRet = nullptr;
     Instr * ret = nullptr;
 
-    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
+    lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+
+    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), lastDeclaredType, ctx->start->getLine())) {
+
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             tmpRet = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
@@ -87,7 +97,7 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
     Instr * ret = nullptr;
 
-    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
+    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), lastDeclaredType, ctx->start->getLine())) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);

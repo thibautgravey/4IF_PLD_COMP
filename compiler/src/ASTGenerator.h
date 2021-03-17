@@ -69,7 +69,7 @@ class ASTGenerator : public ifccBaseVisitor {
     virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
 
     //-------------------------------------------- Constructeurs - destructeur
-    ASTGenerator() = default;
+    ASTGenerator() : program(nullptr), lastDeclaredType(ERROR) {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -83,6 +83,8 @@ class ASTGenerator : public ifccBaseVisitor {
     //----------------------------------------------------- Attributs protégés
 
     Program * program;
+    Type lastDeclaredType;
+
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 
