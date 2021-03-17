@@ -24,11 +24,13 @@ expr:
 	| expr '+' expr	# add
 	| expr '&' expr	# and
 	| expr '|' expr	# or
-	| expr '^' expr	# xor;
+	| expr '^' expr	# xor
+	| '-' expr		# opp
+	| '!' expr		# not;
 
 TYPE: 'int';
 
-CONST: '-'? [0-9]+;
+CONST: [0-9]+;
 
 VAR_NAME: [a-zA-Z_][\\w]*;
 
