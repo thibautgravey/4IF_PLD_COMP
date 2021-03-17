@@ -22,8 +22,8 @@ expr:
 	| expr '*' expr	# mult
 	| expr '-' expr	# less
 	| expr '+' expr	# add
-	| expr '|' expr	# or
 	| expr '&' expr	# and
+	| expr '|' expr	# or
 	| expr '^' expr	# xor;
 
 TYPE: 'int';

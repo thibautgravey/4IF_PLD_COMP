@@ -12,7 +12,10 @@ enum BinaryOperator {
     PLUS,
     MINUS,
     MULT,
-    DIV
+    DIV,
+    OR,
+    XOR,
+    AND
 };
 
 //---------- Interface de la classe <Node> ----------------

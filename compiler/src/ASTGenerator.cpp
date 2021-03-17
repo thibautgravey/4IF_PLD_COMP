@@ -145,6 +145,30 @@ antlrcpp::Any ASTGenerator::visitMult(ifccParser::MultContext * ctx) {
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMult);
 } //----- Fin de visitMult
 
+antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorOr = OR;
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorOr);
+} //----- Fin de visitOr
+
+antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorAnd = AND;
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorAnd);
+} //----- Fin de visitAnd
+
+antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorXor = XOR;
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorXor);
+} //----- Fin de visitXor
+
 antlrcpp::Any ASTGenerator::visitConst(ifccParser::ConstContext * ctx) {
     return (Expr *)new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
 } //----- Fin de visitConst

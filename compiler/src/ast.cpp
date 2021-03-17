@@ -88,6 +88,12 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
         case DIV:
             //TODO : Div op
             break;
+        case OR:
+            break;
+        case AND:
+            break;
+        case XOR:
+            break;
     }
 
     assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
