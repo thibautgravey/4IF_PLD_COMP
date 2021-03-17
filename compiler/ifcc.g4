@@ -21,7 +21,10 @@ expr:
 	| expr '/' expr	# div
 	| expr '*' expr	# mult
 	| expr '-' expr	# less
-	| expr '+' expr	# add;
+	| expr '+' expr	# add
+	| expr '|' expr	# or
+	| expr '&' expr	# and
+	| expr '^' expr	# xor;
 
 TYPE: 'int';
 
