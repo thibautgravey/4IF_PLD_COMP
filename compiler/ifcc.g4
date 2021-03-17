@@ -18,13 +18,18 @@ expr:
 	CONST			# const
 	| VAR_NAME		# var
 	| '(' expr ')'	# par
-	| expr ('/' | '*') expr # div_or_mult
-	| expr ('-' | '+') expr	# less_or_add
+	| expr (OP_DIV | OP_MULT) expr # div_or_mult
+	| expr (OP_LESS | OP_ADD) expr	# less_or_add
 	| expr '&' expr	# and
 	| expr '|' expr	# or
 	| expr '^' expr	# xor;
 
 TYPE: 'int';
+
+OP_DIV: '/';
+OP_MULT: '*';
+OP_LESS: '-';
+OP_ADD: '+';
 
 CONST: '-'? [0-9]+;
 
