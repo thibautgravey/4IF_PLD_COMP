@@ -178,7 +178,6 @@ string OpUn::GenerateAsmOpUn(SymbolTable & symbolTable, string & assembly) {
         case NOT:
             assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
             assembly += "   sete %al\n";
-            assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
             assembly += "   movzbl %al, %eax\n";
             break;
         case OPP:
@@ -228,9 +227,15 @@ string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
     } else if (dynamic_cast<Var *>(returnExpr)) {
         Var * var = dynamic_cast<Var *>(returnExpr);
         instrAssembly = "   movl " + to_string(symbolTable.GetVariableOffset("main", var->GetName())) + "(%rbp), %eax\n";
-    } else if (dynamic_cast<OpUn *>(returnExpr)) {
+    } else if (dynamic_cast<OpBin *>(returnExpr)) {
         OpBin * opBin = dynamic_cast<OpBin *>(returnExpr);
         string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
+        instrAssembly += "   movl " +
+                         to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
+                         "(%rbp), %eax\n";
+    } else if (dynamic_cast<OpUn *>(returnExpr)) {
+        OpUn * opUn = dynamic_cast<OpUn *>(returnExpr);
+        string tmpVarRes = opUn->GenerateAsmOpUn(symbolTable, instrAssembly);
         instrAssembly += "   movl " +
                          to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
                          "(%rbp), %eax\n";
@@ -293,6 +298,15 @@ string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
         } else if (dynamic_cast<OpBin *>(rightExpression)) {
             OpBin * opBin = dynamic_cast<OpBin *>(rightExpression);
             string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
+            instrAssembly += "   movl " +
+                             to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
+                             "(%rbp), %eax\n";
+            instrAssembly += "   movl %eax, " +
+                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
+                             "(%rbp)\n";
+        } else if (dynamic_cast<OpUn *>(rightExpression)) {
+            OpUn * opUn = dynamic_cast<OpUn *>(rightExpression);
+            string tmpVarRes = opUn->GenerateAsmOpUn(symbolTable, instrAssembly);
             instrAssembly += "   movl " +
                              to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
                              "(%rbp), %eax\n";
