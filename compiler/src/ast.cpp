@@ -142,6 +142,76 @@ string OpBin::GenerateIR(CFG * cfg) {
     return tmpResVar;
 }
 
+//------- Réalisation de la classe <OpUn> ---
+Expr * OpUn::GetOperand() {
+    return this->operand;
+}
+
+UnitOperator OpUn::GetOp() {
+    return this->op;
+}
+
+string OpUn::GenerateAsmOpUn(SymbolTable & symbolTable, string & assembly) {
+    string tmpVar1;
+
+    if (dynamic_cast<OpUn *>(operand)) {
+        OpUn * opUn = dynamic_cast<OpUn *>(operand);
+        tmpVar1 = opUn->GenerateAsmOpUn(symbolTable, assembly);
+
+    } else if (dynamic_cast<ConstLiteral *>(operand)) {
+        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand);
+        tmpVar1 = symbolTable.CreateTempVar("main", INT);
+        assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
+
+    } else if (dynamic_cast<Var *>(operand)) {
+        Var * var = dynamic_cast<Var *>(operand);
+        tmpVar1 = var->GetName();
+    } else if (dynamic_cast<OpBin *>(operand)) {
+        OpBin * opBin = dynamic_cast<OpBin *>(operand);
+        tmpVar1 = opBin->GenerateAsmOpBin(symbolTable, assembly);
+    }
+
+    string tmpVarRes = symbolTable.CreateTempVar("main", INT);
+    assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
+
+    switch (op) {
+        case NOT:
+            assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
+            assembly += "   sete %al\n";
+            assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
+            assembly += "   movzbl %al, %eax\n";
+            break;
+        case OPP:
+            assembly += "   negl %eax\n";
+            break;
+    }
+
+    assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
+
+    return tmpVarRes;
+}
+
+OpUn::~OpUn() {
+    delete (operand);
+}
+
+string OpUn::GenerateIR(CFG * cfg) {
+    string tmpVar1 = this->operand->GenerateIR(cfg);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    switch (this->op) {
+        case UnitOperator::NOT:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT, {tmpResVar, tmpVar1});
+            break;
+        case UnitOperator::OPP:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT, {tmpResVar, tmpVar1});
+            break;
+
+        default:
+            break;
+    }
+    return tmpResVar;
+}
+
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
@@ -158,7 +228,7 @@ string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
     } else if (dynamic_cast<Var *>(returnExpr)) {
         Var * var = dynamic_cast<Var *>(returnExpr);
         instrAssembly = "   movl " + to_string(symbolTable.GetVariableOffset("main", var->GetName())) + "(%rbp), %eax\n";
-    } else if (dynamic_cast<OpBin *>(returnExpr)) {
+    } else if (dynamic_cast<OpUn *>(returnExpr)) {
         OpBin * opBin = dynamic_cast<OpBin *>(returnExpr);
         string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
         instrAssembly += "   movl " +

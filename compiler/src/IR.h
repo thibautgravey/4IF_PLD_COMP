@@ -27,6 +27,8 @@ class IRInstr {
         orB,
         andB,
         xorB,
+        opp,
+        neg,
         rmem,
         wmem,
         call,
