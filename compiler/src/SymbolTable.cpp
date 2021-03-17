@@ -42,6 +42,10 @@ bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLin
 } //----- Fin de DefineFunction
 
 bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope) {
+    if (type == ERROR) {
+        return false;
+    }
+
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         printError("function " + function + " does not exist in globalFunctionTable");
