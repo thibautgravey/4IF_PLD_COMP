@@ -17,7 +17,7 @@ LDARGS=-g
 
 all: ifcc
 
-ifcc: dirs antlr $(SOURCES)/main.cpp $(SOURCES)/ASTGenerator.cpp $(SOURCES)/ASTGenerator.h $(SOURCES)/SymbolTable.cpp $(SOURCES)/SymbolTable.h
+ifcc: dirs antlr $(SOURCES)/main.cpp $(SOURCES)/ASTGenerator.cpp $(SOURCES)/ASTGenerator.h $(SOURCES)/SymbolTable.cpp $(SOURCES)/SymbolTable.h $(SOURCES)/IR.cpp $(SOURCES)/IR.h
 	$(CC) $(CCARGS) $(SOURCES)/main.cpp  -o $(OUTPUT)/main.o
 	$(CC) $(CCARGS) $(GENERATED)/ifccBaseVisitor.cpp -o $(OUTPUT)/ifccBaseVisitor.o
 	$(CC) $(CCARGS) $(GENERATED)/ifccLexer.cpp -o $(OUTPUT)/ifccLexer.o

@@ -28,14 +28,21 @@ antlrcpp::Any ASTGenerator::visitAxiom(ifccParser::AxiomContext * ctx) {
 
 antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
     program = new Program(ctx->start->getLine());
-    program->GetSymbolTable().DefineFunction("main", INT, ctx->start->getLine());
 
-    for (int i = 0; i < ctx->line().size(); i++) {
-        Instr * instr = (Instr *)visit(ctx->line(i));
+    Type declaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
-        if (instr != nullptr) {
-            program->AddInstr(instr);
+    if(program->GetSymbolTable().DefineFunction("main", declaredType, ctx->start->getLine())) {
+
+        for (int i = 0; i < ctx->line().size(); i++) {
+            Instr * instr = (Instr *)visit(ctx->line(i));
+
+            if (instr != nullptr) {
+                program->AddInstr(instr);
+            }
         }
+
+    } else {
+        program->SetErrorFlag(true);
     }
 
     return program;
@@ -58,7 +65,10 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
     Instr * tmpRet = nullptr;
     Instr * ret = nullptr;
 
-    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
+    lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+
+    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), lastDeclaredType, ctx->start->getLine())) {
+
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             tmpRet = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
@@ -87,7 +97,7 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
     Instr * ret = nullptr;
 
-    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), INT, ctx->start->getLine())) {
+    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), lastDeclaredType, ctx->start->getLine())) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
@@ -113,37 +123,33 @@ antlrcpp::Any ASTGenerator::visitPar(ifccParser::ParContext * ctx) {
     return visit(ctx->expr());
 } //----- Fin de visitPar
 
-antlrcpp::Any ASTGenerator::visitAdd(ifccParser::AddContext * ctx) {
+antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorPlus = PLUS;
+    BinaryOperator binaryOperator;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
-} //----- Fin de visitAdd
+    if(ctx->OP_LESS()) {
+        binaryOperator = MINUS;
+    } else if(ctx->OP_ADD()) {
+        binaryOperator = PLUS;
+    }
 
-antlrcpp::Any ASTGenerator::visitLess(ifccParser::LessContext * ctx) {
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+} //----- Fin de visitLess_or_add
+
+antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorMinus = MINUS;
+    BinaryOperator binaryOperator;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMinus);
-} //----- Fin de visitLess
+    if(ctx->OP_DIV()) {
+        binaryOperator = DIV;
+    } else if(ctx->OP_MULT()) {
+        binaryOperator = MULT;
+    }
 
-antlrcpp::Any ASTGenerator::visitDiv(ifccParser::DivContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorDiv = DIV;
-
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorDiv);
-} //----- Fin de visitDiv
-
-antlrcpp::Any ASTGenerator::visitMult(ifccParser::MultContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorMult = MULT;
-
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMult);
-} //----- Fin de visitMult
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+} //----- Fin de visitDiv_or_mult
 
 antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
