@@ -89,10 +89,13 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
             //TODO : Div op
             break;
         case OR:
+            assembly += "   orl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
             break;
         case AND:
+            assembly += "   andl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
             break;
         case XOR:
+            assembly += "   xorl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
             break;
     }
 
@@ -122,6 +125,17 @@ string OpBin::GenerateIR(CFG * cfg) {
             break;
         case BinaryOperator::DIV:
             break;
+
+        case BinaryOperator::OR:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::AND:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::XOR:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+
         default:
             break;
     }
