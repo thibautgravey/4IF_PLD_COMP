@@ -18,10 +18,8 @@ expr:
 	CONST			# const
 	| VAR_NAME		# var
 	| '(' expr ')'	# par
-	| expr '/' expr	# div
-	| expr '*' expr	# mult
-	| expr '-' expr	# less
-	| expr '+' expr	# add
+	| expr ('/' | '*') expr # div_or_mult
+	| expr ('-' | '+') expr	# less_or_add
 	| expr '&' expr	# and
 	| expr '|' expr	# or
 	| expr '^' expr	# xor;
