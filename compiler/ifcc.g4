@@ -2,7 +2,7 @@ grammar ifcc;
 
 axiom: prog;
 
-prog: 'int' 'main' '(' ')' '{' line* '}';
+prog: TYPE 'main' '(' ')' '{' line* '}';
 
 line: var_decl | var_aff | return_stmt;
 
