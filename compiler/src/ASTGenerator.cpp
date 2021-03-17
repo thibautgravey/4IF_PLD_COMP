@@ -123,37 +123,33 @@ antlrcpp::Any ASTGenerator::visitPar(ifccParser::ParContext * ctx) {
     return visit(ctx->expr());
 } //----- Fin de visitPar
 
-antlrcpp::Any ASTGenerator::visitAdd(ifccParser::AddContext * ctx) {
+antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorPlus = PLUS;
+    BinaryOperator binaryOperator;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorPlus);
-} //----- Fin de visitAdd
+    if(ctx->OP_LESS()) {
+        binaryOperator = MINUS;
+    } else if(ctx->OP_ADD()) {
+        binaryOperator = PLUS;
+    }
 
-antlrcpp::Any ASTGenerator::visitLess(ifccParser::LessContext * ctx) {
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+} //----- Fin de visitLess_or_add
+
+antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorMinus = MINUS;
+    BinaryOperator binaryOperator;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMinus);
-} //----- Fin de visitLess
+    if(ctx->OP_DIV()) {
+        binaryOperator = DIV;
+    } else if(ctx->OP_MULT()) {
+        binaryOperator = MULT;
+    }
 
-antlrcpp::Any ASTGenerator::visitDiv(ifccParser::DivContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorDiv = DIV;
-
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorDiv);
-} //----- Fin de visitDiv
-
-antlrcpp::Any ASTGenerator::visitMult(ifccParser::MultContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorMult = MULT;
-
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorMult);
-} //----- Fin de visitMult
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+} //----- Fin de visitDiv_or_mult
 
 antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
