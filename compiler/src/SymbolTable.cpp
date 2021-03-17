@@ -22,6 +22,10 @@ using namespace std;
 
 //----------------------------------------------------- Méthodes publiques
 bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLine) {
+    if (type == ERROR) {
+        return false;
+    }
+
     auto iterator = globalFunctionTable.find(name);
     if (iterator != globalFunctionTable.end()) {
         printError("function " + name + " already exist in globalFunctionTable");
@@ -158,6 +162,15 @@ int SymbolTable::CalculateSpaceForFunction(const string & function) {
     ContextTable * contextTable = globalFunctionTableIterator->second;
     return -contextTable->offsetContext;
 }
+
+Type SymbolTable::StringToType(const string & name) {
+    auto it = TYPE_TABLE.find(name);
+    if (it != TYPE_TABLE.end()) {
+        return it->second;
+    } else {
+        return ERROR;
+    }
+} //----- Fin de ~StringToType
 
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable() {
