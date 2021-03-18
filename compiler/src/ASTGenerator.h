@@ -48,9 +48,9 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitPar(ifccParser::ParContext * ctx) override;
 
-    virtual antlrcpp::Any visitLess_or_add(ifccParser::Less_or_addContext *ctx) override;
+    virtual antlrcpp::Any visitLess_or_add(ifccParser::Less_or_addContext * ctx) override;
 
-    virtual antlrcpp::Any visitDiv_or_mult(ifccParser::Div_or_multContext *ctx) override;
+    virtual antlrcpp::Any visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) override;
 
     virtual antlrcpp::Any visitOr(ifccParser::OrContext * ctx) override;
 
@@ -65,7 +65,8 @@ class ASTGenerator : public ifccBaseVisitor {
     virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
 
     //-------------------------------------------- Constructeurs - destructeur
-    ASTGenerator() : program(nullptr), lastDeclaredType(ERROR) {}
+    ASTGenerator()
+        : program(nullptr), lastDeclaredType(ERROR) {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -80,7 +81,6 @@ class ASTGenerator : public ifccBaseVisitor {
 
     Program * program;
     Type lastDeclaredType;
-
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 

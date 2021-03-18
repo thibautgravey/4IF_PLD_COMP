@@ -23,8 +23,8 @@ using namespace std;
 //----------------------------------------------------- Méthodes publiques
 
 void IRInstr::gen_asm(ostream & o) {
-    
-    string p1,p2,p3;
+
+    string p1, p2, p3;
     switch (this->params.size()) {
         case 3:
             p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
@@ -37,36 +37,36 @@ void IRInstr::gen_asm(ostream & o) {
     }
 
     switch (this->op) {
-        case copy :
+        case copy:
             break;
-        case add :
+        case add:
             o << "        add     " << p1 << " " << p2 << endl;
             break;
-        case sub :
+        case sub:
             o << "        sub     " << p1 << " " << p2 << endl;
             break;
-        case mul :
+        case mul:
             o << "        imul    " << p1 << " " << p2 << endl;
             break;
-        case orB :
+        case orB:
             break;
-        case andB :
+        case andB:
             break;
-        case xorB :
+        case xorB:
             break;
-        case rmem :
+        case rmem:
             break;
-        case wmem :
+        case wmem:
             break;
-        case call :
+        case call:
             break;
-        case cmp_eq :
+        case cmp_eq:
             break;
-        case cmp_lt :
+        case cmp_lt:
             break;
-        case cmp_le :
+        case cmp_le:
             break;
-        case ret :
+        case ret:
             break;
         default:
             break;
@@ -87,13 +87,13 @@ void CFG::add_bb(BasicBlock * bb) {
 
 void CFG::gen_asm(ostream & o) {
     gen_asm_prologue(o);
-    for ( BasicBlock* bb : this->bbs ) {
+    for (BasicBlock * bb : this->bbs) {
         //TODO ajouter label bb
-        for ( IRInstr * instr : bb->instrs ) {
+        for (IRInstr * instr : bb->instrs) {
             instr->gen_asm(o);
         }
         //TODO jump(s) vers les bons labels
-    } 
+    }
     gen_asm_epilogue(o);
 } //fin de gen_asm(CFG)
 
@@ -101,13 +101,13 @@ string CFG::IR_reg_to_asm(string reg) {
 
     string ret;
 
-    if ( reg == "reg1" ) {
+    if (reg == "reg1") {
         ret = "eax";
-    } else if ( reg == "reg2" ) {
+    } else if (reg == "reg2") {
         ret = "ebx";
     } else {
         int offset = this->symbolTable->GetVariableOffset("main", reg);
-        ret = "DWORD PTR " + to_string(offset) +  "[ebp]";
+        ret = "DWORD PTR " + to_string(offset) + "[ebp]";
     }
 
     return ret;
@@ -148,7 +148,7 @@ string IR::GenerateAsmX86() {
     ostream o = cout;
     gen_asm_prologue_global(o);
 
-    for ( CFG* cfg : this->allCFG ) {
+    for (CFG * cfg : this->allCFG) {
         cfg->gen_asm(o);
         o << endl;
     }
@@ -161,7 +161,8 @@ void IR::AddCFG(CFG * newCFG) {
 }
 
 void IR::gen_asm_prologue_global(ostream & o) {
-    o << "        .globl main" << endl << endl; 
+    o << "        .globl main" << endl
+      << endl;
 } //----- Fin de gen_asm_prologue_global
 
 //-------------------------------------------- Constructeurs - destructeur

@@ -26,7 +26,7 @@ enum Type {
     ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
 };
 
-static unordered_map<string, Type> const TYPE_TABLE = { {"int", INT} };
+static unordered_map<string, Type> const TYPE_TABLE = {{"int", INT}};
 
 struct ContextVariable {
     Type type;
