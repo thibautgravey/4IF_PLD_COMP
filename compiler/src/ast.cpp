@@ -176,7 +176,7 @@ string OpUn::GenerateAsmOpUn(SymbolTable & symbolTable, string & assembly) {
 
     switch (op) {
         case NOT:
-            assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
+            assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
             assembly += "   sete %al\n";
             assembly += "   movzbl %al, %eax\n";
             break;
