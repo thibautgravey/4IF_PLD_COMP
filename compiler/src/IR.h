@@ -134,7 +134,7 @@ class IR {
   public:
     string GenerateAsmX86();
     void AddCFG(CFG * newCFG);
-    void gen_asm_prologue_global(ostream &o);
+    void gen_asm_prologue_global(ostream & o);
 
     IR() = default;
     virtual ~IR() = default;
