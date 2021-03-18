@@ -41,19 +41,22 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        mov     " << p1 << ", " << p2 << endl;
             break;
         case add :
-            o << "        add     " << p1 << " " << p2 << endl;
+            o << "        add     " << p1 << ", " << p2 << endl;
             break;
         case sub :
-            o << "        sub     " << p1 << " " << p2 << endl;
+            o << "        sub     " << p1 << ", " << p2 << endl;
             break;
         case mul :
-            o << "        imul    " << p1 << " " << p2 << endl;
+            o << "        mul    " << p1 << ", " << p2 << endl;
             break;
         case orB :
+            o << "        or      " << p1 << ", " << p2 << endl;
             break;
         case andB :
+            o << "        and     " << p1 << ", " << p2 << endl;
             break;
         case xorB :
+            o << "        xor     " << p1 << ", " << p2 << endl;
             break;
         case rmem :
             o << "        mov     " << p1 << ", " << p2 << endl;
@@ -65,10 +68,13 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        call    " << p1 << endl;
             break;
         case cmp_eq :
+            o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
         case cmp_lt :
+            o << "cmp_lt NOT IMPLEMENDTED" << endl;
             break;
         case cmp_le :
+            o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
         case ret :
             o << "        ret" << endl; //? Never used

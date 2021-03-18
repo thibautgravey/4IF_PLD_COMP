@@ -18,6 +18,11 @@ enum BinaryOperator {
     AND
 };
 
+enum UnitOperator {
+    NOT,
+    OPP
+};
+
 //---------- Interface de la classe <Node> ----------------
 class Node {
   public:
@@ -97,6 +102,26 @@ class OpBin : public Expr {
     Expr * operand1;
     Expr * operand2;
     BinaryOperator op;
+};
+
+//---------- Interface de la classe <OpUn> ----------------
+class OpUn : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetOperand();
+    UnitOperator GetOp();
+    string GenerateAsmOpUn(SymbolTable & symbolTable, string & assembly);
+    virtual string GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    OpUn(int line, Expr * operand, UnitOperator op)
+        : Expr(line), operand(operand), op(op){};
+
+    virtual ~OpUn();
+
+  protected:
+    Expr * operand;
+    UnitOperator op;
 };
 
 //---------- Interface de la classe <Instr> ----------------

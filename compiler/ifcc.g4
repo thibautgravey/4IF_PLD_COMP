@@ -15,23 +15,24 @@ var_aff: VAR_NAME '=' expr ';';
 return_stmt: 'return' expr ';';
 
 expr:
-	CONST			# const
-	| VAR_NAME		# var
-	| '(' expr ')'	# par
-	| expr (OP_DIV | OP_MULT) expr # div_or_mult
+	CONST							# const
+	| VAR_NAME						# var
+	| '(' expr ')'					# par
+	| expr (OP_DIV | OP_MULT) expr	# div_or_mult
 	| expr (OP_LESS | OP_ADD) expr	# less_or_add
-	| expr '&' expr	# and
-	| expr '|' expr	# or
-	| expr '^' expr	# xor;
+	| expr '&' expr					# and
+	| expr '|' expr					# or
+	| expr '^' expr					# xor
+	| '-' expr						# opp
+	| '!' expr						# not;
 
 TYPE: 'int';
 
+CONST: [0-9]+;
 OP_DIV: '/';
 OP_MULT: '*';
 OP_LESS: '-';
 OP_ADD: '+';
-
-CONST: '-'? [0-9]+;
 
 VAR_NAME: [a-zA-Z_][\\w]*;
 

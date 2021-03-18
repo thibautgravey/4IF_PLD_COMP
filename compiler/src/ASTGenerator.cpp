@@ -31,7 +31,7 @@ antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
 
     Type declaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
-    if(program->GetSymbolTable().DefineFunction("main", declaredType, ctx->start->getLine())) {
+    if (program->GetSymbolTable().DefineFunction("main", declaredType, ctx->start->getLine())) {
 
         for (int i = 0; i < ctx->line().size(); i++) {
             Instr * instr = (Instr *)visit(ctx->line(i));
@@ -128,9 +128,9 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
     Expr * op2 = (Expr *)visit(ctx->expr(1));
     BinaryOperator binaryOperator;
 
-    if(ctx->OP_LESS()) {
+    if (ctx->OP_LESS()) {
         binaryOperator = MINUS;
-    } else if(ctx->OP_ADD()) {
+    } else if (ctx->OP_ADD()) {
         binaryOperator = PLUS;
     }
 
@@ -142,9 +142,9 @@ antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ct
     Expr * op2 = (Expr *)visit(ctx->expr(1));
     BinaryOperator binaryOperator;
 
-    if(ctx->OP_DIV()) {
+    if (ctx->OP_DIV()) {
         binaryOperator = DIV;
-    } else if(ctx->OP_MULT()) {
+    } else if (ctx->OP_MULT()) {
         binaryOperator = MULT;
     }
 
@@ -178,6 +178,18 @@ antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
 antlrcpp::Any ASTGenerator::visitConst(ifccParser::ConstContext * ctx) {
     return (Expr *)new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
 } //----- Fin de visitConst
+
+antlrcpp::Any ASTGenerator::visitNot(ifccParser::NotContext * ctx) {
+    Expr * op = (Expr *)visit(ctx->expr());
+    UnitOperator unitOperatorNot = NOT;
+    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperatorNot);
+} //----- Fin de visitNot
+
+antlrcpp::Any ASTGenerator::visitOpp(ifccParser::OppContext * ctx) {
+    Expr * op = (Expr *)visit(ctx->expr());
+    UnitOperator unitOperatorOpp = OPP;
+    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperatorOpp);
+} //----- Fin de visitOpp
 
 antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
     Expr * ret = nullptr;
