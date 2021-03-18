@@ -38,6 +38,7 @@ void IRInstr::gen_asm(ostream & o) {
 
     switch (this->op) {
         case copy :
+            o << "        mov     " << p1 << ", " << p2 << endl;
             break;
         case add :
             o << "        add     " << p1 << " " << p2 << endl;
@@ -55,10 +56,13 @@ void IRInstr::gen_asm(ostream & o) {
         case xorB :
             break;
         case rmem :
+            o << "        mov     " << p1 << ", " << p2 << endl;
             break;
         case wmem :
+            o << "        mov     " << p1 << ", " << p2 << endl;
             break;
         case call :
+            o << "        call    " << p1 << endl;
             break;
         case cmp_eq :
             break;
@@ -67,6 +71,7 @@ void IRInstr::gen_asm(ostream & o) {
         case cmp_le :
             break;
         case ret :
+            o << "        ret" << endl; //? Never used
             break;
         default:
             break;
@@ -86,15 +91,24 @@ void CFG::add_bb(BasicBlock * bb) {
 } //fin de add_bb
 
 void CFG::gen_asm(ostream & o) {
-    gen_asm_prologue(o);
+    BasicBlock * lastbb = this->bbs.back();
+    this->bbs.pop_back();
+    
+    gen_asm_prologue(o, this->bbs[0]);
     for ( BasicBlock* bb : this->bbs ) {
-        //TODO ajouter label bb
+        o << bb->label << endl;
         for ( IRInstr * instr : bb->instrs ) {
             instr->gen_asm(o);
         }
-        //TODO jump(s) vers les bons labels
-    } 
-    gen_asm_epilogue(o);
+        if ( bb->exit_false == nullptr ) {
+            o << "jmp" << bb->exit_true->label << endl;
+        } else {
+            o << "je" << bb->exit_true->label << endl;
+            o << "jmp" << bb->exit_false->label << endl;
+        }
+    }
+
+    gen_asm_epilogue(o, lastbb);
 } //fin de gen_asm(CFG)
 
 string CFG::IR_reg_to_asm(string reg) {
@@ -107,21 +121,22 @@ string CFG::IR_reg_to_asm(string reg) {
         ret = "ebx";
     } else {
         int offset = this->symbolTable->GetVariableOffset("main", reg);
-        ret = "DWORD PTR " + to_string(offset) +  "[ebp]";
+        ret = "DWORD PTR -" + to_string(offset) +  "[ebp]"; //? '-'
     }
 
     return ret;
 } //fin de IR_reg_to_asm
 
-void CFG::gen_asm_prologue(ostream & o) {
+void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
     o << "main:" << endl;
-    //TODO o << "." << labelnameBB << ":" << endl;
+    o << "." << bb->label << ":" << endl;
     o << "        push    ebp" << endl;
     o << "        mov     ebp, esp" << endl;
-    //TODO o << "        sub     ebp, " << offset << endl;
+    o << "        sub     ebp, " << to_string(this->symbolTable->CalculateSpaceForFunction("main")) << endl;
 } //fin de gen_asm_prologue
 
-void CFG::gen_asm_epilogue(ostream & o) {
+void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {
+    o << "." << bb->label << ":" << endl;
     o << "        leave" << endl;
     o << "        ret" << endl;
 } //fin de gen_asm_epilogue
@@ -145,7 +160,7 @@ SymbolTable * CFG::GetSymbolTable() {
 } //----- Fin de GetSymbolTable
 
 string IR::GenerateAsmX86() {
-    ostream o = cout;
+    ostream & o = cout;
     gen_asm_prologue_global(o);
 
     for ( CFG* cfg : this->allCFG ) {
