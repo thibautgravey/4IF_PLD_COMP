@@ -93,7 +93,7 @@ void CFG::gen_asm(ostream & o) {
         }
     } 
     gen_asm_epilogue(o);
-} //fin de grn_asm
+} //fin de gen_asm(CFG)
 
 string CFG::IR_reg_to_asm(string reg) {
 
