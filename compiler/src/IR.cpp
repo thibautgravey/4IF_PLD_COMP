@@ -145,7 +145,7 @@ SymbolTable * CFG::GetSymbolTable() {
 } //----- Fin de GetSymbolTable
 
 string IR::GenerateAsmX86() {
-    ostream o = cout;
+    ostream & o = cout;
     gen_asm_prologue_global(o);
 
     for (CFG * cfg : this->allCFG) {
