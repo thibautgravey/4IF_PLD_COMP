@@ -88,9 +88,11 @@ void CFG::add_bb(BasicBlock * bb) {
 void CFG::gen_asm(ostream & o) {
     gen_asm_prologue(o);
     for ( BasicBlock* bb : this->bbs ) {
+        //TODO ajouter label bb
         for ( IRInstr * instr : bb->instrs ) {
             instr->gen_asm(o);
         }
+        //TODO jump(s) vers les bons labels
     } 
     gen_asm_epilogue(o);
 } //fin de gen_asm(CFG)
@@ -117,7 +119,6 @@ void CFG::gen_asm_prologue(ostream & o) {
     o << "        push    ebp" << endl;
     o << "        mov     ebp, esp" << endl;
     //TODO o << "        sub     ebp, " << offset << endl;
-
 } //fin de gen_asm_prologue
 
 void CFG::gen_asm_epilogue(ostream & o) {
@@ -126,7 +127,7 @@ void CFG::gen_asm_epilogue(ostream & o) {
 } //fin de gen_asm_epilogue
 
 string CFG::new_BB_name() {
-    string functionName = "main"; // TO DO : change this when implementing function
+    string functionName = "main"; //TODO : change this when implementing function
     if (this->nextBBnumber == 0) {
         this->nextBBnumber++;
         return functionName;
@@ -144,16 +145,24 @@ SymbolTable * CFG::GetSymbolTable() {
 } //----- Fin de GetSymbolTable
 
 string IR::GenerateAsmX86() {
+    ostream o = cout;
+    gen_asm_prologue_global(o);
+
     for ( CFG* cfg : this->allCFG ) {
-        cfg->gen_asm(cout);
+        cfg->gen_asm(o);
+        o << endl;
     }
-    
+    //TODO? ajouter épilogue bdsm
     return "";
 } //----- Fin de GenerateAsmX86
 
 void IR::AddCFG(CFG * newCFG) {
     this->allCFG.push_back(newCFG);
 }
+
+void IR::gen_asm_prologue_global(ostream & o) {
+    o << "        .globl main" << endl << endl; 
+} //----- Fin de gen_asm_prologue_global
 
 //-------------------------------------------- Constructeurs - destructeur
 
