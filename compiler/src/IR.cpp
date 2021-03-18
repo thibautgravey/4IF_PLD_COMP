@@ -23,6 +23,54 @@ using namespace std;
 //----------------------------------------------------- Méthodes publiques
 
 void IRInstr::gen_asm(ostream & o) {
+    
+    string p1,p2,p3;
+    switch (this->params.size()) {
+        case 3:
+            p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
+        case 2:
+            p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
+        case 1:
+            p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
+        default:
+            break;
+    }
+
+    switch (this->op) {
+        case copy :
+            break;
+        case add :
+            o << "        add     " << p1 << " " << p2 << endl;
+            break;
+        case sub :
+            o << "        sub     " << p1 << " " << p2 << endl;
+            break;
+        case mul :
+            o << "        imul    " << p1 << " " << p2 << endl;
+            break;
+        case orB :
+            break;
+        case andB :
+            break;
+        case xorB :
+            break;
+        case rmem :
+            break;
+        case wmem :
+            break;
+        case call :
+            break;
+        case cmp_eq :
+            break;
+        case cmp_lt :
+            break;
+        case cmp_le :
+            break;
+        case ret :
+            break;
+        default:
+            break;
+    }
 } //fin de gen_asm(Ir_Instr)
 
 void BasicBlock::gen_asm(ostream & o) {
@@ -38,20 +86,48 @@ void CFG::add_bb(BasicBlock * bb) {
 } //fin de add_bb
 
 void CFG::gen_asm(ostream & o) {
-} //fin de grn_asm
+    gen_asm_prologue(o);
+    for ( BasicBlock* bb : this->bbs ) {
+        //TODO ajouter label bb
+        for ( IRInstr * instr : bb->instrs ) {
+            instr->gen_asm(o);
+        }
+        //TODO jump(s) vers les bons labels
+    } 
+    gen_asm_epilogue(o);
+} //fin de gen_asm(CFG)
 
 string CFG::IR_reg_to_asm(string reg) {
-    return "";
+
+    string ret;
+
+    if ( reg == "reg1" ) {
+        ret = "eax";
+    } else if ( reg == "reg2" ) {
+        ret = "ebx";
+    } else {
+        int offset = this->symbolTable->GetVariableOffset("main", reg);
+        ret = "DWORD PTR " + to_string(offset) +  "[ebp]";
+    }
+
+    return ret;
 } //fin de IR_reg_to_asm
 
 void CFG::gen_asm_prologue(ostream & o) {
+    o << "main:" << endl;
+    //TODO o << "." << labelnameBB << ":" << endl;
+    o << "        push    ebp" << endl;
+    o << "        mov     ebp, esp" << endl;
+    //TODO o << "        sub     ebp, " << offset << endl;
 } //fin de gen_asm_prologue
 
 void CFG::gen_asm_epilogue(ostream & o) {
+    o << "        leave" << endl;
+    o << "        ret" << endl;
 } //fin de gen_asm_epilogue
 
 string CFG::new_BB_name() {
-    string functionName = "main"; // TO DO : change this when implementing function
+    string functionName = "main"; //TODO : change this when implementing function
     if (this->nextBBnumber == 0) {
         this->nextBBnumber++;
         return functionName;
@@ -69,12 +145,24 @@ SymbolTable * CFG::GetSymbolTable() {
 } //----- Fin de GetSymbolTable
 
 string IR::GenerateAsmX86() {
+    ostream o = cout;
+    gen_asm_prologue_global(o);
+
+    for ( CFG* cfg : this->allCFG ) {
+        cfg->gen_asm(o);
+        o << endl;
+    }
+    //TODO? ajouter épilogue bdsm
     return "";
 } //----- Fin de GenerateAsmX86
 
 void IR::AddCFG(CFG * newCFG) {
     this->allCFG.push_back(newCFG);
 }
+
+void IR::gen_asm_prologue_global(ostream & o) {
+    o << "        .globl main" << endl << endl; 
+} //----- Fin de gen_asm_prologue_global
 
 //-------------------------------------------- Constructeurs - destructeur
 
