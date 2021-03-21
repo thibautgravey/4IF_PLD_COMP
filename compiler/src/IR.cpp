@@ -23,8 +23,8 @@ using namespace std;
 //----------------------------------------------------- Méthodes publiques
 
 void IRInstr::gen_asm(ostream & o) {
-    
-    string p1,p2,p3;
+
+    string p1, p2, p3;
     switch (this->params.size()) {
         case 3:
             p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
@@ -37,46 +37,46 @@ void IRInstr::gen_asm(ostream & o) {
     }
 
     switch (this->op) {
-        case copy :
+        case copy:
             o << "        mov     " << p1 << ", " << p2 << endl;
             break;
-        case add :
+        case add:
             o << "        add     " << p1 << ", " << p2 << endl;
             break;
-        case sub :
+        case sub:
             o << "        sub     " << p1 << ", " << p2 << endl;
             break;
-        case mul :
+        case mul:
             o << "        mul    " << p1 << ", " << p2 << endl;
             break;
-        case orB :
+        case orB:
             o << "        or      " << p1 << ", " << p2 << endl;
             break;
-        case andB :
+        case andB:
             o << "        and     " << p1 << ", " << p2 << endl;
             break;
-        case xorB :
+        case xorB:
             o << "        xor     " << p1 << ", " << p2 << endl;
             break;
-        case rmem :
+        case rmem:
             o << "        mov     " << p1 << ", " << p2 << endl;
             break;
-        case wmem :
+        case wmem:
             o << "        mov     " << p1 << ", " << p2 << endl;
             break;
-        case call :
+        case call:
             o << "        call    " << p1 << endl;
             break;
-        case cmp_eq :
+        case cmp_eq:
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
-        case cmp_lt :
+        case cmp_lt:
             o << "cmp_lt NOT IMPLEMENDTED" << endl;
             break;
-        case cmp_le :
+        case cmp_le:
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
-        case ret :
+        case ret:
             o << "        ret" << endl; //? Never used
             break;
         default:
@@ -99,14 +99,14 @@ void CFG::add_bb(BasicBlock * bb) {
 void CFG::gen_asm(ostream & o) {
     BasicBlock * lastbb = this->bbs.back();
     this->bbs.pop_back();
-    
+
     gen_asm_prologue(o, this->bbs[0]);
-    for ( BasicBlock* bb : this->bbs ) {
+    for (BasicBlock * bb : this->bbs) {
         o << bb->label << endl;
-        for ( IRInstr * instr : bb->instrs ) {
+        for (IRInstr * instr : bb->instrs) {
             instr->gen_asm(o);
         }
-        if ( bb->exit_false == nullptr ) {
+        if (bb->exit_false == nullptr) {
             o << "jmp" << bb->exit_true->label << endl;
         } else {
             o << "je" << bb->exit_true->label << endl;
@@ -121,13 +121,13 @@ string CFG::IR_reg_to_asm(string reg) {
 
     string ret;
 
-    if ( reg == "reg1" ) {
+    if (reg == "reg1") {
         ret = "eax";
-    } else if ( reg == "reg2" ) {
+    } else if (reg == "reg2") {
         ret = "ebx";
     } else {
         int offset = this->symbolTable->GetVariableOffset("main", reg);
-        ret = "DWORD PTR -" + to_string(offset) +  "[ebp]"; //? '-'
+        ret = "DWORD PTR -" + to_string(offset) + "[ebp]"; //? '-'
     }
 
     return ret;
@@ -169,7 +169,7 @@ string IR::GenerateAsmX86() {
     ostream & o = cout;
     gen_asm_prologue_global(o);
 
-    for ( CFG* cfg : this->allCFG ) {
+    for (CFG * cfg : this->allCFG) {
         cfg->gen_asm(o);
         o << endl;
     }
@@ -182,7 +182,8 @@ void IR::AddCFG(CFG * newCFG) {
 }
 
 void IR::gen_asm_prologue_global(ostream & o) {
-    o << "        .globl main" << endl << endl; 
+    o << "        .globl main" << endl
+      << endl;
 } //----- Fin de gen_asm_prologue_global
 
 //-------------------------------------------- Constructeurs - destructeur
