@@ -129,7 +129,7 @@ void CFG::gen_asm(ostream & o) {
     gen_asm_prologue(o, this->bbs[0]);
     this->bbs.erase(this->bbs.begin());
     for (BasicBlock * bb : this->bbs) {
-        o << bb->label << endl;
+        o << bb->label << ":" << endl;
         for (IRInstr * instr : bb->instrs) {
             instr->gen_asm(o);
         }
