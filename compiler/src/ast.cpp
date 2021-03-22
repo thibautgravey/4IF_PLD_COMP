@@ -143,22 +143,6 @@ string OpBin::GenerateIR(CFG * cfg) {
     return tmpResVar;
 }
 
-string OpUn::GenerateIR(CFG * cfg) {
-    string tmpVar1 = this->operand->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
-    switch (this->op) {
-        case UnitOperator::NOT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT, {tmpResVar, tmpVar1});
-            break;
-        case UnitOperator::OPP:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT, {tmpResVar, tmpVar1});
-            break;
-        default:
-            break;
-    }
-    return tmpResVar;
-}
-
 //------- Réalisation de la classe <OpUn> ---
 Expr * OpUn::GetOperand() {
     return this->operand;
@@ -221,7 +205,6 @@ string OpUn::GenerateIR(CFG * cfg) {
         case UnitOperator::OPP:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT, {tmpResVar, tmpVar1});
             break;
-
         default:
             break;
     }
