@@ -49,6 +49,10 @@ void IRInstr::gen_asm(ostream & o) {
         case mul:
             o << "        mul    " << p1 << ", " << p2 << endl;
             break;
+        case div:
+            o << "        cltd    " << endl;
+            o << "        idivl    " << p1 << endl;
+            break;
         case orB:
             o << "        or      " << p1 << ", " << p2 << endl;
             break;

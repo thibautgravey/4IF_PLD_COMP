@@ -86,7 +86,8 @@ string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
             assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
             break;
         case DIV:
-            //TODO : Div op
+            assembly += "   cltd\n";
+            assembly += "   idivl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp)\n";
             break;
         case OR:
             assembly += "   orl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
@@ -124,8 +125,8 @@ string OpBin::GenerateIR(CFG * cfg) {
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::DIV:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
             break;
-
         case BinaryOperator::OR:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
             break;

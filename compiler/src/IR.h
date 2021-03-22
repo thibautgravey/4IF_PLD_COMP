@@ -24,6 +24,7 @@ class IRInstr {
         add,
         sub,
         mul,
+        div,
         orB,
         andB,
         xorB,
