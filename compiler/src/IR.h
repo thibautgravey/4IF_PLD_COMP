@@ -133,7 +133,7 @@ class CFG {
 
 class IR {
   public:
-    string GenerateAsmX86();
+    void GenerateAsmX86(ostream & o);
     void AddCFG(CFG * newCFG);
     void gen_asm_prologue_global(ostream & o);
 

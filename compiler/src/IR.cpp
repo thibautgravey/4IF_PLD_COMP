@@ -210,8 +210,7 @@ SymbolTable * CFG::GetSymbolTable() {
     return this->symbolTable;
 } //----- Fin de GetSymbolTable
 
-string IR::GenerateAsmX86() {
-    ostream & o = cout;
+void IR::GenerateAsmX86(ostream & o) {
     gen_asm_prologue_global(o);
 
     for (CFG * cfg : this->allCFG) {
@@ -219,7 +218,6 @@ string IR::GenerateAsmX86() {
         o << endl;
     }
     //TODO? ajouter épilogue bdsm
-    return "";
 } //----- Fin de GenerateAsmX86
 
 void IR::AddCFG(CFG * newCFG) {

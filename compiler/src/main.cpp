@@ -50,30 +50,27 @@ int main(int argn, const char ** argv) {
     //TODO : Create an IR and generate ASM
     IR * ir = program->GenerateIR();
 
-    string generatedAsm = ir->GenerateAsmX86();
-
-    //cout << generatedAsm << endl;
-
     //Create the output path
     string outPath(argv[1]);
     if (argn == 3) {
         outPath = string(argv[2]);
-    }
 
-    size_t dotPosition = outPath.find('.');
-    if (dotPosition != string::npos) {
-        outPath.erase(outPath.find('.'));
-    }
-    outPath.append(".s");
+        size_t dotPosition = outPath.find('.');
+        if (dotPosition != string::npos) {
+            outPath.erase(outPath.find('.'));
+        }
+        outPath.append(".s");
 
-    ofstream out(outPath);
-    if (out.bad()) {
-        cerr << "An error occured when writing Generated ASM to " + outPath << endl;
+        ofstream out(outPath);
+        if (out.bad()) {
+            cerr << "An error occured when writing Generated ASM to " + outPath << endl;
+        } else {
+            ir->GenerateAsmX86(out);
+            out.close();
+        }
     } else {
-        out << generatedAsm;
+        ir->GenerateAsmX86(cout);
     }
-
-    out.close();
 
     //TODO : Generate an exec file with a an "as file.s -o file.o" and then link using gcc
 
