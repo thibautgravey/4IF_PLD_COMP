@@ -40,71 +40,6 @@ BinaryOperator OpBin::GetOp() {
     return this->op;
 }
 
-string OpBin::GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly) {
-    string tmpVar1;
-    string tmpVar2;
-
-    if (dynamic_cast<OpBin *>(operand1)) {
-        OpBin * opBin = dynamic_cast<OpBin *>(operand1);
-        tmpVar1 = opBin->GenerateAsmOpBin(symbolTable, assembly);
-
-    } else if (dynamic_cast<ConstLiteral *>(operand1)) {
-        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand1);
-        tmpVar1 = symbolTable.CreateTempVar("main", INT);
-        assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
-
-    } else if (dynamic_cast<Var *>(operand1)) {
-        Var * var = dynamic_cast<Var *>(operand1);
-        tmpVar1 = var->GetName();
-    }
-
-    if (dynamic_cast<OpBin *>(operand2)) {
-        OpBin * opBin = dynamic_cast<OpBin *>(operand2);
-        tmpVar2 = opBin->GenerateAsmOpBin(symbolTable, assembly);
-
-    } else if (dynamic_cast<ConstLiteral *>(operand2)) {
-        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand2);
-        tmpVar2 = symbolTable.CreateTempVar("main", INT);
-        assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp)\n";
-
-    } else if (dynamic_cast<Var *>(operand2)) {
-        Var * var = dynamic_cast<Var *>(operand2);
-        tmpVar2 = var->GetName();
-    }
-
-    string tmpVarRes = symbolTable.CreateTempVar("main", INT);
-    assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
-
-    switch (op) {
-        case PLUS:
-            assembly += "   addl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case MULT:
-            assembly += "   imull " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case MINUS:
-            assembly += "   subl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case DIV:
-            assembly += "   cltd\n";
-            assembly += "   idivl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp)\n";
-            break;
-        case OR:
-            assembly += "   orl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case AND:
-            assembly += "   andl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-        case XOR:
-            assembly += "   xorl " + to_string(symbolTable.GetVariableOffset("main", tmpVar2)) + "(%rbp), %eax\n";
-            break;
-    }
-
-    assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
-
-    return tmpVarRes;
-}
-
 OpBin::~OpBin() {
     delete (operand1);
     delete (operand2);
@@ -152,49 +87,6 @@ UnitOperator OpUn::GetOp() {
     return this->op;
 }
 
-string OpUn::GenerateAsmOpUn(SymbolTable & symbolTable, string & assembly) {
-    string tmpVar1;
-
-    if (dynamic_cast<OpUn *>(operand)) {
-        OpUn * opUn = dynamic_cast<OpUn *>(operand);
-        tmpVar1 = opUn->GenerateAsmOpUn(symbolTable, assembly);
-
-    } else if (dynamic_cast<ConstLiteral *>(operand)) {
-        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(operand);
-        tmpVar1 = symbolTable.CreateTempVar("main", INT);
-        assembly += "   movl $" + to_string(constLiteral->GetValue()) + ", " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
-
-    } else if (dynamic_cast<Var *>(operand)) {
-        Var * var = dynamic_cast<Var *>(operand);
-        tmpVar1 = var->GetName();
-    } else if (dynamic_cast<OpBin *>(operand)) {
-        OpBin * opBin = dynamic_cast<OpBin *>(operand);
-        tmpVar1 = opBin->GenerateAsmOpBin(symbolTable, assembly);
-    }
-
-    string tmpVarRes = symbolTable.CreateTempVar("main", INT);
-    assembly += "   movl " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp), %eax\n";
-
-    switch (op) {
-        case NOT:
-            assembly += "   cmpl $0, " + to_string(symbolTable.GetVariableOffset("main", tmpVar1)) + "(%rbp)\n";
-            assembly += "   sete %al\n";
-            assembly += "   movzbl %al, %eax\n";
-            break;
-        case OPP:
-            assembly += "   negl %eax\n";
-            break;
-    }
-
-    assembly += "   movl %eax, " + to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) + "(%rbp)\n";
-
-    return tmpVarRes;
-}
-
-OpUn::~OpUn() {
-    delete (operand);
-}
-
 string OpUn::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand->GenerateIR(cfg);
     string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
@@ -211,36 +103,15 @@ string OpUn::GenerateIR(CFG * cfg) {
     return tmpResVar;
 }
 
+OpUn::~OpUn() {
+    delete (operand);
+}
+
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
 Expr * ReturnInstr::GetReturnExpr() {
     return this->returnExpr;
-}
-
-string ReturnInstr::GenerateAsm(SymbolTable & symbolTable) {
-
-    string instrAssembly;
-    if (dynamic_cast<ConstLiteral *>(returnExpr)) {
-        ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(returnExpr);
-        instrAssembly = "   movl $" + to_string(constLiteral->GetValue()) + ", %eax\n";
-    } else if (dynamic_cast<Var *>(returnExpr)) {
-        Var * var = dynamic_cast<Var *>(returnExpr);
-        instrAssembly = "   movl " + to_string(symbolTable.GetVariableOffset("main", var->GetName())) + "(%rbp), %eax\n";
-    } else if (dynamic_cast<OpBin *>(returnExpr)) {
-        OpBin * opBin = dynamic_cast<OpBin *>(returnExpr);
-        string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
-        instrAssembly += "   movl " +
-                         to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
-                         "(%rbp), %eax\n";
-    } else if (dynamic_cast<OpUn *>(returnExpr)) {
-        OpUn * opUn = dynamic_cast<OpUn *>(returnExpr);
-        string tmpVarRes = opUn->GenerateAsmOpUn(symbolTable, instrAssembly);
-        instrAssembly += "   movl " +
-                         to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
-                         "(%rbp), %eax\n";
-    }
-    return instrAssembly;
 }
 
 ReturnInstr::~ReturnInstr() {
@@ -269,57 +140,6 @@ Instr * VarAffInstr::GetvarAffInstrNext() {
     return this->varAffInstrNext;
 }
 
-string VarAffInstr::GenerateAsm(SymbolTable & symbolTable) {
-    string instrAssembly = "";
-
-    VarAffInstr * instr = this;
-    Expr * rightExpression;
-    string varAffName;
-
-    while (instr != nullptr) {
-        rightExpression = instr->GetRightExpr();
-        varAffName = instr->GetName();
-
-        if (dynamic_cast<ConstLiteral *>(rightExpression)) {
-            ConstLiteral * constLiteral = dynamic_cast<ConstLiteral *>(rightExpression);
-            instrAssembly += "   movl $" +
-                             to_string(constLiteral->GetValue()) +
-                             ", " +
-                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
-                             "(%rbp)\n";
-        } else if (dynamic_cast<Var *>(rightExpression)) {
-            Var * var = dynamic_cast<Var *>(rightExpression);
-            instrAssembly += "   movl " +
-                             to_string(symbolTable.GetVariableOffset("main", var->GetName())) +
-                             "(%rbp), %eax\n";
-            instrAssembly += "   movl %eax, " +
-                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
-                             "(%rbp)\n";
-        } else if (dynamic_cast<OpBin *>(rightExpression)) {
-            OpBin * opBin = dynamic_cast<OpBin *>(rightExpression);
-            string tmpVarRes = opBin->GenerateAsmOpBin(symbolTable, instrAssembly);
-            instrAssembly += "   movl " +
-                             to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
-                             "(%rbp), %eax\n";
-            instrAssembly += "   movl %eax, " +
-                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
-                             "(%rbp)\n";
-        } else if (dynamic_cast<OpUn *>(rightExpression)) {
-            OpUn * opUn = dynamic_cast<OpUn *>(rightExpression);
-            string tmpVarRes = opUn->GenerateAsmOpUn(symbolTable, instrAssembly);
-            instrAssembly += "   movl " +
-                             to_string(symbolTable.GetVariableOffset("main", tmpVarRes)) +
-                             "(%rbp), %eax\n";
-            instrAssembly += "   movl %eax, " +
-                             to_string(symbolTable.GetVariableOffset("main", varAffName)) +
-                             "(%rbp)\n";
-        }
-        instr = (VarAffInstr *)(instr->GetvarAffInstrNext());
-    }
-
-    return instrAssembly;
-}
-
 VarAffInstr::~VarAffInstr() {
     delete (rightExpr);
 }
@@ -345,50 +165,6 @@ SymbolTable & Program::GetSymbolTable() {
 void Program::AddInstr(Instr * instr) {
     this->listInstr.push_back(instr);
 } //----- Fin de AddInstr
-
-string Program::GenerateAsm() {
-
-    string assembly = "   .globl main\n"
-                      "\n"
-                      "main: \n"
-                      "   # prologue\n"
-                      "   pushq %rbp\n"
-                      "   movq %rsp, %rbp\n";
-
-    // AST walk
-    string tmpAssembly;
-    vector<Instr *>::iterator it;
-    for (it = this->listInstr.begin(); it != this->listInstr.end(); it++) {
-
-        tmpAssembly += (*it)->GenerateAsm(this->symbolTable);
-    }
-
-    // Calculate space needed for variables (main function)
-    int spaceNeeded = symbolTable.CalculateSpaceForFunction("main");
-
-    // Round space to the nearest multiple of 16
-    if (spaceNeeded % 16) {
-        spaceNeeded = ((spaceNeeded / 16) + 1) * 16;
-    }
-
-    assembly += "   subq $" + to_string(spaceNeeded) + ", %rsp\n";
-
-    assembly += "\n"
-                "   # body\n";
-
-    // Add temporary assembly
-    assembly += tmpAssembly;
-
-    assembly += "\n"
-                "   # epilogue\n"
-                "   addq $" +
-                to_string(spaceNeeded) +
-                ", %rsp\n"
-                "   popq %rbp\n"
-                "   ret\n";
-
-    return assembly;
-} //----- Fin de GenerateAsm
 
 void Program::UnusedVariableAnalysis() const {
     this->symbolTable.UnusedVariableAnalysis();

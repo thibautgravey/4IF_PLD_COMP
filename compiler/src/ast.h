@@ -89,7 +89,6 @@ class OpBin : public Expr {
     Expr * GetOperand1();
     Expr * GetOperand2();
     BinaryOperator GetOp();
-    string GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly);
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
@@ -110,7 +109,6 @@ class OpUn : public Expr {
     //----------------------------------------------------- Méthodes publiques
     Expr * GetOperand();
     UnitOperator GetOp();
-    string GenerateAsmOpUn(SymbolTable & symbolTable, string & assembly);
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
@@ -128,7 +126,6 @@ class OpUn : public Expr {
 class Instr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
-    virtual string GenerateAsm(SymbolTable & symbolTable) = 0;
     virtual void GenerateIR(CFG * cfg) = 0;
     //-------------------------------------------- Constructeurs - destructeur
     Instr(int line)
@@ -142,7 +139,6 @@ class ReturnInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
     Expr * GetReturnExpr();
-    virtual string GenerateAsm(SymbolTable & symbolTable);
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     ReturnInstr(int line, Expr * expr)
@@ -162,7 +158,6 @@ class VarAffInstr : public Instr {
     Expr * GetRightExpr();
     void SetVarAffInstrNext(Instr * next);
     Instr * GetvarAffInstrNext();
-    virtual string GenerateAsm(SymbolTable & symbolTable);
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
@@ -184,7 +179,6 @@ class Program : public Node {
     vector<Instr *> GetListInstr();
     SymbolTable & GetSymbolTable();
     void AddInstr(Instr * instr);
-    string GenerateAsm();
     void UnusedVariableAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();

@@ -50,14 +50,20 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        movl    %eax, " << p1 << endl;
             break;
         case sub:
-            o << "        subl     " << p2 << ", " << p1 << endl;
+            o << "        movl    " << p2 << ", %eax" << endl;
+            o << "        subl    " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case mul:
-            o << "        imull    " << p2 << ", " << p1 << endl;
+            o << "        movl    " << p2 << ", %eax" << endl;
+            o << "        imull    " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case div:
+            o << "        movl     " << p2 << ", %eax" << endl;
             o << "        cltd   " << endl;
-            o << "        idivl  " << p1 << endl;
+            o << "        idivl  " << p3 << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case orB:
             o << "        movl     " << p2 << ", %eax" << endl;
@@ -169,7 +175,15 @@ void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
     o << bb->label << ":" << endl;
     o << "        pushq    %rbp" << endl;
     o << "        movq     %rsp, %rbp" << endl;
-    o << "        subq     $" << to_string(this->symbolTable->CalculateSpaceForFunction("main")) << ", %rbp" << endl;
+
+    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
+
+    // Round space to the nearest multiple of 16
+    if (spaceNeeded % 16) {
+        spaceNeeded = ((spaceNeeded / 16) + 1) * 16;
+    }
+
+    o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
     o << "        jmp " << bb->exit_true->label << endl;
 } //fin de gen_asm_prologue
 
