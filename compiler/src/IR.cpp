@@ -54,13 +54,19 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        idivl    " << p1 << endl;
             break;
         case orB:
-            o << "        or      " << p1 << ", " << p2 << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        orl      " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case andB:
-            o << "        and     " << p1 << ", " << p2 << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        andl      " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case xorB:
-            o << "        xor     " << p1 << ", " << p2 << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        xorl      " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case neg:
             o << "        cmpl     $0, " << p2 << endl;
