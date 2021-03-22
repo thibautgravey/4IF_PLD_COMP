@@ -37,36 +37,42 @@ void IRInstr::gen_asm(ostream & o) {
     }
 
     switch (this->op) {
+        case ldconst:
+            o << "        movl    $" << p2 << ", " << p1 << endl;
+            break;
         case copy:
-            o << "        mov     " << p1 << ", " << p2 << endl;
+            o << "        movl    " << p2 << ", %eax" << endl;
+            o << "        movl    %eax, " << p1 << endl;
             break;
         case add:
-            o << "        add     " << p1 << ", " << p2 << endl;
+            o << "        movl    " << p2 << ", %eax" << endl;
+            o << "        addl    " << p3 << ", %eax" << endl;
+            o << "        movl    %eax, " << p1 << endl;
             break;
         case sub:
-            o << "        sub     " << p1 << ", " << p2 << endl;
+            o << "        subl     " << p2 << ", " << p1 << endl;
             break;
         case mul:
-            o << "        mul    " << p1 << ", " << p2 << endl;
+            o << "        imull    " << p2 << ", " << p1 << endl;
             break;
         case div:
-            o << "        cltd    " << endl;
-            o << "        idivl    " << p1 << endl;
+            o << "        cltd   " << endl;
+            o << "        idivl  " << p1 << endl;
             break;
         case orB:
-            o << "        or      " << p1 << ", " << p2 << endl;
+            o << "        orl     " << p2 << ", " << p1 << endl;
             break;
         case andB:
-            o << "        and     " << p1 << ", " << p2 << endl;
+            o << "        andl    " << p2 << ", " << p1 << endl;
             break;
         case xorB:
-            o << "        xor     " << p1 << ", " << p2 << endl;
+            o << "        xorl    " << p2 << ", " << p1 << endl;
             break;
         case rmem:
-            o << "        mov     " << p1 << ", " << p2 << endl;
+            o << "        movl    " << p2 << ", " << p1 << endl;
             break;
         case wmem:
-            o << "        mov     " << p1 << ", " << p2 << endl;
+            o << "        movl    " << p2 << ", " << p1 << endl;
             break;
         case call:
             o << "        call    " << p1 << endl;
@@ -81,7 +87,7 @@ void IRInstr::gen_asm(ostream & o) {
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
         case ret:
-            o << "        ret" << endl; //? Never used
+            o << "        movl    " << p1 << ", %eax" << endl;
             break;
         default:
             break;
@@ -106,7 +112,7 @@ void CFG::gen_asm(ostream & o) {
     gen_asm_prologue(o, this->bbs[0]);
     this->bbs.erase(this->bbs.begin());
     for (BasicBlock * bb : this->bbs) {
-        o << "." << bb->label << endl;
+        o << bb->label << endl;
         for (IRInstr * instr : bb->instrs) {
             instr->gen_asm(o);
         }
@@ -126,12 +132,16 @@ string CFG::IR_reg_to_asm(string reg) {
     string ret;
 
     if (reg == "reg1") {
-        ret = "eax";
+        ret = "%eax";
     } else if (reg == "reg2") {
-        ret = "ebx";
+        ret = "%ebx";
     } else {
-        int offset = this->symbolTable->GetVariableOffset("main", reg);
-        ret = "DWORD PTR -" + to_string(offset) + "[ebp]"; //? '-'
+        if (this->symbolTable->LookUp("main", reg)) {
+            int offset = this->symbolTable->GetVariableOffset("main", reg);
+            ret = to_string(offset) + "(%rbp)";
+        } else {
+            ret = reg;
+        }
     }
 
     return ret;
@@ -139,26 +149,25 @@ string CFG::IR_reg_to_asm(string reg) {
 
 void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
     o << "main:" << endl;
-    o << "." << bb->label << ":" << endl;
-    o << "        push    ebp" << endl;
-    o << "        mov     ebp, esp" << endl;
-    o << "        sub     ebp, " << to_string(this->symbolTable->CalculateSpaceForFunction("main")) << endl;
+    o << bb->label << ":" << endl;
+    o << "        pushq    %rbp" << endl;
+    o << "        movq     %rsp, %rbp" << endl;
+    o << "        subq     $" << to_string(this->symbolTable->CalculateSpaceForFunction("main")) << ", %rbp" << endl;
     o << "        jmp " << bb->exit_true->label << endl;
 } //fin de gen_asm_prologue
 
 void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {
-    o << "." << bb->label << ":" << endl;
+    o << bb->label << ":" << endl;
     o << "        leave" << endl;
     o << "        ret" << endl;
 } //fin de gen_asm_epilogue
 
-string CFG::new_BB_name() {
+string CFG::new_BB_name(string prefix) {
     string functionName = "main"; //TODO : change this when implementing function
-    if (this->nextBBnumber == 0) {
-        this->nextBBnumber++;
-        return functionName;
+    if (prefix.empty()) {
+        return "." + functionName + "BB" + to_string(this->nextBBnumber++);
     } else {
-        return functionName + "BB" + to_string(this->nextBBnumber++);
+        return "." + prefix + "_" + functionName;
     }
 } //fin de new_BB_name
 

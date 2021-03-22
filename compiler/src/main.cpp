@@ -50,8 +50,10 @@ int main(int argn, const char ** argv) {
     //TODO : Create an IR and generate ASM
     IR * ir = program->GenerateIR();
 
+    ir->GenerateAsmX86();
+
     string generatedAsm = program->GenerateAsm();
-    cout << generatedAsm << endl;
+    //cout << generatedAsm << endl;
 
     //Create the output path
     string outPath(argv[1]);

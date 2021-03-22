@@ -326,8 +326,12 @@ VarAffInstr::~VarAffInstr() {
 }
 
 void VarAffInstr::GenerateIR(CFG * cfg) {
-    string tmpVar = this->rightExpr->GenerateIR(cfg);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType("main", this->name), {this->name, tmpVar});
+    VarAffInstr * tmpInstr = this;
+    while (tmpInstr != nullptr) {
+        string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType("main", tmpInstr->name), {tmpInstr->name, tmpVar});
+        tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
+    }
 }
 
 //------- Réalisation de la classe <Program> ---
@@ -411,8 +415,8 @@ IR * Program::GenerateIR() {
     // TO DO : foreach function definition
     CFG * tmpCFG = new CFG(&(this->symbolTable));
 
-    BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
-    // TO DO : VOIR POUR LES INSTRUCTIONS DU PROLOGUE
+    // EMPTY BB FOR PROLOGUE
+    BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("prologue"));
 
     tmpCFG->add_bb(entry);
 
@@ -426,8 +430,8 @@ IR * Program::GenerateIR() {
         instr->GenerateIR(tmpCFG);
     }
 
-    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
-    // TO DO : VOIR POUR LES INSTRUCTIONS DE L'EPILOGUE
+    // EMPTY BB FOR EPILOGUE
+    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
 
     body->exit_true = output;
     tmpCFG->add_bb(output);
