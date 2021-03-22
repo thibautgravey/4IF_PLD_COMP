@@ -103,18 +103,18 @@ void CFG::add_bb(BasicBlock * bb) {
 void CFG::gen_asm(ostream & o) {
     BasicBlock * lastbb = this->bbs.back();
     this->bbs.pop_back();
-
     gen_asm_prologue(o, this->bbs[0]);
+    this->bbs.erase(this->bbs.begin());
     for (BasicBlock * bb : this->bbs) {
-        o << bb->label << endl;
+        o << "." << bb->label << endl;
         for (IRInstr * instr : bb->instrs) {
             instr->gen_asm(o);
         }
         if (bb->exit_false == nullptr) {
-            o << "jmp" << bb->exit_true->label << endl;
+            o << "        jmp " << bb->exit_true->label << endl;
         } else {
-            o << "je" << bb->exit_true->label << endl;
-            o << "jmp" << bb->exit_false->label << endl;
+            o << "        je " << bb->exit_true->label << endl;
+            o << "        jmp " << bb->exit_false->label << endl;
         }
     }
 
@@ -143,6 +143,7 @@ void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
     o << "        push    ebp" << endl;
     o << "        mov     ebp, esp" << endl;
     o << "        sub     ebp, " << to_string(this->symbolTable->CalculateSpaceForFunction("main")) << endl;
+    o << "        jmp " << bb->exit_true->label << endl;
 } //fin de gen_asm_prologue
 
 void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {

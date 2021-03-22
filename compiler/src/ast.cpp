@@ -418,6 +418,7 @@ IR * Program::GenerateIR() {
 
     BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
 
+    entry->exit_true = body;
     tmpCFG->add_bb(body);
 
     // TO DO : move this into GenerateIR of function definition
@@ -428,6 +429,7 @@ IR * Program::GenerateIR() {
     BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
     // TO DO : VOIR POUR LES INSTRUCTIONS DE L'EPILOGUE
 
+    body->exit_true = output;
     tmpCFG->add_bb(output);
 
     ir->AddCFG(tmpCFG);
