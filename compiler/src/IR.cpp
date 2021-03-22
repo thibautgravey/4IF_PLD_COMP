@@ -241,6 +241,8 @@ IRInstr::IRInstr(BasicBlock * bb_, Operation op, Type t, vector<string> params)
 BasicBlock::BasicBlock(CFG * cfg, string entry_label) {
     this->cfg = cfg;
     this->label = entry_label;
+    this->exit_true = nullptr;
+    this->exit_false = nullptr;
 } //fin de constructeur de BasicBlock
 
 //------------------------------------------------------------------ PRIVE

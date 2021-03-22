@@ -41,6 +41,12 @@ antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
             }
         }
 
+        if (!this->hasReturn) {
+            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
+            Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
+            program->AddInstr(retInstr);
+        }
+
     } else {
         program->SetErrorFlag(true);
     }
@@ -115,6 +121,7 @@ antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
 } //----- Fin de visitVar_aff
 
 antlrcpp::Any ASTGenerator::visitReturn_stmt(ifccParser::Return_stmtContext * ctx) {
+    this->hasReturn = true;
     Expr * expr = (Expr *)visit(ctx->expr());
     return (Instr *)new ReturnInstr(ctx->start->getLine(), expr);
 } //----- Fin de visitReturn_stmt
