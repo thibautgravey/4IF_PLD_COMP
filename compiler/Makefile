@@ -4,18 +4,16 @@ SOURCES=src
 GRAMMAR=ifcc.g4
 
 #override with your local installation
-#ANTLR4_BINDIR=/usr/bin
-#ANTLR4_INCDIR=/shares/public/tp/ANTLR4-CPP/antlr4-runtime
-#ANTLR4_LIBDIR=/shares/public/tp/ANTLR4-CPP/lib
 ANTLR4_BINDIR=/usr/bin
 ANTLR4_INCDIR=/usr/local/include/antlr4-runtime
 ANTLR4_LIBDIR=/usr/local/lib
+TEST_DIR=../tests
 
 CC=clang++
 CCARGS=-g -c -I $(ANTLR4_INCDIR) -I $(GENERATED) -std=c++11 -Wno-defaulted-function-deleted -Wno-unknown-warning-option
 LDARGS=-g
 
-all: ifcc
+compile: ifcc
 
 ifcc: dirs antlr $(SOURCES)/main.cpp $(SOURCES)/ASTGenerator.cpp $(SOURCES)/ASTGenerator.h $(SOURCES)/SymbolTable.cpp $(SOURCES)/SymbolTable.h $(SOURCES)/IR.cpp $(SOURCES)/IR.h
 	$(CC) $(CCARGS) $(SOURCES)/main.cpp  -o $(OUTPUT)/main.o
@@ -35,6 +33,9 @@ antlr: $(GRAMMAR)
 dirs:
 	mkdir -p $(OUTPUT)
 	mkdir -p $(GENERATED)
+
+test:
+	cd $(TEST_DIR) && sh test_if.sh
 
 clean:
 	rm -rf $(OUTPUT)
