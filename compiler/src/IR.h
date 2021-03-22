@@ -122,7 +122,7 @@ class CFG {
     SymbolTable * GetSymbolTable();
 
     // basic block management
-    string new_BB_name(string prefix = "");
+    string new_BB_name(const string & prefix = "");
 
   protected:
     int nextBBnumber;         /**< just for naming */

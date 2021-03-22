@@ -193,7 +193,7 @@ void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {
     o << "        ret" << endl;
 } //fin de gen_asm_epilogue
 
-string CFG::new_BB_name(string prefix) {
+string CFG::new_BB_name(const string & prefix) {
     string functionName = "main"; //TODO : change this when implementing function
     if (prefix.empty()) {
         return "." + functionName + "BB" + to_string(this->nextBBnumber++);
