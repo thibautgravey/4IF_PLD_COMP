@@ -22,9 +22,15 @@ using namespace std;
 
 //----------------------------------------------------- Méthodes publiques
 bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLine) {
+
     auto iterator = globalFunctionTable.find(name);
     if (iterator != globalFunctionTable.end()) {
         printError("function " + name + " already exist in globalFunctionTable");
+        return false;
+    }
+
+    if (type == ERROR) {
+        printError("function " + name + " has a bad return type");
         return false;
     }
 
@@ -38,6 +44,7 @@ bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLin
 } //----- Fin de DefineFunction
 
 bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope) {
+
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         printError("function " + function + " does not exist in globalFunctionTable");
@@ -46,6 +53,12 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
 
     string completeName = scope + name;
     ContextTable * contextTable = globalFunctionTableIterator->second;
+
+    if (type == ERROR) {
+        printError("variable " + completeName + " has a bad type");
+        return false;
+    }
+
     auto it = contextTable->contextVariableTable.find(completeName);
     if (it != contextTable->contextVariableTable.end()) {
         printError("variable " + completeName + " already exist in contextVariableTable from " + function);
@@ -158,6 +171,15 @@ int SymbolTable::CalculateSpaceForFunction(const string & function) {
     ContextTable * contextTable = globalFunctionTableIterator->second;
     return -contextTable->offsetContext;
 }
+
+Type SymbolTable::StringToType(const string & name) {
+    auto it = TYPE_TABLE.find(name);
+    if (it != TYPE_TABLE.end()) {
+        return it->second;
+    } else {
+        return ERROR;
+    }
+} //----- Fin de ~StringToType
 
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable() {

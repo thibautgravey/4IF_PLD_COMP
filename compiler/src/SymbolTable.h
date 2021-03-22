@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_map>
 
 using namespace std;
 
@@ -24,6 +25,8 @@ enum Type {
     INT,
     ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
 };
+
+static unordered_map<string, Type> const TYPE_TABLE = {{"int", INT}};
 
 struct ContextVariable {
     Type type;
@@ -70,6 +73,8 @@ class SymbolTable {
     void SetUsedVariable(const string & function, const string & name, const string & scope = "");
 
     int CalculateSpaceForFunction(const string & function);
+
+    Type StringToType(const string & name);
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;

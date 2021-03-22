@@ -177,6 +177,8 @@ OK_COLOR = "\033[92m"
 FAIL_COLOR = "\033[91m"
 END_COLOR = "\033[0m"
 
+test_fail = False
+
 for jobname in jobs:
     os.chdir(orig_cwd)
 
@@ -206,10 +208,12 @@ for jobname in jobs:
     elif gccstatus != 0 and pldstatus == 0:
         ## padawan wrongly accepts invalid program -> error
         print(FAIL_COLOR + "TEST FAIL (your compiler accepts an invalid program)" + END_COLOR)
+        test_fail = True
         continue
     elif gccstatus == 0 and pldstatus != 0:
         ## padawan wrongly rejects valid program -> error
         print(FAIL_COLOR + "TEST FAIL (your compiler rejects a valid program)" + END_COLOR)
+        test_fail = True
         if args.verbose:
             dumpfile("pld-compile.txt")
         continue
@@ -218,6 +222,7 @@ for jobname in jobs:
         ldstatus=command("gcc -o exe-pld asm-pld.s", "pld-link.txt")
         if ldstatus:
             print(FAIL_COLOR + "TEST FAIL (your compiler produces incorrect assembly)" + END_COLOR)
+            test_fail = True
             if args.verbose:
                 dumpfile("pld-link.txt")
             continue
@@ -228,6 +233,7 @@ for jobname in jobs:
     exepldstatus=command("./exe-pld","pld-execute.txt")
     if open("gcc-execute.txt").read() != open("pld-execute.txt").read() :
         print(FAIL_COLOR + "TEST FAIL (different results at execution)" + END_COLOR)
+        test_fail = True
         if args.verbose:
             print("GCC:")
             dumpfile("gcc-execute.txt")
@@ -237,3 +243,8 @@ for jobname in jobs:
 
     ## last but not least
     print(OK_COLOR + "TEST OK" + END_COLOR)
+
+if test_fail:
+    sys.exit(1)
+else:
+    sys.exit(0)

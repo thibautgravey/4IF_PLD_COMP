@@ -5,6 +5,7 @@
 #include "ifccLexer.h"
 #include "ifccParser.h"
 
+#include "IR.h"
 #include "ast.h"
 
 using namespace antlr4;
@@ -25,6 +26,14 @@ int main(int argn, const char ** argv) {
     ifccParser parser(&tokens);
     tree::ParseTree * tree = parser.axiom();
 
+    //TODO : Check error from the parser
+
+    int lexerErrors = lexer.getNumberOfSyntaxErrors();
+    int parserErrors = parser.getNumberOfSyntaxErrors();
+
+    if (lexerErrors || parserErrors)
+        return EXIT_FAILURE;
+
     //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST with first static analysis
 
     ASTGenerator astGenerator;
@@ -35,40 +44,35 @@ int main(int argn, const char ** argv) {
 
     program->UnusedVariableAnalysis();
 
-    //TODO : Check error
-
-    int lexerErrors = lexer.getNumberOfSyntaxErrors();
-    int parserErrors = parser.getNumberOfSyntaxErrors();
-
-    if (lexerErrors || parserErrors || program->GetErrorFlag())
-        return 1;
+    if (program->GetErrorFlag())
+        return EXIT_FAILURE;
 
     //TODO : Create an IR and generate ASM
-    string generatedAsm = program->GenerateAsm();
-    cout << generatedAsm << endl;
+    IR * ir = program->GenerateIR();
 
     //Create the output path
     string outPath(argv[1]);
     if (argn == 3) {
         outPath = string(argv[2]);
-    }
 
-    size_t dotPosition = outPath.find('.');
-    if (dotPosition != string::npos) {
-        outPath.erase(outPath.find('.'));
-    }
-    outPath.append(".s");
+        size_t dotPosition = outPath.find('.');
+        if (dotPosition != string::npos) {
+            outPath.erase(outPath.find('.'));
+        }
+        outPath.append(".s");
 
-    ofstream out(outPath);
-    if (out.bad()) {
-        cerr << "An error occured when writing Generated ASM to " + outPath << endl;
+        ofstream out(outPath);
+        if (out.bad()) {
+            cerr << "An error occured when writing Generated ASM to " + outPath << endl;
+        } else {
+            ir->GenerateAsmX86(out);
+            out.close();
+        }
     } else {
-        out << generatedAsm;
+        ir->GenerateAsmX86(cout);
     }
-
-    out.close();
 
     //TODO : Generate an exec file with a an "as file.s -o file.o" and then link using gcc
 
-    return 0;
+    return EXIT_SUCCESS;
 }

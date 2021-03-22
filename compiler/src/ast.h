@@ -1,6 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
+#include "IR.h"
 #include "SymbolTable.h"
 
 #include <string>
@@ -11,7 +12,15 @@ enum BinaryOperator {
     PLUS,
     MINUS,
     MULT,
-    DIV
+    DIV,
+    OR,
+    XOR,
+    AND
+};
+
+enum UnitOperator {
+    NOT,
+    OPP
 };
 
 //---------- Interface de la classe <Node> ----------------
@@ -32,6 +41,8 @@ class Node {
 //---------- Interface de la classe <Expr> ----------------
 class Expr : public Node {
   public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual string GenerateIR(CFG * cfg) = 0;
     //-------------------------------------------- Constructeurs - destructeur
     Expr(int line)
         : Node(line){};
@@ -44,6 +55,7 @@ class Var : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
     string GetName();
+    virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     Var(int line, string name)
         : Expr(line), name(name){};
@@ -59,6 +71,7 @@ class ConstLiteral : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
     int GetValue() const;
+    virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     ConstLiteral(int line, int value)
         : Expr(line), value(value){};
@@ -76,7 +89,7 @@ class OpBin : public Expr {
     Expr * GetOperand1();
     Expr * GetOperand2();
     BinaryOperator GetOp();
-    string GenerateAsmOpBin(SymbolTable & symbolTable, string & assembly);
+    virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
     OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
@@ -90,11 +103,30 @@ class OpBin : public Expr {
     BinaryOperator op;
 };
 
+//---------- Interface de la classe <OpUn> ----------------
+class OpUn : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetOperand();
+    UnitOperator GetOp();
+    virtual string GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    OpUn(int line, Expr * operand, UnitOperator op)
+        : Expr(line), operand(operand), op(op){};
+
+    virtual ~OpUn();
+
+  protected:
+    Expr * operand;
+    UnitOperator op;
+};
+
 //---------- Interface de la classe <Instr> ----------------
 class Instr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
-    virtual string GenerateAsm(SymbolTable & symbolTable) = 0;
+    virtual void GenerateIR(CFG * cfg) = 0;
     //-------------------------------------------- Constructeurs - destructeur
     Instr(int line)
         : Node(line){};
@@ -107,7 +139,7 @@ class ReturnInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
     Expr * GetReturnExpr();
-    virtual string GenerateAsm(SymbolTable & symbolTable);
+    virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     ReturnInstr(int line, Expr * expr)
         : Instr(line), returnExpr(expr){};
@@ -126,7 +158,7 @@ class VarAffInstr : public Instr {
     Expr * GetRightExpr();
     void SetVarAffInstrNext(Instr * next);
     Instr * GetvarAffInstrNext();
-    virtual string GenerateAsm(SymbolTable & symbolTable);
+    virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
     VarAffInstr(int line, string name, Expr * rightExpr, Instr * next = nullptr)
@@ -147,10 +179,10 @@ class Program : public Node {
     vector<Instr *> GetListInstr();
     SymbolTable & GetSymbolTable();
     void AddInstr(Instr * instr);
-    string GenerateAsm();
     void UnusedVariableAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();
+    IR * GenerateIR();
     //-------------------------------------------- Constructeurs - destructeur
     Program(int l)
         : Node(l), errorFlag(false) {}

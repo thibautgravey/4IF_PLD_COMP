@@ -48,22 +48,29 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitPar(ifccParser::ParContext * ctx) override;
 
-    virtual antlrcpp::Any visitAdd(ifccParser::AddContext * ctx) override;
+    virtual antlrcpp::Any visitLess_or_add(ifccParser::Less_or_addContext * ctx) override;
 
-    virtual antlrcpp::Any visitLess(ifccParser::LessContext * ctx) override;
+    virtual antlrcpp::Any visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) override;
 
-    virtual antlrcpp::Any visitDiv(ifccParser::DivContext * ctx) override;
+    virtual antlrcpp::Any visitOr(ifccParser::OrContext * ctx) override;
 
-    virtual antlrcpp::Any visitMult(ifccParser::MultContext * ctx) override;
+    virtual antlrcpp::Any visitAnd(ifccParser::AndContext * ctx) override;
+
+    virtual antlrcpp::Any visitXor(ifccParser::XorContext * ctx) override;
 
     virtual antlrcpp::Any visitConst(ifccParser::ConstContext * ctx) override;
+
+    virtual antlrcpp::Any visitNot(ifccParser::NotContext * ctx) override;
+
+    virtual antlrcpp::Any visitOpp(ifccParser::OppContext * ctx) override;
 
     virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override;
 
     virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
 
     //-------------------------------------------- Constructeurs - destructeur
-    ASTGenerator() = default;
+    ASTGenerator()
+        : program(nullptr), lastDeclaredType(ERROR), hasReturn(false) {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -77,6 +84,8 @@ class ASTGenerator : public ifccBaseVisitor {
     //----------------------------------------------------- Attributs protégés
 
     Program * program;
+    Type lastDeclaredType;
+    bool hasReturn;
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 
