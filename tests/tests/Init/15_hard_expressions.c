@@ -7,5 +7,5 @@ int main()
     int x = (((a + b) * c) - c + a) * d;
     int g = (x + (d * 5) - 3) * b - a;
 
-    return 0;
+    return x+g;
 }

@@ -5,5 +5,5 @@ int main()
 
     int x = a * b;
 
-    return 0;
+    return x;
 }

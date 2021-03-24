@@ -4,5 +4,5 @@ int main()
     int b = 15;
     int x = 20 * b;
 
-    return 0;
+    return x;
 }
