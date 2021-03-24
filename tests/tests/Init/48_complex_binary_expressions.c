@@ -5,5 +5,5 @@ int main() {
     int k = 9;
     int d = (c | b) & 7 ^ k;
 
-    return 0;
+    return d;
 }
