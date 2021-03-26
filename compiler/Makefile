@@ -4,9 +4,12 @@ SOURCES=src
 GRAMMAR=ifcc.g4
 
 #override with your local installation
+#ANTLR4_BINDIR=/usr/bin
+#ANTLR4_INCDIR=/usr/local/include/antlr4-runtime
+#ANTLR4_LIBDIR=/usr/local/lib
 ANTLR4_BINDIR=/usr/bin
-ANTLR4_INCDIR=/usr/local/include/antlr4-runtime
-ANTLR4_LIBDIR=/usr/local/lib
+ANTLR4_INCDIR=/shares/public/tp/ANTLR4-CPP/antlr4-runtime
+ANTLR4_LIBDIR=/shares/public/tp/ANTLR4-CPP/lib
 TEST_DIR=../tests
 
 CC=clang++
