@@ -107,6 +107,28 @@ OpUn::~OpUn() {
     delete (operand);
 }
 
+//------- Réalisation de la classe <Function> ---
+vector<Expr *> Function::GetParams() {
+    return params;
+}
+
+string Function::GetName() {
+    return name;
+}
+
+void Function::SetParams(vector<Expr *> params) {
+    this->params = params;
+}
+
+string Function::GenerateIR(CFG * cfg) {
+}
+
+Function::~Function() {
+    for (Expr * param : params) {
+        delete (param);
+    }
+}
+
 //------- Réalisation de la classe <Instr> ---
 
 //------- Réalisation de la classe <ReturnInstr> ---
@@ -153,6 +175,52 @@ void VarAffInstr::GenerateIR(CFG * cfg) {
     }
 }
 
+Type VarAffInstr::GetType() {
+    return this->type;
+}
+
+//------- Réalisation de la classe <Param> ---
+Param::~Param() {
+}
+
+//------- Réalisation de la classe <DefFuncInstr> ---
+void DefFuncInstr::AddInstr(Instr * instr) {
+    listInstr.push_back(instr);
+}
+
+void DefFuncInstr::SetParam(vector<Param *> param) {
+    listParam = param;
+}
+
+Type DefFuncInstr::GetType() {
+    return type;
+}
+
+string DefFuncInstr::GetName() {
+    return name;
+}
+
+vector<Instr *> DefFuncInstr::GetListInstr() {
+    return listInstr;
+}
+
+vector<Param *> DefFuncInstr::GetListParam() {
+    return listParam;
+}
+
+void DefFuncInstr::GenerateIR(CFG * cfg) {
+}
+
+DefFuncInstr::~DefFuncInstr() {
+    for (Instr * instr : listInstr) {
+        delete (instr);
+    }
+
+    for (Param * param : listParam) {
+        delete (param);
+    }
+}
+
 //------- Réalisation de la classe <Program> ---
 vector<Instr *> Program::GetListInstr() {
     return this->listInstr;
@@ -169,6 +237,10 @@ void Program::AddInstr(Instr * instr) {
 void Program::UnusedVariableAnalysis() const {
     this->symbolTable.UnusedVariableAnalysis();
 } //----- Fin de UnusedVariableAnalysis
+
+void Program::UnusedFunctionAnalysis() const {
+    this->symbolTable.UnusedFunctionAnalysis();
+}
 
 void Program::SetErrorFlag(bool flag) {
     this->errorFlag = flag;

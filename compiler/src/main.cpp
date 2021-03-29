@@ -43,6 +43,7 @@ int main(int argn, const char ** argv) {
     //TODO : Other static analysis
 
     program->UnusedVariableAnalysis();
+    program->UnusedFunctionAnalysis();
 
     if (program->GetErrorFlag())
         return EXIT_FAILURE;

@@ -2,39 +2,48 @@ grammar ifcc;
 
 axiom: prog;
 
-prog: TYPE 'main' '(' ')' '{' line* '}';
+prog: def_func+;
 
-line: var_decl | var_aff | return_stmt;
+def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
-var_decl: TYPE VAR_NAME ('=' expr)? (inline_var_decl)* ';';
+param_list: param (',' param)*;
 
-inline_var_decl: (',' VAR_NAME ('=' expr)?);
+param: TYPE ID;
 
-var_aff: VAR_NAME '=' expr ';';
+line: var_decl | var_aff | expr ';' | return_stmt;
+
+var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
+
+inline_var_decl: (',' ID ('=' expr)?);
+
+var_aff: ID '=' expr ';';
 
 return_stmt: 'return' expr ';';
 
 expr:
-	CONST							# const
-	| VAR_NAME						# var
-	| '(' expr ')'					# par
-	| expr (OP_DIV | OP_MULT) expr	# div_or_mult
-	| expr (OP_LESS | OP_ADD) expr	# less_or_add
-	| expr '&' expr					# and
-	| expr '|' expr					# or
-	| expr '^' expr					# xor
-	| '-' expr						# opp
-	| '!' expr						# not;
+	CONST								# const
+	| ID								# var
+	| '(' expr ')'						# par
+	| (OP_LESS | OP_UNAIRE_NOT) expr	# opp_or_not
+	| expr (OP_DIV | OP_MULT) expr		# div_or_mult
+	| expr (OP_LESS | OP_ADD) expr		# less_or_add
+	| expr '&' expr						# and
+	| expr '|' expr						# or
+	| expr '^' expr						# xor
+	| ID '(' expr_list? ')'				# function;
 
-TYPE: 'int';
+expr_list: expr (',' expr)*;
+
+TYPE: 'int' | 'void';
 
 CONST: [0-9]+;
 OP_DIV: '/';
 OP_MULT: '*';
 OP_LESS: '-';
 OP_ADD: '+';
+OP_UNAIRE_NOT: '!';
 
-VAR_NAME: [a-zA-Z_][\\w]*;
+ID: [_a-zA-Z][_a-zA-Z0-9]*;
 
 COMMENT: '/*' .*? '*/' -> skip;
 

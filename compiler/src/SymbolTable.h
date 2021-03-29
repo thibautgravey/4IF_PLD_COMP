@@ -23,10 +23,11 @@ using namespace std;
 
 enum Type {
     INT,
+    VOID,
     ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
 };
 
-static unordered_map<string, Type> const TYPE_TABLE = {{"int", INT}};
+static unordered_map<string, Type> const TYPE_TABLE = {{"int", INT}, {"void", VOID}};
 
 struct ContextVariable {
     Type type;
@@ -40,6 +41,7 @@ struct ContextTable {
     int declaredLine;
     int offsetContext = 0;
     Type returnType;
+    bool used = false;
 };
 
 //------------------------------------------------------------------------
@@ -58,7 +60,9 @@ class SymbolTable {
 
     bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope = "");
 
-    bool LookUp(const string & function, const string & name, const string & scope = "") const;
+    bool LookUpVariable(const string & function, const string & name, const string & scope = "") const;
+
+    bool LookUpFunction(const string & function) const;
 
     string CreateTempVar(const string & function, Type type);
 
@@ -70,7 +74,11 @@ class SymbolTable {
 
     void UnusedVariableAnalysis() const;
 
+    void UnusedFunctionAnalysis() const;
+
     void SetUsedVariable(const string & function, const string & name, const string & scope = "");
+
+    void SetUsedFunction(const string & function);
 
     int CalculateSpaceForFunction(const string & function);
 
@@ -90,6 +98,8 @@ class SymbolTable {
   protected:
     //----------------------------------------------------- Méthodes privées
     struct ContextVariable * getVariable(const string & function, const string & name, const string & scope = "") const;
+
+    struct ContextTable * getFunction(const string & function) const;
 
     void decreaseContextOffset(const string & function);
 

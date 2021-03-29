@@ -159,7 +159,7 @@ string CFG::IR_reg_to_asm(string reg) {
     } else if (reg == "reg2") {
         ret = "%ebx";
     } else {
-        if (this->symbolTable->LookUp("main", reg)) {
+        if (this->symbolTable->LookUpVariable("main", reg)) {
             int offset = this->symbolTable->GetVariableOffset("main", reg);
             ret = to_string(offset) + "(%rbp)";
         } else {

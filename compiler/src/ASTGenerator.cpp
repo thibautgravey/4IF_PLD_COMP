@@ -10,6 +10,7 @@
 
 //-------------------------------------------------------- Include système
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -27,31 +28,15 @@ antlrcpp::Any ASTGenerator::visitAxiom(ifccParser::AxiomContext * ctx) {
 } //----- Fin de visitAxiom
 
 antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
+
     program = new Program(ctx->start->getLine());
 
-    Type declaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+    Instr * instr;
 
-    if (program->GetSymbolTable().DefineFunction("main", declaredType, ctx->start->getLine())) {
-
-        for (int i = 0; i < ctx->line().size(); i++) {
-            Instr * instr = (Instr *)visit(ctx->line(i));
-
-            if (instr != nullptr) {
-                program->AddInstr(instr);
-            }
-        }
-
-        if (!this->hasReturn) {
-            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
-            Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
-            program->AddInstr(retInstr);
-        }
-
-    } else {
-        program->SetErrorFlag(true);
+    for (int i = 0; i < ctx->def_func().size(); i++) {
+        instr = (Instr *)visit(ctx->def_func(i));
+        program->AddInstr(instr);
     }
-
-    return program;
 } //----- Fin de visitProg
 
 antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
@@ -62,6 +47,8 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
         instr = (Instr *)visit(ctx->return_stmt());
     } else if (ctx->var_decl()) {
         instr = (Instr *)visit(ctx->var_decl());
+    } else if (ctx->expr()) {
+        instr = (Instr *)visit(ctx->expr());
     }
 
     return instr;
@@ -73,11 +60,11 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 
     lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
-    if (program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), lastDeclaredType, ctx->start->getLine())) {
+    if (program->GetSymbolTable().DefineVariable("main", ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
 
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
-            tmpRet = new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+            tmpRet = new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
             ret = tmpRet;
         }
 
@@ -103,10 +90,10 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
     Instr * ret = nullptr;
 
-    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable("main", ctx->VAR_NAME()->getText(), lastDeclaredType, ctx->start->getLine())) {
+    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable("main", ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
-            ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+            ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
         }
     } else {
         program->SetErrorFlag(true);
@@ -117,11 +104,11 @@ antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declCont
 
 antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
     Expr * expr = (Expr *)visit(ctx->expr());
-    return (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->VAR_NAME()->getText(), expr);
+    return (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
 } //----- Fin de visitVar_aff
 
 antlrcpp::Any ASTGenerator::visitReturn_stmt(ifccParser::Return_stmtContext * ctx) {
-    this->hasReturn = true;
+    this->mainHasReturn = true;
     Expr * expr = (Expr *)visit(ctx->expr());
     return (Instr *)new ReturnInstr(ctx->start->getLine(), expr);
 } //----- Fin de visitReturn_stmt
@@ -186,30 +173,109 @@ antlrcpp::Any ASTGenerator::visitConst(ifccParser::ConstContext * ctx) {
     return (Expr *)new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
 } //----- Fin de visitConst
 
-antlrcpp::Any ASTGenerator::visitNot(ifccParser::NotContext * ctx) {
+antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx) {
     Expr * op = (Expr *)visit(ctx->expr());
-    UnitOperator unitOperatorNot = NOT;
-    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperatorNot);
-} //----- Fin de visitNot
+    UnitOperator unitOperator;
 
-antlrcpp::Any ASTGenerator::visitOpp(ifccParser::OppContext * ctx) {
-    Expr * op = (Expr *)visit(ctx->expr());
-    UnitOperator unitOperatorOpp = OPP;
-    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperatorOpp);
-} //----- Fin de visitOpp
+    if (ctx->OP_LESS()) {
+        unitOperator = OPP;
+    } else if (ctx->OP_UNAIRE_NOT()) {
+        unitOperator = NOT;
+    }
+
+    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperator);
+} //----- Fin de visitOpp_or_not
 
 antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
     Expr * ret = nullptr;
-    if (program->GetSymbolTable().LookUp("main", ctx->VAR_NAME()->getText())) {
-        ret = new Var(ctx->start->getLine(), ctx->VAR_NAME()->getText());
-        program->GetSymbolTable().SetUsedVariable("main", ctx->VAR_NAME()->getText());
+    if (program->GetSymbolTable().LookUpVariable("main", ctx->ID()->getText())) {
+        ret = new Var(ctx->start->getLine(), ctx->ID()->getText());
+        program->GetSymbolTable().SetUsedVariable("main", ctx->ID()->getText());
     } else {
         program->SetErrorFlag(true);
-        cerr << "variable " + ctx->VAR_NAME()->getText() + " does not exist in contextVariableTable from " + "main";
+        cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + "main";
     }
 
     return ret;
 } //----- Fin de visitVar
+
+antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
+    Expr * ret = nullptr;
+    if (program->GetSymbolTable().LookUpFunction(ctx->ID()->getText())) {
+        Function * function = new Function(ctx->start->getLine(), ctx->ID()->getText());
+        if (ctx->expr_list()) {
+            function->SetParams(visit(ctx->expr_list()));
+        }
+        ret = function;
+    } else {
+        program->SetErrorFlag(true);
+        cerr << "function " + ctx->ID()->getText() + " does not exist in globalFunctionTable";
+    }
+
+    return ret;
+} //----- Fin de visitFunction
+
+antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
+    //string func_name = ctx->FUNC_NAME()->getText();
+    string func_name("main");
+    Type func_type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+    DefFuncInstr * def_func = nullptr;
+
+    if (program->GetSymbolTable().DefineFunction(func_name, func_type, ctx->start->getLine())) {
+        this->currentFunction = func_name;
+
+        def_func = new DefFuncInstr(ctx->start->getLine(), func_name, func_type);
+
+        if (ctx->param_list()) {
+            def_func->SetParam(visit(ctx->param_list()));
+        }
+
+        for (int i = 0; i < ctx->line().size(); i++) {
+            Instr * instr = (Instr *)visit(ctx->line(i));
+
+            if (instr != nullptr) {
+                def_func->AddInstr(instr);
+            }
+        }
+
+        if (!this->mainHasReturn && func_name.compare("main")) {
+            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
+            Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
+            def_func->AddInstr(retInstr);
+        }
+
+    } else {
+        program->SetErrorFlag(true);
+    }
+
+    return def_func;
+
+} //----- Fin de visitDef_func
+
+antlrcpp::Any ASTGenerator::visitParam_list(ifccParser::Param_listContext * ctx) {
+    vector<Param *> params;
+
+    for (int i = 0; i < ctx->param().size(); i++) {
+        params.push_back(visit(ctx->param(i)));
+    }
+
+    return params;
+} //----- Fin de visitParam_list
+
+antlrcpp::Any ASTGenerator::visitParam(ifccParser::ParamContext * ctx) {
+    Type type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+    Param * ret = new Param(ctx->start->getLine(), ctx->ID()->getText(), type);
+} //----- Fin de visitParam
+
+antlrcpp::Any ASTGenerator::visitExpr_list(ifccParser::Expr_listContext * ctx) {
+    vector<Expr *> params;
+
+    for (int i = 0; i < ctx->expr().size(); i++) {
+        params.push_back(visit(ctx->expr(i)));
+    }
+
+    return params;
+} //----- Fin de visitExpr_list
 
 //-------------------------------------------- Constructeurs - destructeur
 

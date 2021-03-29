@@ -122,6 +122,26 @@ class OpUn : public Expr {
     UnitOperator op;
 };
 
+//---------- Interface de la classe <Function> ----------------
+class Function : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    vector<Expr *> GetParams();
+    string GetName();
+    void SetParams(vector<Expr *> params);
+    virtual string GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    Function(int line, string name)
+        : Expr(line), name(name){};
+
+    virtual ~Function();
+
+  protected:
+    vector<Expr *> params;
+    string name;
+};
+
 //---------- Interface de la classe <Instr> ----------------
 class Instr : public Node {
   public:
@@ -156,20 +176,57 @@ class VarAffInstr : public Instr {
     //----------------------------------------------------- Méthodes publiques
     string GetName();
     Expr * GetRightExpr();
+    Type GetType();
     void SetVarAffInstrNext(Instr * next);
     Instr * GetvarAffInstrNext();
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    VarAffInstr(int line, string name, Expr * rightExpr, Instr * next = nullptr)
-        : Instr(line), name(name), rightExpr(rightExpr), varAffInstrNext(next){};
+    VarAffInstr(int line, string name, Type type, Expr * rightExpr, Instr * next = nullptr)
+        : Instr(line), name(name), type(type), rightExpr(rightExpr), varAffInstrNext(next){};
 
     virtual ~VarAffInstr();
 
   protected:
     string name;
+    Type type;
     Expr * rightExpr;
     Instr * varAffInstrNext;
+};
+
+//---------- Interface de la classe <Param> ----------------
+class Param : public VarAffInstr {
+    //-------------------------------------------- Constructeurs - destructeur
+  public:
+    Param(int line, string name, Type type)
+        : VarAffInstr(line, name, type, nullptr) {}
+
+    virtual ~Param();
+};
+
+//---------- Interface de la classe <DefFuncInstr> ----------------
+class DefFuncInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    void AddInstr(Instr * instr);
+    void SetParam(vector<Param *> param);
+    Type GetType();
+    string GetName();
+    vector<Instr *> GetListInstr();
+    vector<Param *> GetListParam();
+    virtual void GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    DefFuncInstr(int line, string name, Type type)
+        : Instr(line), name(name), type(type) {}
+
+    virtual ~DefFuncInstr();
+
+  protected:
+    Type type;
+    string name;
+    vector<Instr *> listInstr;
+    vector<Param *> listParam;
 };
 
 //---------- Interface de la classe <Program> ----------------
@@ -180,6 +237,7 @@ class Program : public Node {
     SymbolTable & GetSymbolTable();
     void AddInstr(Instr * instr);
     void UnusedVariableAnalysis() const;
+    void UnusedFunctionAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();
     IR * GenerateIR();

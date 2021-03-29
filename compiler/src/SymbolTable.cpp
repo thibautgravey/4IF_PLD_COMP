@@ -76,7 +76,7 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
     return true;
 } //----- Fin de DefineVariable
 
-bool SymbolTable::LookUp(const string & function, const string & name, const string & scope) const {
+bool SymbolTable::LookUpVariable(const string & function, const string & name, const string & scope) const {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         return false;
@@ -90,7 +90,16 @@ bool SymbolTable::LookUp(const string & function, const string & name, const str
     }
 
     return true;
-} //----- Fin de LookUp
+} //----- Fin de LookUpVariable
+
+bool SymbolTable::LookUpFunction(const string & function) const {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        return false;
+    }
+
+    return true;
+} //----- Fin de LookUpFunction
 
 Type SymbolTable::GetVariableType(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
@@ -154,10 +163,25 @@ void SymbolTable::UnusedVariableAnalysis() const {
     }
 } //----- Fin de UnusedVariableAnalysis
 
+void SymbolTable::UnusedFunctionAnalysis() const {
+    for (const auto & function : globalFunctionTable) {
+        if (!function.second->used && !function.first.compare("main")) {
+            printError("WARN : function " + function.first + " is declared at line " + to_string(function.second->declaredLine) + " but never used in the program");
+        }
+    }
+} //----- Fin de UnusedFunctionAnalysis
+
 void SymbolTable::SetUsedVariable(const string & function, const string & name, const string & scope) {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable != nullptr) {
         variable->used = true;
+    }
+}
+
+void SymbolTable::SetUsedFunction(const string & function) {
+    ContextTable * functionPointer = getFunction(function);
+    if (functionPointer != nullptr) {
+        functionPointer->used = true;
     }
 }
 
@@ -221,6 +245,16 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
 
     return it->second;
 } //----- Fin de getVariable
+
+struct ContextTable * SymbolTable::getFunction(const string & function) const {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + function + " does not exist in globalFunctionTable");
+        return nullptr;
+    }
+
+    return globalFunctionTableIterator->second;
+} //----- Fin de getFunction
 
 void SymbolTable::decreaseContextOffset(const string & function) {
     // In this function, we've already check the existence of the function

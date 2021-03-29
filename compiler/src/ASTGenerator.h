@@ -60,17 +60,25 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitConst(ifccParser::ConstContext * ctx) override;
 
-    virtual antlrcpp::Any visitNot(ifccParser::NotContext * ctx) override;
-
-    virtual antlrcpp::Any visitOpp(ifccParser::OppContext * ctx) override;
+    virtual antlrcpp::Any visitOpp_or_not(ifccParser::Opp_or_notContext * ctx) override;
 
     virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override;
 
+    virtual antlrcpp::Any visitFunction(ifccParser::FunctionContext * ctx) override;
+
     virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
+
+    virtual antlrcpp::Any visitDef_func(ifccParser::Def_funcContext * ctx) override;
+
+    virtual antlrcpp::Any visitParam_list(ifccParser::Param_listContext * ctx) override;
+
+    virtual antlrcpp::Any visitParam(ifccParser::ParamContext * ctx) override;
+
+    virtual antlrcpp::Any visitExpr_list(ifccParser::Expr_listContext * ctx) override;
 
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()
-        : program(nullptr), lastDeclaredType(ERROR), hasReturn(false) {}
+        : program(nullptr), lastDeclaredType(ERROR), mainHasReturn(false) {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -85,7 +93,8 @@ class ASTGenerator : public ifccBaseVisitor {
 
     Program * program;
     Type lastDeclaredType;
-    bool hasReturn;
+    bool mainHasReturn;
+    string currentFunction;
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 
