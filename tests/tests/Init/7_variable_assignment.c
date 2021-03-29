@@ -1,5 +1,7 @@
-int main () {
-    int a = 1;
-    int b = a;
+#include <stdint.h>
+
+int32_t main () {
+    int32_t a = 1;
+    int32_t b = a;
     return b;
 }

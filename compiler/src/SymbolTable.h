@@ -22,11 +22,13 @@ using namespace std;
 //------------------------------------------------------------------ Types
 
 enum Type {
-    INT,
-    ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
+    INT32_T,
+    INT64_T,
+    ERROR 
+    // CHAR, LONG, DOUBLE, STRING
 };
 
-static unordered_map<string, Type> const TYPE_TABLE = {{"int", INT}};
+static unordered_map<string, Type> const TYPE_TABLE = {{"int32_t", INT32_T}};
 
 struct ContextVariable {
     Type type;

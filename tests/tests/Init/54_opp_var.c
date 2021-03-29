@@ -1,4 +1,6 @@
-int main() {
-    int g = -10, h = -g;
+#include <stdint.h>
+
+int32_t main() {
+    int32_t g = -10, h = -g;
     return g;
 }

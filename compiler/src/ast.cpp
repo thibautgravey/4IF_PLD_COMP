@@ -17,13 +17,13 @@ string Var::GenerateIR(CFG * cfg) {
 }
 
 //------- Réalisation de la classe <ConstLiteral> ---
-int ConstLiteral::GetValue() const {
+int32_t ConstLiteral::GetValue() const {
     return this->value;
 }
 
 string ConstLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT, {tmpVar, to_string(this->GetValue())});
+    string tmpVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT32_T);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar, to_string(this->GetValue())});
     return tmpVar;
 }
 
@@ -48,28 +48,28 @@ OpBin::~OpBin() {
 string OpBin::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand1->GenerateIR(cfg);
     string tmpVar2 = this->operand2->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT32_T);
     switch (this->op) {
         case BinaryOperator::PLUS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::MINUS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::MULT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::DIV:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::OR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::AND:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::XOR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
 
         default:
@@ -89,13 +89,13 @@ UnitOperator OpUn::GetOp() {
 
 string OpUn::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT32_T);
     switch (this->op) {
         case UnitOperator::NOT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT, {tmpResVar, tmpVar1});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT32_T, {tmpResVar, tmpVar1});
             break;
         case UnitOperator::OPP:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT, {tmpResVar, tmpVar1});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT32_T, {tmpResVar, tmpVar1});
             break;
         default:
             break;
@@ -187,7 +187,7 @@ Program::~Program() {
 IR * Program::GenerateIR() {
     IR * ir = new IR();
 
-    // TO DO : foreach function definition
+    // TODO : foreach function definition
     CFG * tmpCFG = new CFG(&(this->symbolTable));
 
     // EMPTY BB FOR PROLOGUE
@@ -200,7 +200,7 @@ IR * Program::GenerateIR() {
     entry->exit_true = body;
     tmpCFG->add_bb(body);
 
-    // TO DO : move this into GenerateIR of function definition
+    // TODO : move this INT32_To GenerateIR of function definition
     for (Instr * instr : this->listInstr) {
         instr->GenerateIR(tmpCFG);
     }

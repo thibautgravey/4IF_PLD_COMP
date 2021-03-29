@@ -1,6 +1,8 @@
-int main() {
-    int a = 4;
-    int c = a / 2;
+#include <stdint.h>
+
+int32_t main() {
+    int32_t a = 4;
+    int32_t c = a / 2;
 
     return c;
 }

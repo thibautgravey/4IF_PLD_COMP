@@ -1,7 +1,9 @@
-int main()
+#include <stdint.h>
+
+int32_t main()
 {
-    int a = 2;
-    int b = 3;
-    int c = b * a + 5;
+    int32_t a = 2;
+    int32_t b = 3;
+    int32_t c = b * a + 5;
     return c;
 }

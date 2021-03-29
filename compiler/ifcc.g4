@@ -26,7 +26,7 @@ expr:
 	| '-' expr						# opp
 	| '!' expr						# not;
 
-TYPE: 'int';
+TYPE: 'int32_t' | 'int64_t';
 
 CONST: [0-9]+;
 OP_DIV: '/';

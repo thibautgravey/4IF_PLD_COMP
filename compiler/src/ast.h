@@ -73,13 +73,13 @@ class ConstLiteral : public Expr {
     int GetValue() const;
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    ConstLiteral(int line, int value)
+    ConstLiteral(int line, int32_t value)
         : Expr(line), value(value){};
 
     virtual ~ConstLiteral() = default;
 
   protected:
-    int value;
+    int32_t value;
 };
 
 //---------- Interface de la classe <OpBin> ----------------

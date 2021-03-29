@@ -1,7 +1,9 @@
-int main()
+#include <stdint.h>
+
+int32_t main()
 {
 
-    int x = 20 * 49;
+    int32_t x = 20 * 49;
 
     return x;
 }

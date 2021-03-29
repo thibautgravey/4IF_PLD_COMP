@@ -1,7 +1,9 @@
-int main () {
-    int a = 1;
-    int b = 2;
-    int c = 3;
-    int d = 4;
+#include <stdint.h>
+
+int32_t main () {
+    int32_t a = 1;
+    int32_t b = 2;
+    int32_t c = 3;
+    int32_t d = 4;
     return b;
 }
