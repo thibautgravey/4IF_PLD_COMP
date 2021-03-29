@@ -153,6 +153,84 @@ void VarAffInstr::GenerateIR(CFG * cfg) {
     }
 }
 
+
+//---------------//
+//  IfElseInstr  //
+//---------------//
+
+Expr * IfElseInstr::GetIfExpr() {
+    return ifExpr;
+}
+
+BlockInstr * IfElseInstr::GetIfBlock() {
+    return ifBlock;
+}
+
+BlockInstr * IfElseInstr::GetElseBlock() {
+    return elseBlock;
+}
+
+void IfElseInstr::GenerateIR(CFG * cfg) {
+    BasicBlock *ifBB, *elseBB, *endif;
+
+    // TODO: Ajout du test à partir de ifExpr et ajout du jump
+    ifExpr->GenerateIR(cfg);
+
+    // Création du BB de fin de if
+    endif = new BasicBlock(cfg, cfg->new_BB_name());
+
+    // Création du BB pour le ifblock
+    ifBB = new BasicBlock(cfg, cfg->new_BB_name());
+    cfg->GetCurrentBB()->exit_true = ifBB;
+
+    // Création du BB pour le elseBlock si besoin
+    if (elseBlock != nullptr) {
+        elseBB = new BasicBlock(cfg, cfg->new_BB_name());
+        cfg->GetCurrentBB()->exit_false = elseBB;
+    } else {
+        cfg->GetCurrentBB()->exit_false = endif;
+    }
+
+    // Ajout des instructions ifBB
+    cfg->add_bb(ifBB);
+    ifBlock->GenerateIR(cfg);
+    ifBB->exit_true = endif;
+
+    // Ajout des instructins elseBB si besoin
+    if (elseBlock != nullptr) {
+        cfg->add_bb(elseBB);
+        elseBlock->GenerateIR(cfg);
+        elseBB->exit_true = endif;
+    }
+
+    cfg->add_bb(endif);
+}
+
+//----------------//
+//   BlockInstr   //
+//----------------//
+
+vector<Instr *> BlockInstr::GetListInstr() {
+    return listInstr;
+}
+
+void BlockInstr::GenerateIR(CFG * cfg) {
+
+    // TODO: change scope at the begining and the end of the block
+    //cfg->enterblock();
+
+    for (Instr * instr : listInstr) {
+        instr->GenerateIR(cfg);
+    }
+
+    //cfg->leaveblock();
+
+}
+
+void BlockInstr::AddInstr(Instr * instr) {
+    listInstr.push_back(instr);
+}
+
 //------- Réalisation de la classe <Program> ---
 vector<Instr *> Program::GetListInstr() {
     return this->listInstr;
