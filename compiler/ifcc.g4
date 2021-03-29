@@ -4,7 +4,7 @@ axiom: prog;
 
 prog: TYPE 'main' '(' ')' '{' line* '}'; //change to block
 
-line: var_decl | var_aff | return_stmt | ifelse;
+line: var_decl | var_aff | return_stmt | ifblock;
 
 var_decl: TYPE VAR_NAME ('=' expr)? (inline_var_decl)* ';';
 
@@ -34,10 +34,10 @@ OP_MULT: '*';
 OP_LESS: '-';
 OP_ADD: '+';
 
-ifelse:
-	'if(' expr ')' (line | block) (
-		'else' ((line | block) | ifelse)
-	)?;
+ifblock:
+	'if(' expr ')' (line | block) elseblock?;
+
+elseblock: 'else' (line | block | ifblock);
 
 block: '{' line* '}';
 
