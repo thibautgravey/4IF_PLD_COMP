@@ -176,19 +176,21 @@ class ifElseInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
     Expr * GetIfExpr();
-    Expr * GetIfInstr();
-    Expr * GetElseInstr();
+    vector<Instr *> GetIfInstr();
+    vector<Instr *> GetElseInstr();
     virtual void GenerateIR(CFG * cfg);
+    void AddIfInstr(Instr * instr);
+    void AddElseInstr(Instr * instr);
     //-------------------------------------------- Constructeurs - destructeur
-    ifElseInstr(int line, Expr * expr,Instr** ifInstr,Instr** elseInstr)
-        : Instr(line), IfExpr(expr),ifInstr(ifInstr),elseInstr(elseInstr){};
+    ifElseInstr(int line, Expr * expr)
+        : Instr(line), IfExpr(expr){};
 
     virtual ~ifElseInstr();
 
   protected:
     Expr * ifExpr;
-    Instr** ifInstr;
-    Instr** elseInstr;
+    vector<Instr *>  ifInstr;
+    vector<Instr* > elseInstr;
 };
 
 //---------- Interface de la classe <Program> ----------------
