@@ -220,6 +220,16 @@ void IR::GenerateAsmX86(ostream & o) {
     //TODO? ajouter épilogue bdsm
 } //----- Fin de GenerateAsmX86
 
+void IR::GenerateAsmARM(ostream & o) {
+    gen_asm_prologue_global(o);
+
+    for (CFG * cfg : this->allCFG) {
+        cfg->gen_asm(o);
+        o << endl;
+    }
+    //TODO? ajouter épilogue bdsm
+} //----- Fin de GenerateAsmARM
+
 void IR::AddCFG(CFG * newCFG) {
     this->allCFG.push_back(newCFG);
 }

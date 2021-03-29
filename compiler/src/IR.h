@@ -134,6 +134,7 @@ class CFG {
 class IR {
   public:
     void GenerateAsmX86(ostream & o);
+    void GenerateAsmARM(ostream & o);
     void AddCFG(CFG * newCFG);
     void gen_asm_prologue_global(ostream & o);
 
