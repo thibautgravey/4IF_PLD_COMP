@@ -211,13 +211,70 @@ antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
     return ret;
 } //----- Fin de visitVar
 
-antlrcpp::Any ASTGenerator visitIfelse(ifccParser::IfelseContext * ctx) {
+antlrcpp::Any ASTGenerator visitIfblock(ifccParser::IfblockContext * ctx) {
     
-    return nullptr;
+    // Création de l'expression
+    Expr * exprIf = (Expr *)visit(ctx->expr());
+    //ifElseInstr * ifelseblock = new ifElseInstr(ctx->start->getLine(), exprIf);
+    
+    // Récupération des intructions du IF
+    BlockInstr * ifblock;
+    if(ctx->line()){
+        ifblock = new BlockInstr(ctx->start->getLine());
+        ifblock.addInstr( (Instr *)visit(ctx->line()) )
+    } else { //
+        ifblock = (BlockInstr *)visit(ctx->block());
+    }
+
+    // Récupération des intructions du else
+    BlockInstr * elseblock;
+    if(ctx->elseblock()){
+        elseblock = (Blockinstr *)visit(ctx->elseblock());
+    }
+
+    // Création du ifElseInstr
+    ifElseInstr * ifelse = new ifElseInstr(ctx->start->getLine(), exprIf, ifblock, elseblock);
+    
+    return ifelse;
+}
+
+
+antlrcpp::Any ASTGenerator visitElseblock(ifccParser::ElseblockContext * ctx) {
+
+    BlockInstr * elseblock;
+
+    if(ctx->line()){
+        elseblock = new BlockInstr(ctx->start->getLine());
+        elseblock.addInstr( (Instr *)visit(ctx->line()) )
+    } else if (ctx->block()) { //
+        elseblock = (BlockInstr *)visit(ctx->block());
+    } else {
+        elseblock = new BlockInstr(ctx->start->getLine());
+        elseblock.addInstr( (IfElseInstr *)visit(ctx->ifblock) );
+    }
+
+    return elseblock;
 }
 
 antlrcpp::Any ASTGenerator visitBlock(ifccParser::BlockContext * ctx) {
-    return nullptr;
+
+     BlockInstr* blockInstr=new BlockInstr(ctx->start->getLine());
+
+     for (int i = 0; i < ctx->line().size(); i++) {
+            Instr * instr = (Instr *)visit(ctx->line(i));
+
+            if (instr != nullptr) {
+                blockInstr->addInstr(instr);
+            }
+        }
+
+        if (!this->hasReturn) {
+            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
+            Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
+            blockInstr->addInstr(retInstr);
+
+        }
+    return blockInstr;
 }
 
 //-------------------------------------------- Constructeurs - destructeur
