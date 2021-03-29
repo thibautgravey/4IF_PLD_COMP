@@ -172,6 +172,22 @@ class VarAffInstr : public Instr {
     Instr * varAffInstrNext;
 };
 
+class BlockInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    vector<Instr *> GetListInstr();
+    virtual void GenerateIR(CFG * cfg);
+    void AddInstr(Instr * instr);
+    //-------------------------------------------- Constructeurs - destructeur
+    BlockInstr(int line)
+        : Instr(line){};
+
+    virtual ~BlockInstr();
+
+  protected:
+    vector<Instr *>  listInstr;
+};
+
 class IfElseInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
@@ -190,23 +206,6 @@ class IfElseInstr : public Instr {
     BlockInstr *  ifBlock;
     BlockInstr * elseBlock;
 };
-
-class BlockInstr : public Instr {
-  public:
-    //----------------------------------------------------- Méthodes publiques
-    vector<Instr *> GetListInstr();
-    virtual void GenerateIR(CFG * cfg);
-    void AddInstr(Instr * instr);
-    //-------------------------------------------- Constructeurs - destructeur
-    BlockInstr(int line)
-        : Instr(line){};
-
-    virtual ~BlockInstr();
-
-  protected:
-    vector<Instr *>  listInstr;
-};
-
 
 //---------- Interface de la classe <Program> ----------------
 class Program : public Node {

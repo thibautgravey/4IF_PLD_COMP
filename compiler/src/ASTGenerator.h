@@ -5,7 +5,7 @@
 *******************************************************************************/
 
 //-------- Interface de la classe <ASTGenerator> (fichier ASTGenerator.h) ---------
-#if !defined(ASTGENERATOR_H)
+#ifndef ASTGENERATOR_H
 #define ASTGENERATOR_H
 
 //--------------------------------------------------- Interfaces utilisées
@@ -92,3 +92,5 @@ class ASTGenerator : public ifccBaseVisitor {
     Program * program;
     Type lastDeclaredType;
     bool hasReturn;
+
+#endif
