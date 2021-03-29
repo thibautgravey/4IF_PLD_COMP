@@ -172,6 +172,25 @@ class VarAffInstr : public Instr {
     Instr * varAffInstrNext;
 };
 
+class ifElseInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetIfExpr();
+    Expr * GetIfInstr();
+    Expr * GetElseInstr();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    ifElseInstr(int line, Expr * expr,Instr** ifInstr,Instr** elseInstr)
+        : Instr(line), IfExpr(expr),ifInstr(ifInstr),elseInstr(elseInstr){};
+
+    virtual ~ifElseInstr();
+
+  protected:
+    Expr * ifExpr;
+    Instr** ifInstr;
+    Instr** elseInstr;
+};
+
 //---------- Interface de la classe <Program> ----------------
 class Program : public Node {
   public:
