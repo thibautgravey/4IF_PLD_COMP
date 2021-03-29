@@ -183,6 +183,7 @@ void IfElseInstr::GenerateIR(CFG * cfg) {
     ifBB = new BasicBlock(cfg, cfg->new_BB_name());
     cfg->GetCurrentBB()->exit_true = ifBB;
 
+
     // Création du BB pour le elseBlock si besoin
     if (elseBlock != nullptr) {
         elseBB = new BasicBlock(cfg, cfg->new_BB_name());
@@ -205,6 +206,13 @@ void IfElseInstr::GenerateIR(CFG * cfg) {
 
     cfg->add_bb(endif);
 }
+
+IfElseInstr::~IfElseInstr() {
+    delete (ifExpr);
+    delete (ifBlock);
+    delete (elseBlock);
+} //----- Fin de ~IfElseInstr
+
 
 //----------------//
 //   BlockInstr   //
@@ -230,6 +238,12 @@ void BlockInstr::GenerateIR(CFG * cfg) {
 void BlockInstr::AddInstr(Instr * instr) {
     listInstr.push_back(instr);
 }
+
+BlockInstr::~BlockInstr() {
+    for (const auto & instr : listInstr) {
+        delete (instr);
+    }
+} //----- Fin de ~BlockInstr
 
 //------- Réalisation de la classe <Program> ---
 vector<Instr *> Program::GetListInstr() {
@@ -286,7 +300,7 @@ IR * Program::GenerateIR() {
     // EMPTY BB FOR EPILOGUE
     BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
 
-    body->exit_true = output;
+    tmpCFG->GetCurrentBB()->exit_true = output;
     tmpCFG->add_bb(output);
 
     ir->AddCFG(tmpCFG);

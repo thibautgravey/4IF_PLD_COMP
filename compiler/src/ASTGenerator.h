@@ -92,5 +92,7 @@ class ASTGenerator : public ifccBaseVisitor {
     Program * program;
     Type lastDeclaredType;
     bool hasReturn;
+};
+//-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 
-#endif
+#endif // ASTGENERATOR_H

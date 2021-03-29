@@ -2,7 +2,7 @@ grammar ifcc;
 
 axiom: prog;
 
-prog: TYPE 'main' '(' ')' '{' line* '}'; //change to block
+prog: TYPE 'main' '(' ')' '{' line* '}';
 
 line: var_decl | var_aff | return_stmt | ifblock;
 
@@ -35,7 +35,7 @@ OP_LESS: '-';
 OP_ADD: '+';
 
 ifblock:
-	'if(' expr ')' (line | block) elseblock?;
+	'if' '(' expr ')' (line | block) elseblock?;
 
 elseblock: 'else' (line | block | ifblock);
 
