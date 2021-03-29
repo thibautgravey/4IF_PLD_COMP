@@ -2,9 +2,9 @@ grammar ifcc;
 
 axiom: prog;
 
-prog: TYPE 'main' '(' ')' '{' line* '}';
+prog: TYPE 'main' '(' ')' '{' line* '}'; //change to block
 
-line: var_decl | var_aff | return_stmt;
+line: var_decl | var_aff | return_stmt | ifelse;
 
 var_decl: TYPE VAR_NAME ('=' expr)? (inline_var_decl)* ';';
 
@@ -33,6 +33,13 @@ OP_DIV: '/';
 OP_MULT: '*';
 OP_LESS: '-';
 OP_ADD: '+';
+
+ifelse:
+	'if(' expr ')' (line | block) (
+		'else' ((line | block) | ifelse)
+	)?;
+
+block: '{' line* '}';
 
 VAR_NAME: [a-zA-Z_][\\w]*;
 

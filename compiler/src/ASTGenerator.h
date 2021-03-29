@@ -68,6 +68,10 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
 
+    virtual antlrcpp::Any visitIfelse(ifccParser::IfelseContext * ctx) override;
+
+    virtual antlrcpp::Any visitBlock(ifccParser::BlockContext * ctx) override;
+
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()
         : program(nullptr), lastDeclaredType(ERROR), hasReturn(false) {}
@@ -86,7 +90,3 @@ class ASTGenerator : public ifccBaseVisitor {
     Program * program;
     Type lastDeclaredType;
     bool hasReturn;
-};
-//-------------------------------- Autres définitions dépendantes de <ASTGenerator>
-
-#endif // ASTGENERATOR_H

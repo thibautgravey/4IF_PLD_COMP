@@ -211,6 +211,15 @@ antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
     return ret;
 } //----- Fin de visitVar
 
+antlrcpp::Any ASTGenerator visitIfelse(ifccParser::IfelseContext * ctx) {
+    
+    return nullptr;
+}
+
+antlrcpp::Any ASTGenerator visitBlock(ifccParser::BlockContext * ctx) {
+    return nullptr;
+}
+
 //-------------------------------------------- Constructeurs - destructeur
 
 ASTGenerator::~ASTGenerator() {
