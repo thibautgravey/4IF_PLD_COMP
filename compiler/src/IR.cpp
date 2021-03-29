@@ -22,16 +22,16 @@ using namespace std;
 
 //----------------------------------------------------- Méthodes publiques
 
-void IRInstr::gen_asm(ostream & o) {
+void IRInstr::gen_asm_X86(ostream & o) {
 
     string p1, p2, p3;
     switch (this->params.size()) {
         case 3:
-            p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
+            p3 = this->bb->cfg->IR_reg_to_asm_X86(this->params[2]);
         case 2:
-            p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
+            p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1]);
         case 1:
-            p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
+            p1 = this->bb->cfg->IR_reg_to_asm_X86(this->params[0]);
         default:
             break;
     }
@@ -115,10 +115,104 @@ void IRInstr::gen_asm(ostream & o) {
         default:
             break;
     }
-} //fin de gen_asm(Ir_Instr)
+} //fin de gen_asm_X86(Ir_Instr)
 
-void BasicBlock::gen_asm(ostream & o) {
-} //fin de gen_asm(Basic_Block)
+void IRInstr::gen_asm_ARM(ostream & o) {
+
+    string p1, p2, p3;
+    switch (this->params.size()) {
+        case 3:
+            p3 = this->bb->cfg->IR_reg_to_asm_ARM(this->params[2]);
+        case 2:
+            p2 = this->bb->cfg->IR_reg_to_asm_ARM(this->params[1]);
+        case 1:
+            p1 = this->bb->cfg->IR_reg_to_asm_ARM(this->params[0]);
+        default:
+            break;
+    }
+
+    //TODO
+    switch (this->op) {
+        case ldconst:
+            o << "        movs    " << p2 << "," << p1 << endl;
+            o << "        str     " << p2 << "[r7, #4]" << endl;
+            break;
+        case copy:
+            o << "        mov    " << p2 << ", %eax" << endl;
+            o << "        mov    %eax, " << p1 << endl;
+            break;
+        case add:
+            o << "        movs    r3, #3" << endl;
+            o << "        str     r3, [r7, #4]" << endl;
+            break;
+        case sub:
+            o << "        mov    " << p2 << ", %eax" << endl;
+            o << "        sub    " << p3 << ", %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case mul:
+            o << "        mov    " << p2 << ", %eax" << endl;
+            o << "        mul    " << p3 << ", %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case div:
+            o << "        mov     " << p2 << ", %eax" << endl;
+            o << "        cltd   " << endl;
+            o << "        idiv  " << p3 << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case orB:
+            o << "        mov     " << p2 << ", %eax" << endl;
+            o << "        or      " << p3 << ", %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case andB:
+            o << "        mov     " << p2 << ", %eax" << endl;
+            o << "        and      " << p3 << ", %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case xorB:
+            o << "        mov     " << p2 << ", %eax" << endl;
+            o << "        xor      " << p3 << ", %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case neg:
+            o << "        cmp     $0, " << p2 << endl;
+            o << "        sete     %al" << endl;
+            o << "        movzb     %al, %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case opp:
+            o << "        mov     " << p2 << ", %eax" << endl;
+            o << "        neg     %eax" << endl;
+            o << "        mov     %eax, " << p1 << endl;
+            break;
+        case rmem:
+            o << "        mov    " << p2 << ", " << p1 << endl;
+            break;
+        case wmem:
+            o << "        mov    " << p2 << ", " << p1 << endl;
+            break;
+        case call:
+            o << "        call    " << p1 << endl;
+            break;
+        case cmp_eq:
+            o << "cmp_eq NOT IMPLEMENDTED" << endl;
+            break;
+        case cmp_lt:
+            o << "cmp_lt NOT IMPLEMENDTED" << endl;
+            break;
+        case cmp_le:
+            o << "cmp_eq NOT IMPLEMENDTED" << endl;
+            break;
+        case ret:
+            o << "        mov    " << p1 << ", %eax" << endl;
+            break;
+        default:
+            break;
+    }
+} //fin de gen_asm_ARM(Ir_Instr)
+
 
 void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params) {
     this->instrs.push_back(new IRInstr(this, op, t, params));
@@ -129,15 +223,15 @@ void CFG::add_bb(BasicBlock * bb) {
     this->current_bb = bb;
 } //fin de add_bb
 
-void CFG::gen_asm(ostream & o) {
+void CFG::gen_asm_X86(ostream & o) {
     BasicBlock * lastbb = this->bbs.back();
     this->bbs.pop_back();
-    gen_asm_prologue(o, this->bbs[0]);
+    gen_asm_prologue_X86(o, this->bbs[0]);
     this->bbs.erase(this->bbs.begin());
     for (BasicBlock * bb : this->bbs) {
         o << bb->label << ":" << endl;
         for (IRInstr * instr : bb->instrs) {
-            instr->gen_asm(o);
+            instr->gen_asm_X86(o);
         }
         if (bb->exit_false == nullptr) {
             o << "        jmp " << bb->exit_true->label << endl;
@@ -147,10 +241,10 @@ void CFG::gen_asm(ostream & o) {
         }
     }
 
-    gen_asm_epilogue(o, lastbb);
-} //fin de gen_asm(CFG)
+    gen_asm_epilogue_X86(o, lastbb);
+} //fin de gen_asm_x86(CFG)
 
-string CFG::IR_reg_to_asm(string reg) {
+string CFG::IR_reg_to_asm_X86(string reg) {
 
     string ret;
 
@@ -168,9 +262,9 @@ string CFG::IR_reg_to_asm(string reg) {
     }
 
     return ret;
-} //fin de IR_reg_to_asm
+} //fin de IR_reg_to_asm_X86
 
-void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
+void CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
     o << "main:" << endl;
     o << bb->label << ":" << endl;
     o << "        pushq    %rbp" << endl;
@@ -185,13 +279,38 @@ void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
 
     o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
     o << "        jmp " << bb->exit_true->label << endl;
-} //fin de gen_asm_prologue
+} //fin de gen_asm_prologue_X86
 
-void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {
+//TODO
+void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
+    o << "main:" << endl;
+    o << bb->label << ":" << endl;
+    o << "        pushq    %rbp" << endl;
+    o << "        movq     %rsp, %rbp" << endl;
+
+    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
+
+    // Round space to the nearest multiple of 16
+    if (spaceNeeded % 16) {
+        spaceNeeded = ((spaceNeeded / 16) + 1) * 16;
+    }
+
+    o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
+    o << "        jmp " << bb->exit_true->label << endl;
+} //fin de gen_asm_prologue_ARM
+
+void CFG::gen_asm_epilogue_X86(ostream & o, BasicBlock * bb) {
     o << bb->label << ":" << endl;
     o << "        leave" << endl;
     o << "        ret" << endl;
-} //fin de gen_asm_epilogue
+} //fin de gen_asm_epilogue_X86
+
+//TODO
+void CFG::gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb) {
+    o << bb->label << ":" << endl;
+    o << "        leave" << endl;
+    o << "        ret" << endl;
+} //fin de gen_asm_epilogue_ARM
 
 string CFG::new_BB_name(const string & prefix) {
     string functionName = "main"; //TODO : change this when implementing function
@@ -211,20 +330,21 @@ SymbolTable * CFG::GetSymbolTable() {
 } //----- Fin de GetSymbolTable
 
 void IR::GenerateAsmX86(ostream & o) {
-    gen_asm_prologue_global(o);
+    gen_asm_prologue_global_X86(o);
 
     for (CFG * cfg : this->allCFG) {
-        cfg->gen_asm(o);
+        cfg->gen_asm_X86(o);
         o << endl;
     }
     //TODO? ajouter épilogue bdsm
 } //----- Fin de GenerateAsmX86
 
+//TODO
 void IR::GenerateAsmARM(ostream & o) {
-    gen_asm_prologue_global(o);
+    gen_asm_prologue_global_ARM(o);
 
     for (CFG * cfg : this->allCFG) {
-        cfg->gen_asm(o);
+        cfg->gen_asm_ARM(o);
         o << endl;
     }
     //TODO? ajouter épilogue bdsm
@@ -234,10 +354,16 @@ void IR::AddCFG(CFG * newCFG) {
     this->allCFG.push_back(newCFG);
 }
 
-void IR::gen_asm_prologue_global(ostream & o) {
+void IR::gen_asm_prologue_global_X86(ostream & o) {
     o << "        .globl main" << endl
       << endl;
-} //----- Fin de gen_asm_prologue_global
+} //----- Fin de gen_asm_prologue_global_X86
+
+//TODO
+void IR::gen_asm_prologue_global_ARM(ostream & o) {
+    o << ".globl _start" << endl;
+    o << ".arm" << endl;
+} //----- Fin de gen_asm_prologue_global_ARM
 
 //-------------------------------------------- Constructeurs - destructeur
 

@@ -43,7 +43,9 @@ class IRInstr {
     IRInstr(BasicBlock * bb_, Operation op, Type t, vector<string> params);
 
     /** Actual code generation */
-    void gen_asm(ostream & o); /**< x86 assembly code generation for this IR instruction */
+    void gen_asm_X86(ostream & o); /**< x86 assembly code generation for this IR instruction */
+
+    void gen_asm_ARM(ostream & o); /**< ARM assembly code generation for this IR instruction */
 
   private:
     BasicBlock * bb; /**< The BB this instruction belongs to, which provides a pointer to the CFG this instruction belong to */
@@ -82,8 +84,7 @@ Possible optimization:
 class BasicBlock {
   public:
     BasicBlock(CFG * cfg, string entry_label);
-    void gen_asm(ostream & o); /**< x86 assembly code generation for this basic block (very simple) */
-
+    
     void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
 
     // No encapsulation whatsoever here. Feel free to do better.
@@ -114,10 +115,17 @@ class CFG {
     void add_bb(BasicBlock * bb);
 
     // x86 code generation: could be encapsulated in a processor class in a retargetable compiler
-    void gen_asm(ostream & o);
-    string IR_reg_to_asm(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
-    void gen_asm_prologue(ostream & o, BasicBlock * bb);
-    void gen_asm_epilogue(ostream & o, BasicBlock * bb);
+    void gen_asm_X86(ostream & o);
+    void gen_asm_ARM(ostream & o);
+
+    string IR_reg_to_asm_X86(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
+    string IR_reg_to_asm_ARM(string reg); 
+    
+    void gen_asm_prologue_X86(ostream & o, BasicBlock * bb);
+    void gen_asm_prologue_ARM(ostream & o, BasicBlock * bb);
+
+    void gen_asm_epilogue_X86(ostream & o, BasicBlock * bb);
+    void gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb);
     BasicBlock * GetCurrentBB();
     SymbolTable * GetSymbolTable();
 
@@ -136,7 +144,8 @@ class IR {
     void GenerateAsmX86(ostream & o);
     void GenerateAsmARM(ostream & o);
     void AddCFG(CFG * newCFG);
-    void gen_asm_prologue_global(ostream & o);
+    void gen_asm_prologue_global_X86(ostream & o);
+    void gen_asm_prologue_global_ARM(ostream & o);
 
     IR() = default;
     virtual ~IR() = default;
