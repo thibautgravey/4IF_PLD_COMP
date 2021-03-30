@@ -14,22 +14,8 @@ var_aff: VAR_NAME '=' expr ';';
 
 return_stmt: 'return' expr ';';
 
-ifblock: ('if' '(' condition ')' (line | block) elseblock?);
+ifblock: ('if' '(' expr ')' (line | block) elseblock?);
 elseblock: 'else' (line | block | ifblock);
-
-condition:
-	boolcdt '&&' condition		# cdtand
-	| boolcdt '||' condition	# cdtor
-	| boolcdt					# cdtbool;
-
-boolcdt:
-	expr '==' expr		# equal
-	| expr '!=' expr	# notequal
-	| expr '>=' expr	# greaterequal
-	| expr '>' expr		# greater
-	| expr '<=' expr	# lessequal
-	| expr '<' expr		# less
-	| expr				# expression;
 
 expr:
 	CONST							# const
@@ -41,7 +27,15 @@ expr:
 	| expr '|' expr					# or
 	| expr '^' expr					# xor
 	| '-' expr						# opp
-	| '!' expr						# not;
+	| '!' expr						# not
+	| expr '==' expr				# equal
+	| expr '!=' expr				# notequal
+	| expr '>=' expr				# greaterequal
+	| expr '>' expr					# greater
+	| expr '<=' expr				# lessequal
+	| expr '<' expr					# less
+	| expr '&&' expr				# cdtand
+	| expr '||' expr				# cdtor;
 
 TYPE: 'int32_t' | 'int64_t';
 
