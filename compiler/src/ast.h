@@ -15,7 +15,8 @@ enum BinaryOperator {
     DIV,
     OR,
     XOR,
-    AND
+    AND,
+    EQ
 };
 
 enum UnitOperator {
@@ -194,6 +195,21 @@ class VarAffInstr : public Instr {
     Instr * varAffInstrNext;
 };
 
+//---------- Interface de la classe <ExprInstr> ----------------
+class ExprInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual void GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    ExprInstr(int line, Expr * expr)
+        : Instr(line), expr(expr){};
+    virtual ~ExprInstr() = default;
+
+  protected:
+    Expr * expr;
+};
+
 //---------- Interface de la classe <Param> ----------------
 class Param : public VarAffInstr {
     //-------------------------------------------- Constructeurs - destructeur
@@ -209,11 +225,9 @@ class DefFuncInstr : public Instr {
   public:
     //----------------------------------------------------- Méthodes publiques
     void AddInstr(Instr * instr);
-    void SetParam(vector<Param *> param);
     Type GetType();
     string GetName();
     vector<Instr *> GetListInstr();
-    vector<Param *> GetListParam();
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
@@ -226,7 +240,6 @@ class DefFuncInstr : public Instr {
     Type type;
     string name;
     vector<Instr *> listInstr;
-    vector<Param *> listParam;
 };
 
 //---------- Interface de la classe <Program> ----------------

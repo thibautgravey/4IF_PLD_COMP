@@ -10,13 +10,11 @@ param_list: param (',' param)*;
 
 param: TYPE ID;
 
-line: var_decl | var_aff | expr ';' | return_stmt;
+line: var_decl | expr ';' | return_stmt;
 
 var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
 
 inline_var_decl: (',' ID ('=' expr)?);
-
-var_aff: ID '=' expr ';';
 
 return_stmt: 'return' expr ';';
 
@@ -30,7 +28,9 @@ expr:
 	| expr '&' expr						# and
 	| expr '|' expr						# or
 	| expr '^' expr						# xor
-	| ID '(' expr_list? ')'				# function;
+	| ID '(' expr_list? ')'				# function
+	| ID '=' expr						# var_aff
+	;
 
 expr_list: expr (',' expr)*;
 

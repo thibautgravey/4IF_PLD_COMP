@@ -40,13 +40,13 @@ int main(int argn, const char ** argv) {
 
     Program * program = astGenerator.visit(tree);
 
+    if (program->GetErrorFlag())
+        return EXIT_FAILURE;
+
     //TODO : Other static analysis
 
     program->UnusedVariableAnalysis();
     program->UnusedFunctionAnalysis();
-
-    if (program->GetErrorFlag())
-        return EXIT_FAILURE;
 
     //TODO : Create an IR and generate ASM
     IR * ir = program->GenerateIR();

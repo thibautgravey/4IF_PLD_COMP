@@ -22,7 +22,7 @@ int ConstLiteral::GetValue() const {
 }
 
 string ConstLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT, {tmpVar, to_string(this->GetValue())});
     return tmpVar;
 }
@@ -46,9 +46,10 @@ OpBin::~OpBin() {
 }
 
 string OpBin::GenerateIR(CFG * cfg) {
+    // TODO: changer les types
     string tmpVar1 = this->operand1->GenerateIR(cfg);
     string tmpVar2 = this->operand2->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
     switch (this->op) {
         case BinaryOperator::PLUS:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
@@ -71,7 +72,10 @@ string OpBin::GenerateIR(CFG * cfg) {
         case BinaryOperator::XOR:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
             break;
-
+        case BinaryOperator::EQ:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT, {tmpVar1, tmpVar2});
+            tmpResVar = tmpVar1;
+            break;
         default:
             break;
     }
@@ -89,7 +93,7 @@ UnitOperator OpUn::GetOp() {
 
 string OpUn::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
     switch (this->op) {
         case UnitOperator::NOT:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT, {tmpResVar, tmpVar1});
@@ -121,6 +125,17 @@ void Function::SetParams(vector<Expr *> params) {
 }
 
 string Function::GenerateIR(CFG * cfg) {
+    // TODO : a voir pour le type
+    // TODO : a voir pour les params (passage dans IRInstr notamment)
+    // TODO : a voir pour la destination (pour l'instant : reg1)
+    vector<string> paramsIRInstr = {this->name, "reg1"};
+    for (Expr * param : this->params) {
+        paramsIRInstr.push_back(param->GenerateIR(cfg));
+    }
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT, paramsIRInstr);
+
+    // TODO: vérifier pour le registre
+    return "reg1";
 }
 
 Function::~Function() {
@@ -142,7 +157,8 @@ ReturnInstr::~ReturnInstr() {
 
 void ReturnInstr::GenerateIR(CFG * cfg) {
     string tmpRetVar = this->returnExpr->GenerateIR(cfg);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType("main", tmpRetVar), {tmpRetVar});
+    // TODO : voir pour le type (ex : si c'est une fonction)
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar), {tmpRetVar});
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -170,13 +186,18 @@ void VarAffInstr::GenerateIR(CFG * cfg) {
     VarAffInstr * tmpInstr = this;
     while (tmpInstr != nullptr) {
         string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
-        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType("main", tmpInstr->name), {tmpInstr->name, tmpVar});
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name), {tmpInstr->name, tmpVar});
         tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
     }
 }
 
 Type VarAffInstr::GetType() {
     return this->type;
+}
+
+//------- Réalisation de la classe <ExprInstr> ---
+void ExprInstr::GenerateIR(CFG * cfg) {
+    this->expr->GenerateIR(cfg);
 }
 
 //------- Réalisation de la classe <Param> ---
@@ -186,10 +207,6 @@ Param::~Param() {
 //------- Réalisation de la classe <DefFuncInstr> ---
 void DefFuncInstr::AddInstr(Instr * instr) {
     listInstr.push_back(instr);
-}
-
-void DefFuncInstr::SetParam(vector<Param *> param) {
-    listParam = param;
 }
 
 Type DefFuncInstr::GetType() {
@@ -204,20 +221,12 @@ vector<Instr *> DefFuncInstr::GetListInstr() {
     return listInstr;
 }
 
-vector<Param *> DefFuncInstr::GetListParam() {
-    return listParam;
-}
-
 void DefFuncInstr::GenerateIR(CFG * cfg) {
 }
 
 DefFuncInstr::~DefFuncInstr() {
     for (Instr * instr : listInstr) {
         delete (instr);
-    }
-
-    for (Param * param : listParam) {
-        delete (param);
     }
 }
 
@@ -259,31 +268,44 @@ Program::~Program() {
 IR * Program::GenerateIR() {
     IR * ir = new IR();
 
-    // TO DO : foreach function definition
-    CFG * tmpCFG = new CFG(&(this->symbolTable));
-
-    // EMPTY BB FOR PROLOGUE
-    BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("prologue"));
-
-    tmpCFG->add_bb(entry);
-
-    BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
-
-    entry->exit_true = body;
-    tmpCFG->add_bb(body);
-
-    // TO DO : move this into GenerateIR of function definition
     for (Instr * instr : this->listInstr) {
-        instr->GenerateIR(tmpCFG);
+        // TODO: deplacer tout ce code dans GenerateIR de DefFuncInstr (besoin d'un CFG contenant tout les autres CFG ?)
+
+        // Normally all instructions in listInstr are def function instruction
+        DefFuncInstr * defFuncInstr = dynamic_cast<DefFuncInstr *>(instr);
+
+        CFG * tmpCFG = new CFG(&(this->symbolTable), defFuncInstr->GetName());
+
+        // EMPTY BB FOR PROLOGUE
+        BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("prologue"));
+
+        tmpCFG->add_bb(entry);
+
+        BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
+
+        entry->exit_true = body;
+        tmpCFG->add_bb(body);
+
+        // TODO: recuperer les variables passees en arguments
+        vector<FunctionParam *> functionParams = this->symbolTable.GetFunctionParams(defFuncInstr->GetName());
+        for (int i = 0; i < functionParams.size(); i++) {
+            string reg = "paramReg" + to_string(i + 1);
+            tmpCFG->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg});
+        }
+
+        // TO DO : move this into GenerateIR of function definition
+        for (Instr * instr : defFuncInstr->GetListInstr()) {
+            instr->GenerateIR(tmpCFG);
+        }
+
+        // EMPTY BB FOR EPILOGUE
+        BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
+
+        body->exit_true = output;
+        tmpCFG->add_bb(output);
+
+        ir->AddCFG(tmpCFG);
     }
-
-    // EMPTY BB FOR EPILOGUE
-    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
-
-    body->exit_true = output;
-    tmpCFG->add_bb(output);
-
-    ir->AddCFG(tmpCFG);
 
     return ir;
 }

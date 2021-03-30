@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 using namespace std;
 
@@ -26,6 +27,14 @@ enum Type {
     VOID,
     ERROR //, BITE, LONG, DOUBLE, CHAR, STRING
 };
+
+typedef struct fp {
+    Type type;
+    string name;
+    // TODO: voir pour avoir une valeur par défaut ?
+    fp(Type t, string n)
+        : type(t), name(n){};
+} FunctionParam;
 
 static unordered_map<string, Type> const TYPE_TABLE = {{"int", INT}, {"void", VOID}};
 
@@ -42,6 +51,7 @@ struct ContextTable {
     int offsetContext = 0;
     Type returnType;
     bool used = false;
+    vector<FunctionParam *> params;
 };
 
 //------------------------------------------------------------------------
@@ -56,7 +66,7 @@ class SymbolTable {
 
   public:
     //----------------------------------------------------- Méthodes publiques
-    bool DefineFunction(const string & name, Type type, int declaredLine);
+    bool DefineFunction(const string & name, Type type, vector<FunctionParam *> params, int declaredLine);
 
     bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope = "");
 
@@ -83,6 +93,8 @@ class SymbolTable {
     int CalculateSpaceForFunction(const string & function);
 
     Type StringToType(const string & name);
+
+    vector<FunctionParam *> GetFunctionParams(const string & function);
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;
