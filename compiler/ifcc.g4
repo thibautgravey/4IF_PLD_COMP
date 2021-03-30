@@ -14,6 +14,23 @@ var_aff: VAR_NAME '=' expr ';';
 
 return_stmt: 'return' expr ';';
 
+ifblock: ('if' '(' condition ')' (line | block) elseblock?);
+elseblock: 'else' (line | block | ifblock);
+
+condition:
+	boolcdt '&&' condition		# cdtand
+	| boolcdt '||' condition	# cdtor
+	| boolcdt					# cdtbool;
+
+boolcdt:
+	expr '==' expr		# equal
+	| expr '!=' expr	# notequal
+	| expr '>=' expr	# greaterequal
+	| expr '>' expr		# greater
+	| expr '<=' expr	# lessequal
+	| expr '<' expr		# less
+	| expr				# expression;
+
 expr:
 	CONST							# const
 	| VAR_NAME						# var
@@ -33,11 +50,6 @@ OP_DIV: '/';
 OP_MULT: '*';
 OP_LESS: '-';
 OP_ADD: '+';
-
-ifblock:
-	'if' '(' expr ')' (line | block) elseblock?;
-
-elseblock: 'else' (line | block | ifblock);
 
 block: '{' line* '}';
 
