@@ -136,6 +136,9 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
     BinaryOperator binaryOperator;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
 
     if (ctx->OP_LESS()) {
         binaryOperator = MINUS;
@@ -149,6 +152,9 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
 antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
     BinaryOperator binaryOperator;
 
     if (ctx->OP_DIV()) {
@@ -164,6 +170,9 @@ antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
     BinaryOperator binaryOperatorOr = OR;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorOr);
 } //----- Fin de visitOr
@@ -171,6 +180,9 @@ antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
 antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
     BinaryOperator binaryOperatorAnd = AND;
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorAnd);
@@ -179,6 +191,9 @@ antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
 antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
     BinaryOperator binaryOperatorXor = XOR;
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorXor);
@@ -214,67 +229,153 @@ antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
 } //----- Fin de visitVar
 
 antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
-    
+
     // Création de l'expression
     Expr * exprIf = (Expr *)visit(ctx->expr());
     //ifElseInstr * ifelseblock = new ifElseInstr(ctx->start->getLine(), exprIf);
-    
+
     // Récupération des intructions du IF
     BlockInstr * ifblock;
-    if(ctx->line()){
+    if (ctx->line()) {
         ifblock = new BlockInstr(ctx->start->getLine());
-        ifblock->AddInstr( (Instr *)visit(ctx->line()) );
+        ifblock->AddInstr((Instr *)visit(ctx->line()));
     } else { //
         ifblock = (BlockInstr *)visit(ctx->block());
     }
 
     // Récupération des intructions du else
     BlockInstr * elseblock;
-    if(ctx->elseblock()){
+    if (ctx->elseblock()) {
         elseblock = (BlockInstr *)visit(ctx->elseblock());
     }
 
     // Création du ifElseInstr
     Instr * ifelse = new IfElseInstr(ctx->start->getLine(), exprIf, ifblock, elseblock);
-    
+
     return ifelse;
 }
-
 
 antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
     BlockInstr * elseblock;
 
-    if(ctx->line()){
+    if (ctx->line()) {
         elseblock = new BlockInstr(ctx->start->getLine());
-        elseblock->AddInstr( (Instr *)visit(ctx->line()) );
+        elseblock->AddInstr((Instr *)visit(ctx->line()));
     } else if (ctx->block()) { //
         elseblock = (BlockInstr *)visit(ctx->block());
     } else {
         elseblock = new BlockInstr(ctx->start->getLine());
-        elseblock->AddInstr( (Instr *)visit(ctx->ifblock()) );
+        elseblock->AddInstr((Instr *)visit(ctx->ifblock()));
     }
 
     return elseblock;
 }
 
 antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
-    BlockInstr* blockInstr=new BlockInstr(ctx->start->getLine());
+    BlockInstr * blockInstr = new BlockInstr(ctx->start->getLine());
 
-     for (int i = 0; i < ctx->line().size(); i++) {
-            Instr * instr = (Instr *)visit(ctx->line(i));
+    for (int i = 0; i < ctx->line().size(); i++) {
+        Instr * instr = (Instr *)visit(ctx->line(i));
 
-            if (instr != nullptr) {
-                blockInstr->AddInstr(instr);
-            }
+        if (instr != nullptr) {
+            blockInstr->AddInstr(instr);
         }
+    }
 
-        if (!this->hasReturn) {
-            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
-            Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
-            blockInstr->AddInstr(retInstr);
-
-        }
+    if (!this->hasReturn) {
+        Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
+        Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
+        blockInstr->AddInstr(retInstr);
+    }
     return blockInstr;
+}
+
+antlrcpp::Any ASTGenerator::visitCdtand(ifccParser::CdtandContext * ctx) {
+    Expr * op1 = visit(ctx->expr(0));
+    Expr * op2 = visit(ctx->expr(1));
+    BinaryOperator binaryOperatorCdtAnd = CDTAND;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtAnd);
+}
+
+antlrcpp::Any ASTGenerator::visitCdtor(ifccParser::CdtorContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorCdtOr = CDTOR;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtOr);
+}
+
+antlrcpp::Any ASTGenerator::visitEqual(ifccParser::EqualContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorEqual = EQUAL;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorEqual);
+}
+
+antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorNotEqual = NEQUAL;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorNotEqual);
+}
+
+antlrcpp::Any ASTGenerator::visitGreaterequal(ifccParser::GreaterequalContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorGreaterEqual = GREATERE;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorGreaterEqual);
+}
+
+antlrcpp::Any ASTGenerator::visitGreater(ifccParser::GreaterContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorGreater = GREATER;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorGreater);
+}
+
+antlrcpp::Any ASTGenerator::visitLessequal(ifccParser::LessequalContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorLessEqual = LESSE;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorLessEqual);
+}
+
+antlrcpp::Any ASTGenerator::visitLess(ifccParser::LessContext * ctx) {
+    Expr * op1 = (Expr *)visit(ctx->expr(0));
+    Expr * op2 = (Expr *)visit(ctx->expr(1));
+    BinaryOperator binaryOperatorLess = LESS;
+    if (op1 == nullptr || op2 == nullptr) {
+        return (Expr *)nullptr;
+    }
+
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorLess);
 }
 
 //-------------------------------------------- Constructeurs - destructeur

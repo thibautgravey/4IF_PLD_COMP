@@ -15,7 +15,16 @@ enum BinaryOperator {
     DIV,
     OR,
     XOR,
-    AND
+    AND,
+    CDTAND,
+    CDTOR,
+    EQUAL,
+    NEQUAL,
+    GREATER,
+    GREATERE,
+    LESS,
+    LESSE
+
 };
 
 enum UnitOperator {
@@ -185,7 +194,7 @@ class BlockInstr : public Instr {
     virtual ~BlockInstr();
 
   protected:
-    vector<Instr *>  listInstr;
+    vector<Instr *> listInstr;
 };
 
 class IfElseInstr : public Instr {
@@ -196,14 +205,14 @@ class IfElseInstr : public Instr {
     BlockInstr * GetElseBlock();
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    IfElseInstr(int line, Expr * expr, BlockInstr* ifBlock,BlockInstr* elseBlock)
+    IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock)
         : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
 
     virtual ~IfElseInstr();
 
   protected:
     Expr * ifExpr;
-    BlockInstr *  ifBlock;
+    BlockInstr * ifBlock;
     BlockInstr * elseBlock;
 };
 
