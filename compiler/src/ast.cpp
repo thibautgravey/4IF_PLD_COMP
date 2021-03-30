@@ -126,7 +126,6 @@ void Function::SetParams(vector<Expr *> params) {
 
 string Function::GenerateIR(CFG * cfg) {
     // TODO : a voir pour le type
-    // TODO : a voir pour les params (passage dans IRInstr notamment)
     // TODO : a voir pour la destination (pour l'instant : reg1)
     vector<string> paramsIRInstr = {this->name, "reg1"};
     for (Expr * param : this->params) {
@@ -134,8 +133,11 @@ string Function::GenerateIR(CFG * cfg) {
     }
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT, paramsIRInstr);
 
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT, {tmpResVar, "reg1"});
+
     // TODO: vérifier pour le registre
-    return "reg1";
+    return tmpResVar;
 }
 
 Function::~Function() {
