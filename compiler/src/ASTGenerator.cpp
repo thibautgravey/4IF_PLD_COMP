@@ -333,7 +333,7 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
             }
         }
 
-        if (func_name.compare("main") == 0 && program->GetSymbolTable().FunctionHasReturn("main")) {
+        if (func_name.compare("main") == 0 && !program->GetSymbolTable().FunctionHasReturn("main")) {
             Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
             Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
             def_func->AddInstr(retInstr);
