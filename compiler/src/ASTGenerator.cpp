@@ -282,11 +282,6 @@ antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
         }
     }
 
-    if (!this->hasReturn) {
-        Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
-        Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
-        blockInstr->AddInstr(retInstr);
-    }
     return blockInstr;
 }
 

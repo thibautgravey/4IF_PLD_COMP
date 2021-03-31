@@ -135,6 +135,8 @@ class CFG {
     // basic block management
     string new_BB_name(const string & prefix = "");
 
+    BasicBlock * bb_epilogue;
+
   protected:
     int nextBBnumber;         /**< just for naming */
     vector<BasicBlock *> bbs; /**< all the basic blocks of this CFG*/

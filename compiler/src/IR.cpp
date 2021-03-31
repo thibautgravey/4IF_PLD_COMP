@@ -36,7 +36,6 @@ void IRInstr::gen_asm(ostream & o) {
             break;
     }
 
-    string labelIf;
     switch (this->op) {
         case ldconst:
             o << "        movl    $" << p2 << ", " << p1 << endl;
@@ -147,19 +146,16 @@ void IRInstr::gen_asm(ostream & o) {
         case cdtAnd:
             o << "        movl     " << p2 << ", %eax" << endl;
             o << "        and      " << p3 << ", %eax" << endl;
-            //o << "        sete     %al" << endl;
-            //o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case cdtOr:
             o << "        movl     " << p2 << ", %eax" << endl;
             o << "        or       " << p3 << ", %eax" << endl;
-            //o << "        sete     %al" << endl;
-            //o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case ret:
             o << "        movl     " << p1 << ", %eax" << endl;
+            o << "        jmp      " << bb->cfg->bb_epilogue->label << endl;
             break;
 
         default:
@@ -190,11 +186,11 @@ void CFG::gen_asm(ostream & o) {
             instr->gen_asm(o);
         }
         if (bb->exit_false == nullptr) {
-            o << "        jmp " << bb->exit_true->label << endl;
+            o << "        jmp      " << bb->exit_true->label << endl;
         } else {
             o << "        cmpl     $1, " << bb->cfg->IR_reg_to_asm(bb->test_var_name) << endl;
-            o << "        jne " << bb->exit_false->label << endl;
-            o << "        jmp " << bb->exit_true->label << endl;
+            o << "        jne      " << bb->exit_false->label << endl;
+            o << "        jmp      " << bb->exit_true->label << endl;
         }
     }
 

@@ -305,20 +305,21 @@ IR * Program::GenerateIR() {
     // EMPTY BB FOR PROLOGUE
     BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("prologue"));
 
-    tmpCFG->add_bb(entry);
+    // EMPTY BB FOR EPILOGUE
+    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
 
     BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
 
+    tmpCFG->add_bb(entry);
+
     entry->exit_true = body;
     tmpCFG->add_bb(body);
+    tmpCFG->bb_epilogue = output;
 
     // TODO : move this INT32_To GenerateIR of function definition
     for (Instr * instr : this->listInstr) {
         instr->GenerateIR(tmpCFG);
     }
-
-    // EMPTY BB FOR EPILOGUE
-    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
 
     tmpCFG->GetCurrentBB()->exit_true = output;
     tmpCFG->add_bb(output);
