@@ -52,7 +52,7 @@ int main(int argn, const char ** argv) {
 
     //Create the output path
     string outPath(argv[1]);
-    if (argn == 3) {
+    if (argn >= 3) {
         outPath = string(argv[2]);
 
         size_t dotPosition = outPath.find('.');
@@ -65,7 +65,15 @@ int main(int argn, const char ** argv) {
         if (out.bad()) {
             cerr << "An error occured when writing Generated ASM to " + outPath << endl;
         } else {
-            ir->GenerateAsmX86(out);
+            if (argn == 4) {
+                if (string(argv[3]) == "--as=ARM" || string(argv[3]) == "--as=arm") {
+                    ir->GenerateAsmARM(out);
+                } else {
+                    ir->GenerateAsmX86(out);
+                }
+            } else {
+                ir->GenerateAsmX86(out);
+            }
             out.close();
         }
     } else {
