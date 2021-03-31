@@ -49,7 +49,11 @@ string OpBin::GenerateIR(CFG * cfg) {
     // TODO: changer les types
     string tmpVar1 = this->operand1->GenerateIR(cfg);
     string tmpVar2 = this->operand2->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
+    string tmpResVar;
+    if (this->op != BinaryOperator::EQ) {
+        tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
+    }
+
     switch (this->op) {
         case BinaryOperator::PLUS:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT, {tmpResVar, tmpVar1, tmpVar2});
