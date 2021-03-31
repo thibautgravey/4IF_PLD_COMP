@@ -131,70 +131,80 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             break;
     }
 
-    //TODO
     switch (this->op) {
         case ldconst:
-            o << "        movs    " << p2 << "," << p1 << endl;
-            o << "        str     " << p2 << "[r7, #4]" << endl;
+            o << "        movs    r3, " << p2 << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case copy:
-            o << "        mov    " << p2 << ", %eax" << endl;
-            o << "        mov    %eax, " << p1 << endl;
+            o << "        ldr     r3, " << p1 << endl;
+            o << "        str     r3, " << p2 << endl;
             break;
         case add:
-            o << "        movs    r3, #3" << endl;
-            o << "        str     r3, [r7, #4]" << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        add     r3, r2, r3" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case sub:
-            o << "        mov    " << p2 << ", %eax" << endl;
-            o << "        sub    " << p3 << ", %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        subs     r3, r2, r3" << endl;
+            o << "        str     r3, " << p1 << endl;        
             break;
         case mul:
-            o << "        mov    " << p2 << ", %eax" << endl;
-            o << "        mul    " << p3 << ", %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        mul     r3, r2, r3" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case div:
-            o << "        mov     " << p2 << ", %eax" << endl;
-            o << "        cltd   " << endl;
-            o << "        idiv  " << p3 << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        bl      __aeabi_idiv" << endl;
+            o << "        mov     r3, r0" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case orB:
-            o << "        mov     " << p2 << ", %eax" << endl;
-            o << "        or      " << p3 << ", %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        orrs     r3, r2, r3" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case andB:
-            o << "        mov     " << p2 << ", %eax" << endl;
-            o << "        and      " << p3 << ", %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        ands     r3, r2, r3" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case xorB:
-            o << "        mov     " << p2 << ", %eax" << endl;
-            o << "        xor      " << p3 << ", %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r2, " << p2 << endl;
+            o << "        ldr     r3, " << p3 << endl;
+            o << "        eors     r3, r2, r3" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case neg:
-            o << "        cmp     $0, " << p2 << endl;
-            o << "        sete     %al" << endl;
-            o << "        movzb     %al, %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r3, " << p2 << endl;
+            o << "        cmp     r3, #0" << endl;
+            o << "        ite     eq" << endl;
+            o << "        moveq   r3, #1" << endl;
+            o << "        movne   r3, #0" << endl;
+            o << "        uxtb    r3, r3" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case opp:
-            o << "        mov     " << p2 << ", %eax" << endl;
-            o << "        neg     %eax" << endl;
-            o << "        mov     %eax, " << p1 << endl;
+            o << "        ldr     r3, " << p2 << endl;
+            o << "        rsbs     r3, r3, #0" << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case rmem:
-            o << "        mov    " << p2 << ", " << p1 << endl;
+            o << " rmem NOT IMPLEMENDTED" << endl;
             break;
         case wmem:
-            o << "        mov    " << p2 << ", " << p1 << endl;
+            o << " wmem NOT IMPLEMENDTED" << endl;
             break;
         case call:
-            o << "        call    " << p1 << endl;
+            o << "        bl    " << p1 << endl;
             break;
         case cmp_eq:
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
@@ -206,7 +216,7 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
         case ret:
-            o << "        mov    " << p1 << ", %eax" << endl;
+            o << "        ldr    r3, " << p1 << endl;
             break;
         default:
             break;
@@ -244,6 +254,28 @@ void CFG::gen_asm_X86(ostream & o) {
     gen_asm_epilogue_X86(o, lastbb);
 } //fin de gen_asm_x86(CFG)
 
+//TODO
+void CFG::gen_asm_ARM(ostream & o) {
+    BasicBlock * lastbb = this->bbs.back();
+    this->bbs.pop_back();
+    gen_asm_prologue_ARM(o, this->bbs[0]);
+    this->bbs.erase(this->bbs.begin());
+    for (BasicBlock * bb : this->bbs) {
+        o << bb->label << ":" << endl;
+        for (IRInstr * instr : bb->instrs) {
+            instr->gen_asm_ARM(o);
+        }
+        if (bb->exit_false == nullptr) {
+            o << "        b " << bb->exit_true->label << endl;
+        } else {
+            o << "        beq " << bb->exit_true->label << endl;
+            o << "        b " << bb->exit_false->label << endl;
+        }
+    }
+
+    gen_asm_epilogue_ARM(o, lastbb);
+} //fin de gen_asm_ARM(CFG)
+
 string CFG::IR_reg_to_asm_X86(string reg) {
 
     string ret;
@@ -264,6 +296,26 @@ string CFG::IR_reg_to_asm_X86(string reg) {
     return ret;
 } //fin de IR_reg_to_asm_X86
 
+string CFG::IR_reg_to_asm_ARM(string reg) {
+
+    string ret;
+
+    if (reg == "reg1") {
+        ret = "r3";
+    } else if (reg == "reg2") {
+        ret = "r0";
+    } else {
+        if (this->symbolTable->LookUp("main", reg)) {
+            int offset = this->symbolTable->GetVariableOffset("main", reg);
+            ret = "[r7, #" + to_string(offset) + "]";
+        } else {
+            ret = reg;
+        }
+    }
+
+    return ret;
+} //fin de IR_reg_to_asm_ARM
+
 void CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
     o << "main:" << endl;
     o << bb->label << ":" << endl;
@@ -283,20 +335,20 @@ void CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
 
 //TODO
 void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
-    o << "main:" << endl;
     o << bb->label << ":" << endl;
-    o << "        pushq    %rbp" << endl;
-    o << "        movq     %rsp, %rbp" << endl;
+    o << "        push    {r7}" << endl; //si main : push    {r7, lr}
 
     int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
 
-    // Round space to the nearest multiple of 16
-    if (spaceNeeded % 16) {
-        spaceNeeded = ((spaceNeeded / 16) + 1) * 16;
+    // Round space to the nearest multiple of 4
+    if (spaceNeeded % 4) {
+        spaceNeeded = ((spaceNeeded / 4) + 1) * 4;
     }
 
-    o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
-    o << "        jmp " << bb->exit_true->label << endl;
+    o << "        sub     sp, sp, #" << spaceNeeded << endl;
+    o << "        add     r7, sp, #0" << endl;
+    // o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
+    // o << "        jmp " << bb->exit_true->label << endl;
 } //fin de gen_asm_prologue_ARM
 
 void CFG::gen_asm_epilogue_X86(ostream & o, BasicBlock * bb) {
@@ -307,9 +359,21 @@ void CFG::gen_asm_epilogue_X86(ostream & o, BasicBlock * bb) {
 
 //TODO
 void CFG::gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb) {
+
+    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
+
+    // Round space to the nearest multiple of 4
+    if (spaceNeeded % 4) {
+        spaceNeeded = ((spaceNeeded / 4) + 1) * 4;
+    }
+
+
     o << bb->label << ":" << endl;
-    o << "        leave" << endl;
-    o << "        ret" << endl;
+    o << "        mov     r0, r3" << endl;
+    o << "        adds    r7, r7, #" << spaceNeeded << endl;
+    o << "        mov     sp, r7" << endl;
+    o << "        ldr     r7, [sp], #4" << endl;
+    o << "        bx      lr" << endl;
 } //fin de gen_asm_epilogue_ARM
 
 string CFG::new_BB_name(const string & prefix) {
@@ -339,7 +403,6 @@ void IR::GenerateAsmX86(ostream & o) {
     //TODO? ajouter épilogue bdsm
 } //----- Fin de GenerateAsmX86
 
-//TODO
 void IR::GenerateAsmARM(ostream & o) {
     gen_asm_prologue_global_ARM(o);
 
@@ -359,7 +422,6 @@ void IR::gen_asm_prologue_global_X86(ostream & o) {
       << endl;
 } //----- Fin de gen_asm_prologue_global_X86
 
-//TODO
 void IR::gen_asm_prologue_global_ARM(ostream & o) {
     o << ".globl _start" << endl;
     o << ".arm" << endl;
