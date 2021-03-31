@@ -108,8 +108,8 @@ class BasicBlock {
  */
 class CFG {
   public:
-    CFG(SymbolTable * symbolTable)
-        : nextBBnumber(0), symbolTable(symbolTable){};
+    CFG(SymbolTable * symbolTable, string name)
+        : nextBBnumber(0), symbolTable(symbolTable), cfgName(name){};
 
     void add_bb(BasicBlock * bb);
 
@@ -120,6 +120,7 @@ class CFG {
     void gen_asm_epilogue(ostream & o, BasicBlock * bb);
     BasicBlock * GetCurrentBB();
     SymbolTable * GetSymbolTable();
+    string GetName();
 
     // basic block management
     string new_BB_name(const string & prefix = "");
@@ -129,6 +130,7 @@ class CFG {
     vector<BasicBlock *> bbs; /**< all the basic blocks of this CFG*/
     BasicBlock * current_bb;
     SymbolTable * symbolTable;
+    string cfgName;
 };
 
 class IR {

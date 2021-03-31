@@ -25,15 +25,22 @@ using namespace std;
 void IRInstr::gen_asm(ostream & o) {
 
     string p1, p2, p3;
-    switch (this->params.size()) {
-        case 3:
-            p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
-        case 2:
-            p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
-        case 1:
-            p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
-        default:
-            break;
+    // TODO : voir si on peut améliorer
+
+    if (this->op != call) {
+        switch (this->params.size()) {
+            case 3:
+                p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
+            case 2:
+                p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
+            case 1:
+                p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
+            default:
+                break;
+        }
+    } else {
+        p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
+        p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
     }
 
     switch (this->op) {
@@ -97,9 +104,36 @@ void IRInstr::gen_asm(ostream & o) {
         case wmem:
             o << "        movl    " << p2 << ", " << p1 << endl;
             break;
-        case call:
+        case call: {
+            // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
+            for (int i = 2; i < params.size(); i++) {
+                p3 = this->bb->cfg->IR_reg_to_asm(this->params[i]);
+                string dest;
+                switch (i - 2) {
+                    case 0:
+                        dest = "%edi";
+                        break;
+                    case 1:
+                        dest = "%esi";
+                        break;
+                    case 2:
+                        dest = "%edx";
+                        break;
+                    case 3:
+                        dest = "%ecx";
+                        break;
+                    case 4:
+                        dest = "%r8d";
+                        break;
+                    case 5:
+                        dest = "%r9d";
+                        break;
+                }
+                o << "        movl    " << p3 << ", " << dest << endl;
+            }
             o << "        call    " << p1 << endl;
             break;
+        }
         case cmp_eq:
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
@@ -158,9 +192,21 @@ string CFG::IR_reg_to_asm(string reg) {
         ret = "%eax";
     } else if (reg == "reg2") {
         ret = "%ebx";
+    } else if (reg == "paramReg1") {
+        ret = "%edi";
+    } else if (reg == "paramReg2") {
+        ret = "%esi";
+    } else if (reg == "paramReg3") {
+        ret = "%edx";
+    } else if (reg == "paramReg4") {
+        ret = "%ecx";
+    } else if (reg == "paramReg5") {
+        ret = "%r8d";
+    } else if (reg == "paramReg6") {
+        ret = "%r9d";
     } else {
-        if (this->symbolTable->LookUp("main", reg)) {
-            int offset = this->symbolTable->GetVariableOffset("main", reg);
+        if (this->symbolTable->LookUpVariable(cfgName, reg)) {
+            int offset = this->symbolTable->GetVariableOffset(cfgName, reg);
             ret = to_string(offset) + "(%rbp)";
         } else {
             ret = reg;
@@ -171,12 +217,14 @@ string CFG::IR_reg_to_asm(string reg) {
 } //fin de IR_reg_to_asm
 
 void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
-    o << "main:" << endl;
+    o << "        .globl " << cfgName << endl
+      << endl;
+    o << cfgName << ":" << endl;
     o << bb->label << ":" << endl;
     o << "        pushq    %rbp" << endl;
     o << "        movq     %rsp, %rbp" << endl;
 
-    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
+    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction(cfgName);
 
     // Round space to the nearest multiple of 16
     if (spaceNeeded % 16) {
@@ -194,11 +242,10 @@ void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {
 } //fin de gen_asm_epilogue
 
 string CFG::new_BB_name(const string & prefix) {
-    string functionName = "main"; //TODO : change this when implementing function
     if (prefix.empty()) {
-        return "." + functionName + "BB" + to_string(this->nextBBnumber++);
+        return "." + this->cfgName + "BB" + to_string(this->nextBBnumber++);
     } else {
-        return "." + prefix + "_" + functionName;
+        return "." + prefix + "_" + this->cfgName;
     }
 } //fin de new_BB_name
 
@@ -210,8 +257,12 @@ SymbolTable * CFG::GetSymbolTable() {
     return this->symbolTable;
 } //----- Fin de GetSymbolTable
 
+string CFG::GetName() {
+    return this->cfgName;
+}
+
 void IR::GenerateAsmX86(ostream & o) {
-    gen_asm_prologue_global(o);
+    //gen_asm_prologue_global(o);
 
     for (CFG * cfg : this->allCFG) {
         cfg->gen_asm(o);
