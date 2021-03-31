@@ -269,15 +269,17 @@ antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
 } //----- Fin de visitVar
 
 antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
-    Function * ret = nullptr;
-    if (program->GetSymbolTable().LookUpFunction(ctx->ID()->getText())) {
-        ret = new Function(ctx->start->getLine(), ctx->ID()->getText());
+    Function * ret = new Function(ctx->start->getLine(), ctx->ID()->getText());
 
-        vector<Expr *> params;
-        if (ctx->expr_list()) {
-            params = visit(ctx->expr_list()).as<vector<Expr *>>();
-            //function->SetParams(visit(ctx->expr_list()));
-        }
+    vector<Expr *> params;
+    if (ctx->expr_list()) {
+        params = visit(ctx->expr_list()).as<vector<Expr *>>();
+    }
+
+    ret->SetParams(params);
+
+    if (program->GetSymbolTable().LookUpFunction(ctx->ID()->getText())) {
+        // Internal Function
 
         // Check number of params
         int nbParamsNeeded = program->GetSymbolTable().GetFunctionParams(ctx->ID()->getText()).size();
@@ -297,12 +299,7 @@ antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
         // Check params types
         // TODO
 
-        ret->SetParams(params);
-
         program->GetSymbolTable().SetUsedFunction(ctx->ID()->getText());
-    } else {
-        program->SetErrorFlag(true);
-        cerr << "function " + ctx->ID()->getText() + " does not exist in globalFunctionTable" << endl;
     }
 
     return (Expr *)ret;
