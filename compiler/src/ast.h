@@ -16,7 +16,16 @@ enum BinaryOperator {
     OR,
     XOR,
     AND,
-    EQ
+    CDTAND,
+    CDTOR,
+    EQ,
+    EQUAL,
+    NEQUAL,
+    GREATER,
+    GREATERE,
+    LESS,
+    LESSE
+
 };
 
 enum UnitOperator {
@@ -240,6 +249,42 @@ class DefFuncInstr : public Instr {
     Type type;
     string name;
     vector<Instr *> listInstr;
+
+};
+
+class BlockInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    vector<Instr *> GetListInstr();
+    virtual void GenerateIR(CFG * cfg);
+    void AddInstr(Instr * instr);
+    //-------------------------------------------- Constructeurs - destructeur
+    BlockInstr(int line)
+        : Instr(line){};
+
+    virtual ~BlockInstr();
+
+  protected:
+    vector<Instr *> listInstr;
+};
+
+class IfElseInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetIfExpr();
+    BlockInstr * GetIfBlock();
+    BlockInstr * GetElseBlock();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock)
+        : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
+
+    virtual ~IfElseInstr();
+
+  protected:
+    Expr * ifExpr;
+    BlockInstr * ifBlock;
+    BlockInstr * elseBlock;
 };
 
 //---------- Interface de la classe <Program> ----------------
@@ -264,6 +309,7 @@ class Program : public Node {
     vector<Instr *> listInstr;
     SymbolTable symbolTable;
     bool errorFlag;
+
 };
 
 #endif

@@ -30,11 +30,22 @@ class IRInstr {
         xorB,
         opp,
         neg,
+        equal,
+        nequal,
+        greater,
+        greatere,
+        less,
+        lesse,
+        cdtAnd,
+        cdtOr,
         rmem,
         wmem,
         call,
         cmp_eq,
-        cmp_lt,
+        cmp_neq,
+        cmp_ge,
+        cmp_g,
+        cmp_l,
         cmp_le,
         ret
     } Operation;
@@ -124,6 +135,8 @@ class CFG {
 
     // basic block management
     string new_BB_name(const string & prefix = "");
+
+    BasicBlock * bb_epilogue;
 
   protected:
     int nextBBnumber;         /**< just for naming */
