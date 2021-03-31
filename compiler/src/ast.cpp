@@ -284,6 +284,10 @@ void Program::UnusedFunctionAnalysis() const {
     this->symbolTable.UnusedFunctionAnalysis();
 }
 
+void Program::FunctionReturnAnalysis() const {
+    this->symbolTable.FunctionReturnAnalysis();
+}
+
 void Program::SetErrorFlag(bool flag) {
     this->errorFlag = flag;
 } //----- Fin de SetErrorFlag

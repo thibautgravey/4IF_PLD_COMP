@@ -172,6 +172,16 @@ void SymbolTable::UnusedFunctionAnalysis() const {
     }
 } //----- Fin de UnusedFunctionAnalysis
 
+void SymbolTable::FunctionReturnAnalysis() const {
+    for (const auto & function : globalFunctionTable) {
+        if (function.second->returnType == Type::VOID && function.second->hasReturned) {
+            printError("WARN : function " + function.first + " is a void function with a return statement");
+        } else if (function.second->returnType != Type::VOID && !function.second->hasReturned) {
+            printError("WARN : function " + function.first + " is a non-void function without a return statement");
+        }
+    }
+} //----- Fin de FunctionReturnAnalysis
+
 void SymbolTable::SetUsedVariable(const string & function, const string & name, const string & scope) {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable != nullptr) {
@@ -184,6 +194,22 @@ void SymbolTable::SetUsedFunction(const string & function) {
     if (functionPointer != nullptr) {
         functionPointer->used = true;
     }
+}
+
+void SymbolTable::SetHasReturnFunction(const string & function) {
+    ContextTable * functionPointer = getFunction(function);
+    if (functionPointer != nullptr) {
+        functionPointer->hasReturned = true;
+    }
+}
+
+bool SymbolTable::FunctionHasReturn(const string & function) {
+    ContextTable * functionPointer = getFunction(function);
+    if (functionPointer == nullptr) {
+        return false;
+    }
+
+    return functionPointer->hasReturned;
 }
 
 int SymbolTable::CalculateSpaceForFunction(const string & function) {

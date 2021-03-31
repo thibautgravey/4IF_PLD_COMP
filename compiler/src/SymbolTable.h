@@ -53,6 +53,7 @@ struct ContextTable {
     int offsetContext = 0;
     Type returnType;
     bool used = false;
+    bool hasReturned = false;
     vector<FunctionParam *> params;
 };
 
@@ -88,9 +89,15 @@ class SymbolTable {
 
     void UnusedFunctionAnalysis() const;
 
+    void FunctionReturnAnalysis() const;
+
     void SetUsedVariable(const string & function, const string & name, const string & scope = "");
 
     void SetUsedFunction(const string & function);
+
+    void SetHasReturnFunction(const string & function);
+
+    bool FunctionHasReturn(const string & function);
 
     int CalculateSpaceForFunction(const string & function);
 

@@ -147,9 +147,9 @@ antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
 } //----- Fin de visitVar_aff
 
 antlrcpp::Any ASTGenerator::visitReturn_stmt(ifccParser::Return_stmtContext * ctx) {
-    if (this->currentFunction.compare("main") == 0) {
-        this->mainHasReturn = true;
-    }
+
+    program->GetSymbolTable().SetHasReturnFunction(currentFunction);
+
     Expr * expr = visit(ctx->expr());
     if (expr == nullptr) {
 
@@ -333,7 +333,7 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
             }
         }
 
-        if (!this->mainHasReturn && func_name.compare("main") == 0) {
+        if (func_name.compare("main") == 0 && program->GetSymbolTable().FunctionHasReturn("main")) {
             Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
             Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
             def_func->AddInstr(retInstr);

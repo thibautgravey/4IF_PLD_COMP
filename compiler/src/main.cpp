@@ -47,6 +47,7 @@ int main(int argn, const char ** argv) {
 
     program->UnusedVariableAnalysis();
     program->UnusedFunctionAnalysis();
+    program->FunctionReturnAnalysis();
 
     //TODO : Create an IR and generate ASM
     IR * ir = program->GenerateIR();

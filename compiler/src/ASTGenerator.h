@@ -78,7 +78,7 @@ class ASTGenerator : public ifccBaseVisitor {
 
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()
-        : program(nullptr), lastDeclaredType(ERROR), mainHasReturn(false) {}
+        : program(nullptr), lastDeclaredType(ERROR) {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -93,7 +93,6 @@ class ASTGenerator : public ifccBaseVisitor {
 
     Program * program;
     Type lastDeclaredType;
-    bool mainHasReturn;
     string currentFunction;
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>

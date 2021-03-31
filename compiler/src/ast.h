@@ -251,6 +251,7 @@ class Program : public Node {
     void AddInstr(Instr * instr);
     void UnusedVariableAnalysis() const;
     void UnusedFunctionAnalysis() const;
+    void FunctionReturnAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();
     IR * GenerateIR();
