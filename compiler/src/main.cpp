@@ -31,7 +31,7 @@ int main(int argn, const char ** argv) {
     int lexerErrors = lexer.getNumberOfSyntaxErrors();
     int parserErrors = parser.getNumberOfSyntaxErrors();
 
-    if (lexerErrors || parserErrors)
+    if (lexerErrors || parserErrors) 
         return EXIT_FAILURE;
 
     //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST with first static analysis
@@ -40,8 +40,11 @@ int main(int argn, const char ** argv) {
 
     Program * program = astGenerator.visit(tree);
 
-    if (program->GetErrorFlag())
+    if (program->GetErrorFlag()) {
+        delete(program);
         return EXIT_FAILURE;
+    }
+        
 
     //TODO : Other static analysis
 
@@ -74,6 +77,9 @@ int main(int argn, const char ** argv) {
     }
 
     //TODO : Generate an exec file with a an "as file.s -o file.o" and then link using gcc
+
+    //delete(program);
+    //delete(ir);
 
     return EXIT_SUCCESS;
 }

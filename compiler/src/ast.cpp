@@ -76,6 +76,10 @@ string OpBin::GenerateIR(CFG * cfg) {
         case BinaryOperator::XOR:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
+        case BinaryOperator::EQ:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2});
+            tmpResVar = tmpVar1;
+            break;
         case BinaryOperator::EQUAL:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
@@ -224,6 +228,10 @@ Type VarAffInstr::GetType() {
 //------- Réalisation de la classe <ExprInstr> ---
 void ExprInstr::GenerateIR(CFG * cfg) {
     this->expr->GenerateIR(cfg);
+}
+
+ExprInstr::~ExprInstr() {
+    delete(expr);
 }
 
 //------- Réalisation de la classe <Param> ---

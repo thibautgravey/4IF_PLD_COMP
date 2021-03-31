@@ -213,7 +213,7 @@ class ExprInstr : public Instr {
     //-------------------------------------------- Constructeurs - destructeur
     ExprInstr(int line, Expr * expr)
         : Instr(line), expr(expr){};
-    virtual ~ExprInstr() = default;
+    virtual ~ExprInstr();
 
   protected:
     Expr * expr;
@@ -277,7 +277,7 @@ class IfElseInstr : public Instr {
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock)
-        : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
+        : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock) {};
 
     virtual ~IfElseInstr();
 

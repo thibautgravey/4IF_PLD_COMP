@@ -308,6 +308,13 @@ string CFG::GetName() {
     return this->cfgName;
 }
 
+CFG::~CFG(){
+    delete(bb_epilogue);
+    for (BasicBlock *bb : bbs) {
+        delete(bb);
+    }
+}
+
 void IR::GenerateAsmX86(ostream & o) {
     //gen_asm_prologue_global(o);
 
@@ -336,6 +343,12 @@ void IR::gen_asm_prologue_global(ostream & o) {
     o << "        .globl main" << endl
       << endl;
 } //----- Fin de gen_asm_prologue_global
+
+IR::~IR(){
+    for (CFG * cfg : allCFG) {
+        delete(cfg);
+    }
+}
 
 //-------------------------------------------- Constructeurs - destructeur
 

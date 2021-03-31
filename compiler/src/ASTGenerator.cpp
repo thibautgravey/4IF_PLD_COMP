@@ -395,7 +395,7 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
     }
 
     // Récupération des intructions du else
-    BlockInstr * elseblock;
+    BlockInstr * elseblock = nullptr;
     if (ctx->elseblock()) {
         elseblock = (BlockInstr *)visit(ctx->elseblock());
     }

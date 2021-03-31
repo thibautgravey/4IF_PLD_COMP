@@ -136,6 +136,8 @@ class CFG {
     // basic block management
     string new_BB_name(const string & prefix = "");
 
+    virtual ~CFG();
+
     BasicBlock * bb_epilogue;
 
   protected:
@@ -154,7 +156,7 @@ class IR {
     void gen_asm_prologue_global(ostream & o);
 
     IR() = default;
-    virtual ~IR() = default;
+    virtual ~IR();
 
   protected:
     vector<CFG *> allCFG;
