@@ -30,11 +30,22 @@ class IRInstr {
         xorB,
         opp,
         neg,
+        equal,
+        nequal,
+        greater,
+        greatere,
+        less,
+        lesse,
+        cdtAnd,
+        cdtOr,
         rmem,
         wmem,
         call,
         cmp_eq,
-        cmp_lt,
+        cmp_neq,
+        cmp_ge,
+        cmp_g,
+        cmp_l,
         cmp_le,
         ret
     } Operation;
@@ -125,6 +136,10 @@ class CFG {
     // basic block management
     string new_BB_name(const string & prefix = "");
 
+    virtual ~CFG();
+
+    BasicBlock * bb_epilogue;
+
   protected:
     int nextBBnumber;         /**< just for naming */
     vector<BasicBlock *> bbs; /**< all the basic blocks of this CFG*/
@@ -141,7 +156,7 @@ class IR {
     void gen_asm_prologue_global(ostream & o);
 
     IR() = default;
-    virtual ~IR() = default;
+    virtual ~IR();
 
   protected:
     vector<CFG *> allCFG;

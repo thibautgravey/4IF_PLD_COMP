@@ -241,6 +241,15 @@ vector<FunctionParam *> SymbolTable::GetFunctionParams(const string & function) 
     return {};
 } //----- Fin de GetFunctionParams
 
+Type SymbolTable::GetFunctionType(const string & function) {
+    ContextTable * contextTable = getFunction(function);
+    if (contextTable != nullptr) {
+        return contextTable->returnType;
+    }
+
+    return ERROR;
+}
+
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable() {
     for (auto & it : globalFunctionTable) {

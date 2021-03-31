@@ -80,6 +80,30 @@ string OpBin::GenerateIR(CFG * cfg) {
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2});
             tmpResVar = tmpVar1;
             break;
+        case BinaryOperator::EQUAL:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::NEQUAL:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_neq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::GREATER:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_g, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::GREATERE:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_ge, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::LESS:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_l, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::LESSE:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_le, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::CDTAND:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtAnd, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::CDTOR:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtOr, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
         default:
             break;
     }
@@ -206,6 +230,10 @@ void ExprInstr::GenerateIR(CFG * cfg) {
     this->expr->GenerateIR(cfg);
 }
 
+ExprInstr::~ExprInstr() {
+    delete(expr);
+}
+
 //------- Réalisation de la classe <Param> ---
 Param::~Param() {
 }
@@ -228,32 +256,33 @@ vector<Instr *> DefFuncInstr::GetListInstr() {
 }
 
 void DefFuncInstr::GenerateIR(CFG * cfg) {
+
     // EMPTY BB FOR PROLOGUE
     BasicBlock * entry = new BasicBlock(cfg, cfg->new_BB_name("prologue"));
 
-    cfg->add_bb(entry);
+    // EMPTY BB FOR EPILOGUE
+    BasicBlock * output = new BasicBlock(cfg, cfg->new_BB_name("epilogue"));
 
     BasicBlock * body = new BasicBlock(cfg, cfg->new_BB_name());
 
+    cfg->add_bb(entry);
+
     entry->exit_true = body;
     cfg->add_bb(body);
+    cfg->bb_epilogue = output;
 
-    // TODO: recuperer les variables passees en arguments
+    // TODO: recuperer les variables passees en arguments pour plus que 6
     vector<FunctionParam *> functionParams = cfg->GetSymbolTable()->GetFunctionParams(cfg->GetName());
     for (int i = 0; i < functionParams.size(); i++) {
         string reg = "paramReg" + to_string(i + 1);
         cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg});
     }
-
-    // TO DO : move this into GenerateIR of function definition
+    
     for (Instr * instr : this->GetListInstr()) {
         instr->GenerateIR(cfg);
     }
 
-    // EMPTY BB FOR EPILOGUE
-    BasicBlock * output = new BasicBlock(cfg, cfg->new_BB_name("epilogue"));
-
-    body->exit_true = output;
+    cfg->GetCurrentBB()->exit_true = output;
     cfg->add_bb(output);
 }
 
@@ -262,6 +291,93 @@ DefFuncInstr::~DefFuncInstr() {
         delete (instr);
     }
 }
+//---------------//
+//  IfElseInstr  //
+//---------------//
+
+Expr * IfElseInstr::GetIfExpr() {
+    return ifExpr;
+}
+
+BlockInstr * IfElseInstr::GetIfBlock() {
+    return ifBlock;
+}
+
+BlockInstr * IfElseInstr::GetElseBlock() {
+    return elseBlock;
+}
+
+void IfElseInstr::GenerateIR(CFG * cfg) {
+    BasicBlock *ifBB, *elseBB, *endif;
+
+    // Génération IR test if et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = ifExpr->GenerateIR(cfg);
+
+    // Création du BB de fin de if
+    endif = new BasicBlock(cfg, cfg->new_BB_name());
+
+    // Création du BB pour le ifblock
+    ifBB = new BasicBlock(cfg, cfg->new_BB_name());
+    cfg->GetCurrentBB()->exit_true = ifBB;
+
+    // Création du BB pour le elseBlock si besoin
+    if (elseBlock != nullptr) {
+        elseBB = new BasicBlock(cfg, cfg->new_BB_name());
+        cfg->GetCurrentBB()->exit_false = elseBB;
+    } else {
+        cfg->GetCurrentBB()->exit_false = endif;
+    }
+
+    // Ajout des instructions ifBB
+    cfg->add_bb(ifBB);
+    ifBlock->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = endif;
+
+    // Ajout des instructins elseBB si besoin
+    if (elseBlock != nullptr) {
+        cfg->add_bb(elseBB);
+        elseBlock->GenerateIR(cfg);
+        cfg->GetCurrentBB()->exit_true = endif;
+    }
+
+    cfg->add_bb(endif);
+}
+
+IfElseInstr::~IfElseInstr() {
+    delete (ifExpr);
+    delete (ifBlock);
+    delete (elseBlock);
+} //----- Fin de ~IfElseInstr
+
+//----------------//
+//   BlockInstr   //
+//----------------//
+
+vector<Instr *> BlockInstr::GetListInstr() {
+    return listInstr;
+}
+
+void BlockInstr::GenerateIR(CFG * cfg) {
+
+    // TODO: change scope at the begining and the end of the block
+    //cfg->enterblock();
+
+    for (Instr * instr : listInstr) {
+        instr->GenerateIR(cfg);
+    }
+
+    //cfg->leaveblock();
+}
+
+void BlockInstr::AddInstr(Instr * instr) {
+    listInstr.push_back(instr);
+}
+
+BlockInstr::~BlockInstr() {
+    for (const auto & instr : listInstr) {
+        delete (instr);
+    }
+} //----- Fin de ~BlockInstr
 
 //------- Réalisation de la classe <Program> ---
 vector<Instr *> Program::GetListInstr() {

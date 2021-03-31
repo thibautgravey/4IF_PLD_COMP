@@ -48,28 +48,28 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        movl    $" << p2 << ", " << p1 << endl;
             break;
         case copy:
-            o << "        movl    " << p2 << ", %eax" << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
             o << "        movl    %eax, " << p1 << endl;
             break;
         case add:
-            o << "        movl    " << p2 << ", %eax" << endl;
-            o << "        addl    " << p3 << ", %eax" << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        addl     " << p3 << ", %eax" << endl;
             o << "        movl    %eax, " << p1 << endl;
             break;
         case sub:
-            o << "        movl    " << p2 << ", %eax" << endl;
-            o << "        subl    " << p3 << ", %eax" << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        subl     " << p3 << ", %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case mul:
-            o << "        movl    " << p2 << ", %eax" << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
             o << "        imull    " << p3 << ", %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case div:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cltd   " << endl;
-            o << "        idivl  " << p3 << endl;
+            o << "        cltd     " << endl;
+            o << "        idivl    " << p3 << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case orB:
@@ -79,18 +79,18 @@ void IRInstr::gen_asm(ostream & o) {
             break;
         case andB:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        andl      " << p3 << ", %eax" << endl;
+            o << "        andl     " << p3 << ", %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case xorB:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        xorl      " << p3 << ", %eax" << endl;
+            o << "        xorl     " << p3 << ", %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case neg:
             o << "        cmpl     $0, " << p2 << endl;
             o << "        sete     %al" << endl;
-            o << "        movzbl     %al, %eax" << endl;
+            o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case opp:
@@ -99,10 +99,10 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        movl     %eax, " << p1 << endl;
             break;
         case rmem:
-            o << "        movl    " << p2 << ", " << p1 << endl;
+            o << "        movl     " << p2 << ", " << p1 << endl;
             break;
         case wmem:
-            o << "        movl    " << p2 << ", " << p1 << endl;
+            o << "        movl     " << p2 << ", " << p1 << endl;
             break;
         case call: {
             // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
@@ -135,17 +135,63 @@ void IRInstr::gen_asm(ostream & o) {
             break;
         }
         case cmp_eq:
-            o << "cmp_eq NOT IMPLEMENDTED" << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        sete     %al" << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
-        case cmp_lt:
-            o << "cmp_lt NOT IMPLEMENDTED" << endl;
+        case cmp_neq:
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        setne    %al" << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
+            break;
+        case cmp_g:
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        setg     %al" << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
+            break;
+        case cmp_ge:
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        setge    %al" << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
+            break;
+        case cmp_l:
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        setl     %al" << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_le:
-            o << "cmp_eq NOT IMPLEMENDTED" << endl;
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        setle    %al" << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
+            break;
+
+        case cdtAnd:
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        and      " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
+            break;
+        case cdtOr:
+            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        or       " << p3 << ", %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case ret:
-            o << "        movl    " << p1 << ", %eax" << endl;
+            o << "        movl     " << p1 << ", %eax" << endl;
+            o << "        jmp      " << bb->cfg->bb_epilogue->label << endl;
             break;
+
         default:
             break;
     }
@@ -174,10 +220,11 @@ void CFG::gen_asm(ostream & o) {
             instr->gen_asm(o);
         }
         if (bb->exit_false == nullptr) {
-            o << "        jmp " << bb->exit_true->label << endl;
+            o << "        jmp      " << bb->exit_true->label << endl;
         } else {
-            o << "        je " << bb->exit_true->label << endl;
-            o << "        jmp " << bb->exit_false->label << endl;
+            o << "        cmpl     $1, " << bb->cfg->IR_reg_to_asm(bb->test_var_name) << endl;
+            o << "        jne      " << bb->exit_false->label << endl;
+            o << "        jmp      " << bb->exit_true->label << endl;
         }
     }
 
@@ -261,6 +308,13 @@ string CFG::GetName() {
     return this->cfgName;
 }
 
+CFG::~CFG(){
+    delete(bb_epilogue);
+    for (BasicBlock *bb : bbs) {
+        delete(bb);
+    }
+}
+
 void IR::GenerateAsmX86(ostream & o) {
     //gen_asm_prologue_global(o);
 
@@ -289,6 +343,12 @@ void IR::gen_asm_prologue_global(ostream & o) {
     o << "        .globl main" << endl
       << endl;
 } //----- Fin de gen_asm_prologue_global
+
+IR::~IR(){
+    for (CFG * cfg : allCFG) {
+        delete(cfg);
+    }
+}
 
 //-------------------------------------------- Constructeurs - destructeur
 

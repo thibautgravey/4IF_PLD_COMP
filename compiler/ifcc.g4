@@ -6,17 +6,21 @@ prog: def_func+;
 
 def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
+line: var_decl | expr ';' | return_stmt | ifblock;
+
 param_list: param (',' param)*;
 
 param: TYPE ID;
-
-line: var_decl | expr ';' | return_stmt;
 
 var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
 
 inline_var_decl: (',' ID ('=' expr)?);
 
 return_stmt: 'return' expr ';';
+
+ifblock: ('if' '(' expr ')' (line | block) elseblock?);
+
+elseblock: 'else' (line | block | ifblock);
 
 expr:
 	CONST								# const
@@ -30,6 +34,14 @@ expr:
 	| expr '|' expr						# or
 	| expr '^' expr						# xor
 	| ID '=' expr						# var_aff
+	| expr '==' expr					# equal
+	| expr '!=' expr					# notequal
+	| expr '>=' expr					# greaterequal
+	| expr '>' expr						# greater
+	| expr '<=' expr					# lessequal
+	| expr '<' expr						# less
+	| expr '&&' expr					# cdtand
+	| expr '||' expr					# cdtor
 	;
 
 expr_list: expr (',' expr)*;
@@ -44,6 +56,8 @@ OP_ADD: '+';
 OP_UNAIRE_NOT: '!';
 
 ID: [_a-zA-Z][_a-zA-Z0-9]*;
+
+block: '{' line* '}';
 
 COMMENT: '/*' .*? '*/' -> skip;
 
