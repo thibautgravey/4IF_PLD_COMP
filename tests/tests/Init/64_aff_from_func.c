@@ -1,8 +1,10 @@
-int toto() {
+#include <stdint.h>
+
+int32_t toto() {
     return 45;
 }
 
-int main() {
-    int a = toto();
+int32_t main() {
+    int32_t a = toto();
     return a;
 }

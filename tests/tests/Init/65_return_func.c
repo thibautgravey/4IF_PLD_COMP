@@ -1,7 +1,9 @@
-int fonction() {
+#include <stdint.h>
+
+int32_t fonction() {
     return 1 + 2 + 3 * 4;
 }
 
-int main() {
+int32_t main() {
     return fonction();
 }

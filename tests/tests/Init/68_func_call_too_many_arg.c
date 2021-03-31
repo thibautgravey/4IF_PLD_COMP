@@ -1,7 +1,9 @@
-int sum(int abc, int bcd) {
+#include <stdint.h>
+
+int32_t sum(int32_t abc, int32_t bcd) {
     return abc + bcd;
 }
 
-int main() {
+int32_t main() {
     return sum(1, 2, 3);
 }

@@ -77,7 +77,7 @@ string OpBin::GenerateIR(CFG * cfg) {
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::EQ:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT, {tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2});
             tmpResVar = tmpVar1;
             break;
         default:
@@ -135,10 +135,10 @@ string Function::GenerateIR(CFG * cfg) {
     for (Expr * param : this->params) {
         paramsIRInstr.push_back(param->GenerateIR(cfg));
     }
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT, paramsIRInstr);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT32_T, paramsIRInstr);
 
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT, {tmpResVar, "reg1"});
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpResVar, "reg1"});
 
     // TODO: vérifier pour le registre
     return tmpResVar;

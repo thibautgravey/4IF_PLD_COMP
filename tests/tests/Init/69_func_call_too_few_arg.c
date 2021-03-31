@@ -1,9 +1,11 @@
-int toto(int a, int b, int c) {
-    int res = a * (b + c);
+#include <stdint.h>
+
+int32_t toto(int32_t a, int32_t b, int32_t c) {
+    int32_t res = a * (b + c);
     return res;
 }
 
-int main() {
-    int test = toto(1, 2);
+int32_t main() {
+    int32_t test = toto(1, 2);
     return test;
 }

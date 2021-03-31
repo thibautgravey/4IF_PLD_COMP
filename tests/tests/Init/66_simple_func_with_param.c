@@ -1,10 +1,12 @@
-int sumPlus(int a, int b) {
+#include <stdint.h>
+
+int32_t sumPlus(int32_t a, int32_t b) {
     a = a + 1;
     b = b + 1;
     return a + b;
 }
 
-int main() {
-    int a = sumPlus(10, 12);
+int32_t main() {
+    int32_t a = sumPlus(10, 12);
     return a;
 }
