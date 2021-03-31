@@ -224,6 +224,33 @@ vector<Instr *> DefFuncInstr::GetListInstr() {
 }
 
 void DefFuncInstr::GenerateIR(CFG * cfg) {
+    // EMPTY BB FOR PROLOGUE
+    BasicBlock * entry = new BasicBlock(cfg, cfg->new_BB_name("prologue"));
+
+    cfg->add_bb(entry);
+
+    BasicBlock * body = new BasicBlock(cfg, cfg->new_BB_name());
+
+    entry->exit_true = body;
+    cfg->add_bb(body);
+
+    // TODO: recuperer les variables passees en arguments
+    vector<FunctionParam *> functionParams = cfg->GetSymbolTable()->GetFunctionParams(cfg->GetName());
+    for (int i = 0; i < functionParams.size(); i++) {
+        string reg = "paramReg" + to_string(i + 1);
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg});
+    }
+
+    // TO DO : move this into GenerateIR of function definition
+    for (Instr * instr : this->GetListInstr()) {
+        instr->GenerateIR(cfg);
+    }
+
+    // EMPTY BB FOR EPILOGUE
+    BasicBlock * output = new BasicBlock(cfg, cfg->new_BB_name("epilogue"));
+
+    body->exit_true = output;
+    cfg->add_bb(output);
 }
 
 DefFuncInstr::~DefFuncInstr() {
@@ -278,33 +305,7 @@ IR * Program::GenerateIR() {
 
         CFG * tmpCFG = new CFG(&(this->symbolTable), defFuncInstr->GetName());
 
-        // EMPTY BB FOR PROLOGUE
-        BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("prologue"));
-
-        tmpCFG->add_bb(entry);
-
-        BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
-
-        entry->exit_true = body;
-        tmpCFG->add_bb(body);
-
-        // TODO: recuperer les variables passees en arguments
-        vector<FunctionParam *> functionParams = this->symbolTable.GetFunctionParams(defFuncInstr->GetName());
-        for (int i = 0; i < functionParams.size(); i++) {
-            string reg = "paramReg" + to_string(i + 1);
-            tmpCFG->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg});
-        }
-
-        // TO DO : move this into GenerateIR of function definition
-        for (Instr * instr : defFuncInstr->GetListInstr()) {
-            instr->GenerateIR(tmpCFG);
-        }
-
-        // EMPTY BB FOR EPILOGUE
-        BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
-
-        body->exit_true = output;
-        tmpCFG->add_bb(output);
+        defFuncInstr->GenerateIR(tmpCFG);
 
         ir->AddCFG(tmpCFG);
     }
