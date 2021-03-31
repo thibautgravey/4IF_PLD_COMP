@@ -71,6 +71,30 @@ string OpBin::GenerateIR(CFG * cfg) {
         case BinaryOperator::XOR:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
+        case BinaryOperator::EQUAL:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::NEQUAL:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_neq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::GREATER:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_g, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::GREATERE:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_ge, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::LESS:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_l, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::LESSE:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_le, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::CDTAND:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtAnd, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
+        case BinaryOperator::CDTOR:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtOr, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            break;
 
         default:
             break;
@@ -153,7 +177,6 @@ void VarAffInstr::GenerateIR(CFG * cfg) {
     }
 }
 
-
 //---------------//
 //  IfElseInstr  //
 //---------------//
@@ -173,8 +196,8 @@ BlockInstr * IfElseInstr::GetElseBlock() {
 void IfElseInstr::GenerateIR(CFG * cfg) {
     BasicBlock *ifBB, *elseBB, *endif;
 
-    // TODO: Ajout du test à partir de ifExpr et ajout du jump
-    ifExpr->GenerateIR(cfg);
+    // Génération IR test if et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = ifExpr->GenerateIR(cfg);
 
     // Création du BB de fin de if
     endif = new BasicBlock(cfg, cfg->new_BB_name());
@@ -182,7 +205,6 @@ void IfElseInstr::GenerateIR(CFG * cfg) {
     // Création du BB pour le ifblock
     ifBB = new BasicBlock(cfg, cfg->new_BB_name());
     cfg->GetCurrentBB()->exit_true = ifBB;
-
 
     // Création du BB pour le elseBlock si besoin
     if (elseBlock != nullptr) {
@@ -195,13 +217,13 @@ void IfElseInstr::GenerateIR(CFG * cfg) {
     // Ajout des instructions ifBB
     cfg->add_bb(ifBB);
     ifBlock->GenerateIR(cfg);
-    ifBB->exit_true = endif;
+    cfg->GetCurrentBB()->exit_true = endif;
 
     // Ajout des instructins elseBB si besoin
     if (elseBlock != nullptr) {
         cfg->add_bb(elseBB);
         elseBlock->GenerateIR(cfg);
-        elseBB->exit_true = endif;
+        cfg->GetCurrentBB()->exit_true = endif;
     }
 
     cfg->add_bb(endif);
@@ -212,7 +234,6 @@ IfElseInstr::~IfElseInstr() {
     delete (ifBlock);
     delete (elseBlock);
 } //----- Fin de ~IfElseInstr
-
 
 //----------------//
 //   BlockInstr   //
@@ -232,7 +253,6 @@ void BlockInstr::GenerateIR(CFG * cfg) {
     }
 
     //cfg->leaveblock();
-
 }
 
 void BlockInstr::AddInstr(Instr * instr) {
