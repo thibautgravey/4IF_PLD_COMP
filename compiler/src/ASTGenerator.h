@@ -89,6 +89,7 @@ class ASTGenerator : public ifccBaseVisitor {
     //------------------------------------------------------------------ PRIVE
 
   protected:
+    bool checkExpr(Expr * expr);
     //----------------------------------------------------- Attributs protégés
 
     Program * program;

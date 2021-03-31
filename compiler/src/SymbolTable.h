@@ -98,6 +98,8 @@ class SymbolTable {
 
     vector<FunctionParam *> GetFunctionParams(const string & function);
 
+    Type GetFunctionType(const string & function);
+
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;
     // Mode d'emploi :

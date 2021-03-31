@@ -80,7 +80,7 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
-            if (expr == nullptr) {
+            if (!checkExpr(expr)) {
                 return (Instr *)nullptr;
             }
 
@@ -113,7 +113,7 @@ antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declCont
     if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
-            if (expr == nullptr) {
+            if (!checkExpr(expr)) {
                 return (Instr *)nullptr;
             }
 
@@ -138,7 +138,7 @@ antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
     */
 
     Expr * affExpr = (Expr *)visit(ctx->expr());
-    if (affExpr == nullptr) {
+    if (!checkExpr(affExpr)) {
         return (Expr *)nullptr;
     }
     Expr * var = new Var(ctx->start->getLine(), ctx->ID()->getText());
@@ -151,8 +151,7 @@ antlrcpp::Any ASTGenerator::visitReturn_stmt(ifccParser::Return_stmtContext * ct
         this->mainHasReturn = true;
     }
     Expr * expr = visit(ctx->expr());
-    if (expr == nullptr) {
-
+    if (!checkExpr(expr)) {
         return (Instr *)nullptr;
     }
     return (Instr *)new ReturnInstr(ctx->start->getLine(), expr);
@@ -165,7 +164,7 @@ antlrcpp::Any ASTGenerator::visitPar(ifccParser::ParContext * ctx) {
 antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    if (op1 == nullptr || op2 == nullptr) {
+    if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
@@ -183,7 +182,7 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
 antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    if (op1 == nullptr || op2 == nullptr) {
+    if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
@@ -201,7 +200,7 @@ antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ct
 antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    if (op1 == nullptr || op2 == nullptr) {
+    if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
@@ -213,7 +212,7 @@ antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
 antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    if (op1 == nullptr || op2 == nullptr) {
+    if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
@@ -225,7 +224,7 @@ antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
 antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    if (op1 == nullptr || op2 == nullptr) {
+    if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
@@ -240,7 +239,7 @@ antlrcpp::Any ASTGenerator::visitConst(ifccParser::ConstContext * ctx) {
 
 antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx) {
     Expr * op = (Expr *)visit(ctx->expr());
-    if (op == nullptr) {
+    if (!checkExpr(op)) {
         return (Expr *)nullptr;
     }
 
@@ -372,7 +371,7 @@ antlrcpp::Any ASTGenerator::visitExpr_list(ifccParser::Expr_listContext * ctx) {
 
     for (int i = 0; i < ctx->expr().size(); i++) {
         Expr * tmpExpr = visit(ctx->expr(i));
-        if (tmpExpr != nullptr) {
+        if (checkExpr(tmpExpr)) {
             params.push_back(tmpExpr);
         }
     }
@@ -389,3 +388,19 @@ ASTGenerator::~ASTGenerator() {
 //------------------------------------------------------------------ PRIVE
 
 //----------------------------------------------------- Méthodes privées
+bool ASTGenerator::checkExpr(Expr * expr) {
+    bool res = false;
+    if (expr) {
+        Function * func = dynamic_cast<Function *>(expr);
+        if (func && this->program->GetSymbolTable().GetFunctionType(func->GetName()) == VOID) {
+            cerr << "Void value not ignored as it ought to be (function '" << func->GetName() << "')" << endl;
+        } else {
+            // TODO : continuer vérification de type ?
+            res = true;
+        }
+    }
+    if (!res) {
+        this->program->SetErrorFlag(true);
+    }
+    return res;
+}
