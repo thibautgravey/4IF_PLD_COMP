@@ -22,13 +22,13 @@ expr:
 	CONST								# const
 	| ID								# var
 	| '(' expr ')'						# par
+	| ID '(' expr_list? ')'				# function
 	| (OP_LESS | OP_UNAIRE_NOT) expr	# opp_or_not
 	| expr (OP_DIV | OP_MULT) expr		# div_or_mult
 	| expr (OP_LESS | OP_ADD) expr		# less_or_add
 	| expr '&' expr						# and
 	| expr '|' expr						# or
 	| expr '^' expr						# xor
-	| ID '(' expr_list? ')'				# function
 	| ID '=' expr						# var_aff
 	;
 

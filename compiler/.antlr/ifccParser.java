@@ -700,10 +700,33 @@ public class ifccParser extends Parser {
 				break;
 			case 4:
 				{
-				_localctx = new Opp_or_notContext(_localctx);
+				_localctx = new FunctionContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(94);
+				match(ID);
+				setState(95);
+				match(T__0);
+				setState(97);
+				_errHandler.sync(this);
+				_la = _input.LA(1);
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__0) | (1L << CONST) | (1L << OP_LESS) | (1L << OP_UNAIRE_NOT) | (1L << ID))) != 0)) {
+					{
+					setState(96);
+					expr_list();
+					}
+				}
+
+				setState(99);
+				match(T__1);
+				}
+				break;
+			case 5:
+				{
+				_localctx = new Opp_or_notContext(_localctx);
+				_ctx = _localctx;
+				_prevctx = _localctx;
+				setState(100);
 				_la = _input.LA(1);
 				if ( !(_la==OP_LESS || _la==OP_UNAIRE_NOT) ) {
 				_errHandler.recoverInline(this);
@@ -713,31 +736,8 @@ public class ifccParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(95);
-				expr(8);
-				}
-				break;
-			case 5:
-				{
-				_localctx = new FunctionContext(_localctx);
-				_ctx = _localctx;
-				_prevctx = _localctx;
-				setState(96);
-				match(ID);
-				setState(97);
-				match(T__0);
-				setState(99);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__0) | (1L << CONST) | (1L << OP_LESS) | (1L << OP_UNAIRE_NOT) | (1L << ID))) != 0)) {
-					{
-					setState(98);
-					expr_list();
-					}
-				}
-
 				setState(101);
-				match(T__1);
+				expr(7);
 				}
 				break;
 			case 6:
@@ -771,7 +771,7 @@ public class ifccParser extends Parser {
 						_localctx = new Div_or_multContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(107);
-						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
+						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
 						setState(108);
 						_la = _input.LA(1);
 						if ( !(_la==OP_DIV || _la==OP_MULT) ) {
@@ -783,7 +783,7 @@ public class ifccParser extends Parser {
 							consume();
 						}
 						setState(109);
-						expr(8);
+						expr(7);
 						}
 						break;
 					case 2:
@@ -791,7 +791,7 @@ public class ifccParser extends Parser {
 						_localctx = new Less_or_addContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(110);
-						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
+						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(111);
 						_la = _input.LA(1);
 						if ( !(_la==OP_LESS || _la==OP_ADD) ) {
@@ -803,7 +803,7 @@ public class ifccParser extends Parser {
 							consume();
 						}
 						setState(112);
-						expr(7);
+						expr(6);
 						}
 						break;
 					case 3:
@@ -811,11 +811,11 @@ public class ifccParser extends Parser {
 						_localctx = new AndContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(113);
-						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(114);
 						match(T__8);
 						setState(115);
-						expr(6);
+						expr(5);
 						}
 						break;
 					case 4:
@@ -823,11 +823,11 @@ public class ifccParser extends Parser {
 						_localctx = new OrContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(116);
-						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
 						setState(117);
 						match(T__9);
 						setState(118);
-						expr(5);
+						expr(4);
 						}
 						break;
 					case 5:
@@ -835,11 +835,11 @@ public class ifccParser extends Parser {
 						_localctx = new XorContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(119);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
 						setState(120);
 						match(T__10);
 						setState(121);
-						expr(4);
+						expr(3);
 						}
 						break;
 					}
@@ -923,15 +923,15 @@ public class ifccParser extends Parser {
 	private boolean expr_sempred(ExprContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 7);
-		case 1:
 			return precpred(_ctx, 6);
-		case 2:
+		case 1:
 			return precpred(_ctx, 5);
-		case 3:
+		case 2:
 			return precpred(_ctx, 4);
-		case 4:
+		case 3:
 			return precpred(_ctx, 3);
+		case 4:
+			return precpred(_ctx, 2);
 		}
 		return true;
 	}
@@ -944,7 +944,7 @@ public class ifccParser extends Parser {
 		"\5\f\5\16\5\66\13\5\3\6\3\6\3\6\3\7\3\7\3\7\3\7\3\7\5\7@\n\7\3\b\3\b\3"+
 		"\b\3\b\5\bF\n\b\3\b\7\bI\n\b\f\b\16\bL\13\b\3\b\3\b\3\t\3\t\3\t\3\t\5"+
 		"\tT\n\t\3\n\3\n\3\n\3\n\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3"+
-		"\13\3\13\3\13\5\13f\n\13\3\13\3\13\3\13\3\13\5\13l\n\13\3\13\3\13\3\13"+
+		"\13\5\13d\n\13\3\13\3\13\3\13\3\13\3\13\3\13\5\13l\n\13\3\13\3\13\3\13"+
 		"\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\7\13}\n\13"+
 		"\f\13\16\13\u0080\13\13\3\f\3\f\3\f\7\f\u0085\n\f\f\f\16\f\u0088\13\f"+
 		"\3\f\2\3\24\r\2\4\6\b\n\f\16\20\22\24\26\2\5\4\2\22\22\24\24\3\2\20\21"+
@@ -963,17 +963,17 @@ public class ifccParser extends Parser {
 		"\2KM\3\2\2\2LJ\3\2\2\2MN\7\b\2\2N\17\3\2\2\2OP\7\7\2\2PS\7\25\2\2QR\7"+
 		"\t\2\2RT\5\24\13\2SQ\3\2\2\2ST\3\2\2\2T\21\3\2\2\2UV\7\n\2\2VW\5\24\13"+
 		"\2WX\7\b\2\2X\23\3\2\2\2YZ\b\13\1\2Zl\7\17\2\2[l\7\25\2\2\\]\7\3\2\2]"+
-		"^\5\24\13\2^_\7\4\2\2_l\3\2\2\2`a\t\2\2\2al\5\24\13\nbc\7\25\2\2ce\7\3"+
-		"\2\2df\5\26\f\2ed\3\2\2\2ef\3\2\2\2fg\3\2\2\2gl\7\4\2\2hi\7\25\2\2ij\7"+
-		"\t\2\2jl\5\24\13\3kY\3\2\2\2k[\3\2\2\2k\\\3\2\2\2k`\3\2\2\2kb\3\2\2\2"+
-		"kh\3\2\2\2l~\3\2\2\2mn\f\t\2\2no\t\3\2\2o}\5\24\13\npq\f\b\2\2qr\t\4\2"+
-		"\2r}\5\24\13\tst\f\7\2\2tu\7\13\2\2u}\5\24\13\bvw\f\6\2\2wx\7\f\2\2x}"+
-		"\5\24\13\7yz\f\5\2\2z{\7\r\2\2{}\5\24\13\6|m\3\2\2\2|p\3\2\2\2|s\3\2\2"+
-		"\2|v\3\2\2\2|y\3\2\2\2}\u0080\3\2\2\2~|\3\2\2\2~\177\3\2\2\2\177\25\3"+
-		"\2\2\2\u0080~\3\2\2\2\u0081\u0086\5\24\13\2\u0082\u0083\7\7\2\2\u0083"+
+		"^\5\24\13\2^_\7\4\2\2_l\3\2\2\2`a\7\25\2\2ac\7\3\2\2bd\5\26\f\2cb\3\2"+
+		"\2\2cd\3\2\2\2de\3\2\2\2el\7\4\2\2fg\t\2\2\2gl\5\24\13\thi\7\25\2\2ij"+
+		"\7\t\2\2jl\5\24\13\3kY\3\2\2\2k[\3\2\2\2k\\\3\2\2\2k`\3\2\2\2kf\3\2\2"+
+		"\2kh\3\2\2\2l~\3\2\2\2mn\f\b\2\2no\t\3\2\2o}\5\24\13\tpq\f\7\2\2qr\t\4"+
+		"\2\2r}\5\24\13\bst\f\6\2\2tu\7\13\2\2u}\5\24\13\7vw\f\5\2\2wx\7\f\2\2"+
+		"x}\5\24\13\6yz\f\4\2\2z{\7\r\2\2{}\5\24\13\5|m\3\2\2\2|p\3\2\2\2|s\3\2"+
+		"\2\2|v\3\2\2\2|y\3\2\2\2}\u0080\3\2\2\2~|\3\2\2\2~\177\3\2\2\2\177\25"+
+		"\3\2\2\2\u0080~\3\2\2\2\u0081\u0086\5\24\13\2\u0082\u0083\7\7\2\2\u0083"+
 		"\u0085\5\24\13\2\u0084\u0082\3\2\2\2\u0085\u0088\3\2\2\2\u0086\u0084\3"+
 		"\2\2\2\u0086\u0087\3\2\2\2\u0087\27\3\2\2\2\u0088\u0086\3\2\2\2\17\35"+
-		"#*\64?EJSek|~\u0086";
+		"#*\64?EJSck|~\u0086";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
