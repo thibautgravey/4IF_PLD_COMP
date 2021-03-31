@@ -133,7 +133,7 @@ void IRInstr::gen_asm_ARM(ostream & o) {
 
     switch (this->op) {
         case ldconst:
-            o << "        movs    r3, " << p2 << endl;
+            o << "        movs    r3, #" << p2 << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case copy:
@@ -150,7 +150,7 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        ldr     r2, " << p2 << endl;
             o << "        ldr     r3, " << p3 << endl;
             o << "        subs     r3, r2, r3" << endl;
-            o << "        str     r3, " << p1 << endl;        
+            o << "        str     r3, " << p1 << endl;
             break;
         case mul:
             o << "        ldr     r2, " << p2 << endl;
@@ -216,13 +216,12 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
         case ret:
-            o << "        ldr    r3, " << p1 << endl;
+            o << "        ldr     3, " << p1 << endl;
             break;
         default:
             break;
     }
 } //fin de gen_asm_ARM(Ir_Instr)
-
 
 void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params) {
     this->instrs.push_back(new IRInstr(this, op, t, params));
@@ -306,7 +305,7 @@ string CFG::IR_reg_to_asm_ARM(string reg) {
         ret = "r0";
     } else {
         if (this->symbolTable->LookUp("main", reg)) {
-            int offset = this->symbolTable->GetVariableOffset("main", reg);
+            int offset = -(this->symbolTable->GetVariableOffset("main", reg));
             ret = "[r7, #" + to_string(offset) + "]";
         } else {
             ret = reg;
@@ -341,8 +340,8 @@ void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
     int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
 
     // Round space to the nearest multiple of 4
-    if (spaceNeeded % 4) {
-        spaceNeeded = ((spaceNeeded / 4) + 1) * 4;
+    if (spaceNeeded % 8) {
+        spaceNeeded = ((spaceNeeded / 8) + 1) * 8 + 4;
     }
 
     o << "        sub     sp, sp, #" << spaceNeeded << endl;
@@ -363,10 +362,9 @@ void CFG::gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb) {
     int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
 
     // Round space to the nearest multiple of 4
-    if (spaceNeeded % 4) {
-        spaceNeeded = ((spaceNeeded / 4) + 1) * 4;
+    if (spaceNeeded % 8) {
+        spaceNeeded = ((spaceNeeded / 8) + 1) * 8 + 4;
     }
-
 
     o << bb->label << ":" << endl;
     o << "        mov     r0, r3" << endl;
