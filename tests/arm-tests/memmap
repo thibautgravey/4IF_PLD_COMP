@@ -1,0 +1,9 @@
+MEMORY
+{
+    rom  : ORIGIN = 0x00010000, LENGTH = 32K
+}
+
+SECTIONS
+{
+   .text : { *(.text*) } > rom
+}
