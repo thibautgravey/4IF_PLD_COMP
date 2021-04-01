@@ -504,48 +504,27 @@ antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorNotEqual);
 }
 
-antlrcpp::Any ASTGenerator::visitGreaterequal(ifccParser::GreaterequalContext * ctx) {
+antlrcpp::Any ASTGenerator::visitGreater_equal_lesser_equal(ifccParser::Greater_equal_lesser_equalContext * ctx) {
     Expr * op1 = (Expr *)visit(ctx->expr(0));
     Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorGreaterEqual = GREATERE;
+
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorGreaterEqual);
-}
+    BinaryOperator binaryOperator;
 
-antlrcpp::Any ASTGenerator::visitGreater(ifccParser::GreaterContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorGreater = GREATER;
-    if (!checkExpr(op1) || !checkExpr(op2)) {
-        return (Expr *)nullptr;
+    if (ctx->OP_GREATER_EQUAL()) {
+        binaryOperator = GREATERE;
+    } else if (ctx->OP_GREATER()) {
+        binaryOperator = GREATER;
+    } else if (ctx->OP_LESSER_EQUAL()) {
+        binaryOperator = LESSE;
+    } else if (ctx->OP_LESSER()) {
+        binaryOperator = LESS;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorGreater);
-}
-
-antlrcpp::Any ASTGenerator::visitLessequal(ifccParser::LessequalContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorLessEqual = LESSE;
-    if (!checkExpr(op1) || !checkExpr(op2)) {
-        return (Expr *)nullptr;
-    }
-
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorLessEqual);
-}
-
-antlrcpp::Any ASTGenerator::visitLess(ifccParser::LessContext * ctx) {
-    Expr * op1 = (Expr *)visit(ctx->expr(0));
-    Expr * op2 = (Expr *)visit(ctx->expr(1));
-    BinaryOperator binaryOperatorLess = LESS;
-    if (!checkExpr(op1) || !checkExpr(op2)) {
-        return (Expr *)nullptr;
-    }
-
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorLess);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
 }
 
 //-------------------------------------------- Constructeurs - destructeur

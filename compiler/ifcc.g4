@@ -32,29 +32,43 @@ expr:
 	| (OP_LESS | OP_UNAIRE_NOT) expr	# opp_or_not
 	| expr (OP_DIV | OP_MULT) expr		# div_or_mult
 	| expr (OP_LESS | OP_ADD) expr		# less_or_add
-	| expr '&' expr						# and
-	| expr '|' expr						# or
-	| expr '^' expr						# xor
-	| ID '=' expr						# var_aff
-	| expr '==' expr					# equal
-	| expr '!=' expr					# notequal
-	| expr '>=' expr					# greaterequal
-	| expr '>' expr						# greater
-	| expr '<=' expr					# lessequal
-	| expr '<' expr						# less
-	| expr '&&' expr					# cdtand
-	| expr '||' expr					# cdtor;
+	| expr (
+		OP_GREATER_EQUAL
+		| OP_GREATER
+		| OP_LESSER_EQUAL
+		| OP_LESSER
+	) expr						# greater_equal_lesser_equal
+	| expr OP_DOUBLE_EQUAL expr	# equal
+	| expr OP_NOT_EQUAL expr	# notequal
+	| expr OP_BITWISE_AND expr	# and
+	| expr OP_BITWISE_OR expr	# or
+	| expr OP_BITWISE_XOR expr	# xor
+	| expr OP_LOGICAL_AND expr	# cdtand
+	| expr OP_LOGICAL_OR expr	# cdtor
+	| ID OP_EQUAL expr			# var_aff;
 
 expr_list: expr (',' expr)*;
 
 TYPE: 'int32_t' | 'int64_t' | 'void';
 
 CONST: [0-9]+;
+OP_UNAIRE_NOT: '!';
 OP_DIV: '/';
 OP_MULT: '*';
 OP_LESS: '-';
 OP_ADD: '+';
-OP_UNAIRE_NOT: '!';
+OP_BITWISE_AND: '&';
+OP_BITWISE_OR: '|';
+OP_BITWISE_XOR: '^';
+OP_EQUAL: '=';
+OP_DOUBLE_EQUAL: '==';
+OP_NOT_EQUAL: '!=';
+OP_GREATER_EQUAL: '>=';
+OP_GREATER: '>';
+OP_LESSER_EQUAL: '<=';
+OP_LESSER: '<';
+OP_LOGICAL_AND: '&&';
+OP_LOGICAL_OR: '||';
 
 ID: [_a-zA-Z][_a-zA-Z0-9]*;
 
