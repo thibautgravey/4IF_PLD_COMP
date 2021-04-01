@@ -31,7 +31,7 @@ int main(int argn, const char ** argv) {
     int lexerErrors = lexer.getNumberOfSyntaxErrors();
     int parserErrors = parser.getNumberOfSyntaxErrors();
 
-    if (lexerErrors || parserErrors) 
+    if (lexerErrors || parserErrors)
         return EXIT_FAILURE;
 
     //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST with first static analysis

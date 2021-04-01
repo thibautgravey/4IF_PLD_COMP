@@ -277,7 +277,7 @@ void DefFuncInstr::GenerateIR(CFG * cfg) {
         string reg = "paramReg" + to_string(i + 1);
         cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg});
     }
-    
+
     for (Instr * instr : this->GetListInstr()) {
         instr->GenerateIR(cfg);
     }

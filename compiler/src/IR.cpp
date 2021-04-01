@@ -136,42 +136,42 @@ void IRInstr::gen_asm(ostream & o) {
         }
         case cmp_eq:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        cmpl     " << p3 << ", %eax" << endl;
             o << "        sete     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_neq:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        cmpl     " << p3 << ", %eax" << endl;
             o << "        setne    %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_g:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        cmpl     " << p3 << ", %eax" << endl;
             o << "        setg     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_ge:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        cmpl     " << p3 << ", %eax" << endl;
             o << "        setge    %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_l:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        cmpl     " << p3 << ", %eax" << endl;
             o << "        setl     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_le:
             o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3  << ", %eax" << endl;
+            o << "        cmpl     " << p3 << ", %eax" << endl;
             o << "        setle    %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
             o << "        movl     %eax, " << p1 << endl;
