@@ -60,6 +60,7 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
 
     } else if (ctx->whileblock()) {
         instr = (Instr *)visit(ctx->whileblock());
+        //TO DO : breaks and continue (in while and for ) !
     }
 
     return instr;
