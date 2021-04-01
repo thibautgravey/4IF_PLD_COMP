@@ -74,7 +74,9 @@ ID: [_a-zA-Z][_a-zA-Z0-9]*;
 
 block: '{' line* '}';
 
-COMMENT: '/*' .*? '*/' -> skip;
+SINGLE_COMMENT: '//' .*? '\n' -> skip;
+
+MULTILINE_COMMENT: '/*' .*? '*/' -> skip;
 
 DIRECTIVE: '#' .*? '\n' -> skip;
 
