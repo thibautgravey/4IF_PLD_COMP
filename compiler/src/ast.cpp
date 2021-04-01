@@ -344,9 +344,11 @@ void IfElseInstr::GenerateIR(CFG * cfg) {
 }
 
 IfElseInstr::~IfElseInstr() {
+
     delete (ifExpr);
     delete (ifBlock);
     delete (elseBlock);
+
 } //----- Fin de ~IfElseInstr
 
 //---------------//
@@ -378,11 +380,11 @@ void WhileInstr::GenerateIR(CFG * cfg) {
 
     // Ajout des instructions whileBB
     cfg->add_bb(whileBB);
+    whileBlock->GenerateIR(cfg);
     cfg->GetCurrentBB()->exit_true = whileBB;
 
     cfg->GetCurrentBB()->exit_false = endwhile;
 
-    whileBlock->GenerateIR(cfg);
     // Génération IR test while et enregistrement du résultat
     cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
 
