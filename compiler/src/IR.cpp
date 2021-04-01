@@ -216,7 +216,7 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "cmp_eq NOT IMPLEMENDTED" << endl;
             break;
         case ret:
-            o << "        ldr     3, " << p1 << endl;
+            o << "        ldr     r3, " << p1 << endl;
             break;
         default:
             break;
