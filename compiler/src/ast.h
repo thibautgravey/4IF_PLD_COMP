@@ -249,7 +249,6 @@ class DefFuncInstr : public Instr {
     Type type;
     string name;
     vector<Instr *> listInstr;
-
 };
 
 class BlockInstr : public Instr {
@@ -277,7 +276,7 @@ class IfElseInstr : public Instr {
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
     IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock)
-        : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock) {};
+        : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
 
     virtual ~IfElseInstr();
 
@@ -285,6 +284,23 @@ class IfElseInstr : public Instr {
     Expr * ifExpr;
     BlockInstr * ifBlock;
     BlockInstr * elseBlock;
+};
+
+class WhileInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetWhileExpr();
+    BlockInstr * GetWhileBlock();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    WhileInstr(int line, Expr * expr, BlockInstr * whileBlock)
+        : Instr(line), whileExpr(expr), whileBlock(whileBlock){};
+
+    virtual ~WhileInstr();
+
+  protected:
+    Expr * whileExpr;
+    BlockInstr * whileBlock;
 };
 
 //---------- Interface de la classe <Program> ----------------
@@ -310,7 +326,6 @@ class Program : public Node {
     vector<Instr *> listInstr;
     SymbolTable symbolTable;
     bool errorFlag;
-
 };
 
 #endif

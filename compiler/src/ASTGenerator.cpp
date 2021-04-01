@@ -44,7 +44,7 @@ antlrcpp::Any ASTGenerator::visitProg(ifccParser::ProgContext * ctx) {
 
 antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
     Instr * instr;
-    
+
     if (ctx->return_stmt()) {
         instr = (Instr *)visit(ctx->return_stmt());
     } else if (ctx->var_decl()) {
@@ -57,6 +57,9 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
         instr = new ExprInstr(ctx->start->getLine(), visit(ctx->expr()));
     } else if (ctx->ifblock()) {
         instr = (Instr *)visit(ctx->ifblock());
+
+    } else if (ctx->whileblock()) {
+        instr = (Instr *)visit(ctx->whileblock());
     }
 
     return instr;
@@ -417,6 +420,28 @@ antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
     }
 
     return elseblock;
+}
+antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx) {
+    // Création de l'expression
+    Expr * exprWhile = (Expr *)visit(ctx->expr());
+    if (!checkExpr(exprWhile)) {
+        return (Instr *)nullptr;
+    }
+
+    // Récupération des intructions du WHILE
+    BlockInstr * whileblock;
+    if (ctx->line()) {
+        //TO DO : ajouter vérification instruction non nulle
+        whileblock = new BlockInstr(ctx->start->getLine());
+        whileblock->AddInstr((Instr *)visit(ctx->line()));
+    } else { //
+        whileblock = (BlockInstr *)visit(ctx->block());
+    }
+
+    // Création du whileInstr
+    Instr * whileInstr = new WhileInstr(ctx->start->getLine(), exprWhile, whileblock);
+
+    return whileInstr;
 }
 
 antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {

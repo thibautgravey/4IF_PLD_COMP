@@ -75,7 +75,7 @@ class ASTGenerator : public ifccBaseVisitor {
     virtual antlrcpp::Any visitParam(ifccParser::ParamContext * ctx) override;
 
     virtual antlrcpp::Any visitExpr_list(ifccParser::Expr_listContext * ctx) override;
-    
+
     virtual antlrcpp::Any visitIfblock(ifccParser::IfblockContext * ctx) override;
 
     virtual antlrcpp::Any visitElseblock(ifccParser::ElseblockContext * ctx) override;
@@ -97,6 +97,8 @@ class ASTGenerator : public ifccBaseVisitor {
     virtual antlrcpp::Any visitLessequal(ifccParser::LessequalContext * context) override;
 
     virtual antlrcpp::Any visitLess(ifccParser::LessContext * context) override;
+
+    virtual antlrcpp::Any visitWhileblock(ifccParser::WhileblockContext * ctx) override;
 
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()

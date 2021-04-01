@@ -349,6 +349,52 @@ IfElseInstr::~IfElseInstr() {
     delete (elseBlock);
 } //----- Fin de ~IfElseInstr
 
+//---------------//
+//  WhileInstr  //
+//---------------//
+
+Expr * WhileInstr::GetWhileExpr() {
+    return whileExpr;
+}
+
+BlockInstr * WhileInstr::GetWhileBlock() {
+    return whileBlock;
+}
+
+void WhileInstr::GenerateIR(CFG * cfg) {
+    BasicBlock *whileBB, *endwhile;
+
+    // Génération IR test while et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
+
+    // Création du BB de fin de while
+    endwhile = new BasicBlock(cfg, cfg->new_BB_name());
+
+    // Création du BB pour le whileBlock
+    whileBB = new BasicBlock(cfg, cfg->new_BB_name());
+    cfg->GetCurrentBB()->exit_true = whileBB;
+
+    cfg->GetCurrentBB()->exit_false = endwhile;
+
+    // Ajout des instructions whileBB
+    cfg->add_bb(whileBB);
+    cfg->GetCurrentBB()->exit_true = whileBB;
+
+    cfg->GetCurrentBB()->exit_false = endwhile;
+
+    whileBlock->GenerateIR(cfg);
+    // Génération IR test while et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
+
+    cfg->add_bb(endwhile);
+}
+
+WhileInstr::~WhileInstr() {
+    delete (whileExpr);
+    delete (whileBlock);
+
+} //----- Fin de ~WhileInstr
+
 //----------------//
 //   BlockInstr   //
 //----------------//
