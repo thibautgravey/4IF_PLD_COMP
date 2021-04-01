@@ -25,8 +25,7 @@ elseblock: 'else' (line | block | ifblock);
 whileblock: ('while' '(' expr ')' (line | block));
 
 expr:
-	CONST								# const
-	| ID								# var
+	(CONST | CHAR | ID)					# literal
 	| '(' expr ')'						# par
 	| ID '(' expr_list? ')'				# function
 	| (OP_LESS | OP_UNAIRE_NOT) expr	# opp_or_not
@@ -49,9 +48,10 @@ expr:
 
 expr_list: expr (',' expr)*;
 
-TYPE: 'int32_t' | 'int64_t' | 'void';
+TYPE: 'int32_t' | 'int64_t' | 'char' | 'void';
 
 CONST: [0-9]+;
+CHAR: '\'' . '\'';
 OP_UNAIRE_NOT: '!';
 OP_DIV: '/';
 OP_MULT: '*';

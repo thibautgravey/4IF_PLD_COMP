@@ -27,6 +27,18 @@ string ConstLiteral::GenerateIR(CFG * cfg) {
     return tmpVar;
 }
 
+//------- Réalisation de la classe <CharLiteral> ---
+
+char CharLiteral::GetValue() const {
+    return this->value;
+}
+
+string CharLiteral::GenerateIR(CFG * cfg) {
+    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::CHAR);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::CHAR, {tmpVar, to_string((int)this->GetValue())});
+    return tmpVar;
+}
+
 //------- Réalisation de la classe <OpBin> ---
 Expr * OpBin::GetOperand1() {
     return this->operand1;

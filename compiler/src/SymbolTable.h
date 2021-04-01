@@ -25,6 +25,7 @@ using namespace std;
 enum Type {
     INT32_T,
     INT64_T,
+    CHAR,
     VOID,
     ERROR
     // CHAR, LONG, DOUBLE, STRING
@@ -38,7 +39,7 @@ typedef struct fp {
         : type(t), name(n){};
 } FunctionParam;
 
-static unordered_map<string, Type> const TYPE_TABLE = {{"int32_t", INT32_T}, {"int64_t", INT64_T}, {"void", VOID}};
+static unordered_map<string, Type> const TYPE_TABLE = {{"int32_t", INT32_T}, {"int64_t", INT64_T}, {"char", CHAR}, {"void", VOID}};
 
 struct ContextVariable {
     Type type;

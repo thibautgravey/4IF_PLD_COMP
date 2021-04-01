@@ -58,11 +58,9 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitXor(ifccParser::XorContext * ctx) override;
 
-    virtual antlrcpp::Any visitConst(ifccParser::ConstContext * ctx) override;
+    virtual antlrcpp::Any visitLiteral(ifccParser::LiteralContext * ctx) override;
 
     virtual antlrcpp::Any visitOpp_or_not(ifccParser::Opp_or_notContext * ctx) override;
-
-    virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override;
 
     virtual antlrcpp::Any visitFunction(ifccParser::FunctionContext * ctx) override;
 

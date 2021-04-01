@@ -235,9 +235,24 @@ antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorXor);
 } //----- Fin de visitXor
 
-antlrcpp::Any ASTGenerator::visitConst(ifccParser::ConstContext * ctx) {
-    return (Expr *)new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
-} //----- Fin de visitConst
+antlrcpp::Any ASTGenerator::visitLiteral(ifccParser::LiteralContext * ctx) {
+    Expr * ret = nullptr;
+    if (ctx->CONST()) {
+        ret = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
+    } else if (ctx->CHAR()) {
+        ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1]);
+    } else if (ctx->ID()) {
+        if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText())) {
+            ret = new Var(ctx->start->getLine(), ctx->ID()->getText());
+            program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText());
+        } else {
+            program->SetErrorFlag(true);
+            cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+        }
+    }
+
+    return ret;
+} //----- Fin de visitLiteral
 
 antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx) {
     Expr * op = (Expr *)visit(ctx->expr());
@@ -255,19 +270,6 @@ antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx)
 
     return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperator);
 } //----- Fin de visitOpp_or_not
-
-antlrcpp::Any ASTGenerator::visitVar(ifccParser::VarContext * ctx) {
-    Expr * ret = nullptr;
-    if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText())) {
-        ret = new Var(ctx->start->getLine(), ctx->ID()->getText());
-        program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText());
-    } else {
-        program->SetErrorFlag(true);
-        cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
-    }
-
-    return ret;
-} //----- Fin de visitVar
 
 antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
     Function * ret = new Function(ctx->start->getLine(), ctx->ID()->getText());

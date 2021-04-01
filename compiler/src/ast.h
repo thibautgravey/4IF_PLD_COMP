@@ -92,6 +92,22 @@ class ConstLiteral : public Expr {
     int32_t value;
 };
 
+//---------- Interface de la classe <ConstLiteral> ----------------
+class CharLiteral : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    char GetValue() const;
+    virtual string GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    CharLiteral(int line, char value)
+        : Expr(line), value(value){};
+
+    virtual ~CharLiteral() = default;
+
+  protected:
+    char value;
+};
+
 //---------- Interface de la classe <OpBin> ----------------
 class OpBin : public Expr {
   public:
