@@ -231,7 +231,7 @@ void ExprInstr::GenerateIR(CFG * cfg) {
 }
 
 ExprInstr::~ExprInstr() {
-    delete(expr);
+    delete (expr);
 }
 
 //------- Réalisation de la classe <Param> ---
@@ -374,7 +374,7 @@ void BlockInstr::AddInstr(Instr * instr) {
 }
 
 BlockInstr::~BlockInstr() {
-    for (const auto & instr : listInstr) {
+    for (Instr * instr : listInstr) {
         delete (instr);
     }
 } //----- Fin de ~BlockInstr
@@ -413,7 +413,7 @@ bool Program::GetErrorFlag() {
 } //----- Fin de GetErrorFlag
 
 Program::~Program() {
-    for (const auto & instr : listInstr) {
+    for (Instr * instr : listInstr) {
         delete (instr);
     }
 } //----- Fin de ~Program

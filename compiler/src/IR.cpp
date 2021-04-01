@@ -204,31 +204,36 @@ void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> param
     this->instrs.push_back(new IRInstr(this, op, t, params));
 } //fin de add_IRInst
 
+BasicBlock::~BasicBlock() {
+    for (IRInstr * instr : this->instrs) {
+        delete (instr);
+    }
+}
+
 void CFG::add_bb(BasicBlock * bb) {
     this->bbs.push_back(bb);
     this->current_bb = bb;
 } //fin de add_bb
 
 void CFG::gen_asm(ostream & o) {
-    BasicBlock * lastbb = this->bbs.back();
-    this->bbs.pop_back();
     gen_asm_prologue(o, this->bbs[0]);
-    this->bbs.erase(this->bbs.begin());
-    for (BasicBlock * bb : this->bbs) {
-        o << bb->label << ":" << endl;
-        for (IRInstr * instr : bb->instrs) {
+
+    vector<BasicBlock *>::iterator it;
+    for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
+        o << (*it)->label << ":" << endl;
+        for (IRInstr * instr : (*it)->instrs) {
             instr->gen_asm(o);
         }
-        if (bb->exit_false == nullptr) {
-            o << "        jmp      " << bb->exit_true->label << endl;
+        if ((*it)->exit_false == nullptr) {
+            o << "        jmp      " << (*it)->exit_true->label << endl;
         } else {
-            o << "        cmpl     $1, " << bb->cfg->IR_reg_to_asm(bb->test_var_name) << endl;
-            o << "        jne      " << bb->exit_false->label << endl;
-            o << "        jmp      " << bb->exit_true->label << endl;
+            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name) << endl;
+            o << "        jne      " << (*it)->exit_false->label << endl;
+            o << "        jmp      " << (*it)->exit_true->label << endl;
         }
     }
 
-    gen_asm_epilogue(o, lastbb);
+    gen_asm_epilogue(o, this->bbs[this->bbs.size() - 1]);
 } //fin de gen_asm(CFG)
 
 string CFG::IR_reg_to_asm(string reg) {
@@ -308,10 +313,9 @@ string CFG::GetName() {
     return this->cfgName;
 }
 
-CFG::~CFG(){
-    delete(bb_epilogue);
-    for (BasicBlock *bb : bbs) {
-        delete(bb);
+CFG::~CFG() {
+    for (BasicBlock * bb : bbs) {
+        delete (bb);
     }
 }
 
@@ -344,9 +348,9 @@ void IR::gen_asm_prologue_global(ostream & o) {
       << endl;
 } //----- Fin de gen_asm_prologue_global
 
-IR::~IR(){
+IR::~IR() {
     for (CFG * cfg : allCFG) {
-        delete(cfg);
+        delete (cfg);
     }
 }
 

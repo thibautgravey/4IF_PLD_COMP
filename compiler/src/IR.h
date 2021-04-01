@@ -97,6 +97,8 @@ class BasicBlock {
 
     void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
 
+    virtual ~BasicBlock();
+
     // No encapsulation whatsoever here. Feel free to do better.
     BasicBlock * exit_true;   /**< pointer to the next basic block, true branch. If nullptr, return from procedure */
     BasicBlock * exit_false;  /**< pointer to the next basic block, false branch. If null_ptr, the basic block ends with an unconditional jump */

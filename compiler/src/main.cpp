@@ -41,10 +41,8 @@ int main(int argn, const char ** argv) {
     Program * program = astGenerator.visit(tree);
 
     if (program->GetErrorFlag()) {
-        delete(program);
         return EXIT_FAILURE;
     }
-        
 
     //TODO : Other static analysis
 
@@ -79,8 +77,7 @@ int main(int argn, const char ** argv) {
 
     //TODO : Generate an exec file with a an "as file.s -o file.o" and then link using gcc
 
-    //delete(program);
-    //delete(ir);
+    delete (ir);
 
     return EXIT_SUCCESS;
 }

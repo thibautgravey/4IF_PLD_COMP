@@ -260,6 +260,10 @@ SymbolTable::~SymbolTable() {
             delete (it2.second);
         }
 
+        for (FunctionParam * fp : contextTable->params) {
+            delete (fp);
+        }
+
         delete (contextTable);
     }
 
