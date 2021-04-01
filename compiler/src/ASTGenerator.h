@@ -82,21 +82,15 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitBlock(ifccParser::BlockContext * ctx) override;
 
-    virtual antlrcpp::Any visitCdtand(ifccParser::CdtandContext * context) override;
+    virtual antlrcpp::Any visitCdtand(ifccParser::CdtandContext * ctx) override;
 
-    virtual antlrcpp::Any visitCdtor(ifccParser::CdtorContext * context) override;
+    virtual antlrcpp::Any visitCdtor(ifccParser::CdtorContext * ctx) override;
 
-    virtual antlrcpp::Any visitEqual(ifccParser::EqualContext * context) override;
+    virtual antlrcpp::Any visitEqual(ifccParser::EqualContext * ctx) override;
 
-    virtual antlrcpp::Any visitNotequal(ifccParser::NotequalContext * context) override;
+    virtual antlrcpp::Any visitNotequal(ifccParser::NotequalContext * ctx) override;
 
-    virtual antlrcpp::Any visitGreaterequal(ifccParser::GreaterequalContext * context) override;
-
-    virtual antlrcpp::Any visitGreater(ifccParser::GreaterContext * context) override;
-
-    virtual antlrcpp::Any visitLessequal(ifccParser::LessequalContext * context) override;
-
-    virtual antlrcpp::Any visitLess(ifccParser::LessContext * context) override;
+    virtual antlrcpp::Any visitGreater_equal_lesser_equal(ifccParser::Greater_equal_lesser_equalContext * ctx) override;
 
     virtual antlrcpp::Any visitWhileblock(ifccParser::WhileblockContext * ctx) override;
 
