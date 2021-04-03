@@ -177,6 +177,20 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
     ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
     ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
 
+    if (binaryOperator == PLUS) {
+        if (op1Const && op1Const->GetValue() == 0) {
+            return op2;
+        } else {
+            if (op2Const && op2Const->GetValue() == 0) {
+                return op1;
+            }
+        }
+    }
+
+    if (binaryOperator == MINUS && (op2Const && op2Const->GetValue() == 0)) {
+        return op1;
+    }
+
     if (op1Const && op2Const) {
 
         if (binaryOperator == MINUS) {
@@ -206,6 +220,20 @@ antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ct
 
     ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
     ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (binaryOperator == MULT) {
+        if (op1Const && op1Const->GetValue() == 1) {
+            return op2;
+        } else {
+            if (op2Const && op2Const->GetValue() == 1) {
+                return op1;
+            }
+        }
+    }
+
+    if (binaryOperator == DIV && (op2Const && op2Const->GetValue() == 1)) {
+        return op1;
+    }
 
     if (op1Const && op2Const) {
         if (binaryOperator == DIV) {
