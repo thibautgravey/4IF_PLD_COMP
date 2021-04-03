@@ -174,6 +174,17 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
     } else if (ctx->OP_ADD()) {
         binaryOperator = PLUS;
     }
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+
+        if (binaryOperator == MINUS) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() - op2Const->GetValue());
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() + op2Const->GetValue());
+        }
+    }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
 } //----- Fin de visitLess_or_add
@@ -191,6 +202,17 @@ antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ct
         binaryOperator = DIV;
     } else if (ctx->OP_MULT()) {
         binaryOperator = MULT;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (binaryOperator == DIV) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() / op2Const->GetValue());
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() * op2Const->GetValue());
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
