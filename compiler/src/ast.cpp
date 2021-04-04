@@ -32,9 +32,7 @@ char CharLiteral::GetValue() const {
 }
 
 string CharLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::CHAR);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::CHAR, {tmpVar, to_string((int)this->GetValue())});
-    return tmpVar;
+    return to_string((int)this->GetValue());
 }
 
 //------- Réalisation de la classe <OpBin> ---

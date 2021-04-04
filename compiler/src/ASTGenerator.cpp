@@ -452,7 +452,6 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
     if (!checkExpr(exprIf)) {
         return (Instr *)nullptr;
     }
-    //ifElseInstr * ifelseblock = new ifElseInstr(ctx->start->getLine(), exprIf);
 
     // Récupération des intructions du IF
     BlockInstr * ifblock;
@@ -469,10 +468,18 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
         elseblock = (BlockInstr *)visit(ctx->elseblock());
     }
 
-    // Création du ifElseInstr
-    Instr * ifelse = new IfElseInstr(ctx->start->getLine(), exprIf, ifblock, elseblock);
+    ConstLiteral * exprConst = dynamic_cast<ConstLiteral *>(exprIf);
 
-    return ifelse;
+    if (exprConst) {
+        if (exprConst->GetValue() == 0) {
+            return (Instr *)elseblock;
+        } else {
+            return (Instr *)ifblock;
+        }
+    } else {
+        // Création du ifElseInstr
+        return (Instr *)new IfElseInstr(ctx->start->getLine(), exprIf, ifblock, elseblock);
+    }
 }
 
 antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
@@ -490,6 +497,7 @@ antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
 
     return elseblock;
 }
+
 antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx) {
     // Création de l'expression
     Expr * exprWhile = (Expr *)visit(ctx->expr());
@@ -505,6 +513,17 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
         whileblock->AddInstr((Instr *)visit(ctx->line()));
     } else { //
         whileblock = (BlockInstr *)visit(ctx->block());
+    }
+
+    // TODO : en cas d'évaluation directe, voir pour les delete
+
+    ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(exprWhile);
+    if (constExpr) {
+        if (constExpr->GetValue() == 0) {
+            return (Instr *)nullptr;
+        } else {
+            // TODO : voir quoi faire en cas de boucle infinie
+        }
     }
 
     // Création du whileInstr
@@ -530,11 +549,35 @@ antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
 antlrcpp::Any ASTGenerator::visitCdtand(ifccParser::CdtandContext * ctx) {
     Expr * op1 = visit(ctx->expr(0));
     Expr * op2 = visit(ctx->expr(1));
+
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
     BinaryOperator binaryOperatorCdtAnd = CDTAND;
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() != 0 && op2Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+        }
+    } else if (op1Const && !op2Const) {
+        if (op1Const->GetValue() != 0) {
+            return op2;
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+        }
+    } else if (op2Const && !op1Const) {
+        if (op2Const->GetValue() != 0) {
+            return op1;
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+        }
+    }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtAnd);
 }
@@ -545,6 +588,29 @@ antlrcpp::Any ASTGenerator::visitCdtor(ifccParser::CdtorContext * ctx) {
     BinaryOperator binaryOperatorCdtOr = CDTOR;
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() != 0 || op2Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+        }
+    } else if (op1Const && !op2Const) {
+        if (op1Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+        } else {
+            return op2;
+        }
+    } else if (op2Const && !op1Const) {
+        if (op2Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+        } else {
+            return op1;
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtOr);
@@ -558,6 +624,17 @@ antlrcpp::Any ASTGenerator::visitEqual(ifccParser::EqualContext * ctx) {
         return (Expr *)nullptr;
     }
 
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() == op2Const->GetValue()) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+        }
+    }
+
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorEqual);
 }
 
@@ -567,6 +644,17 @@ antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
     BinaryOperator binaryOperatorNotEqual = NEQUAL;
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() != op2Const->GetValue()) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorNotEqual);
@@ -590,6 +678,37 @@ antlrcpp::Any ASTGenerator::visitGreater_equal_lesser_equal(ifccParser::Greater_
         binaryOperator = LESSE;
     } else if (ctx->OP_LESSER()) {
         binaryOperator = LESS;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (binaryOperator == GREATERE) {
+            if (op1Const->GetValue() >= op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+            }
+        } else if (binaryOperator == GREATER) {
+            if (op1Const->GetValue() > op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+            }
+        } else if (binaryOperator == LESSE) {
+            if (op1Const->GetValue() <= op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+            }
+        } else if (binaryOperator == LESS) {
+            if (op1Const->GetValue() < op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+            }
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
