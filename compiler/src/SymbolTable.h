@@ -72,19 +72,19 @@ class SymbolTable {
     //----------------------------------------------------- Méthodes publiques
     bool DefineFunction(const string & name, Type type, vector<FunctionParam *> params, int declaredLine);
 
-    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope = "");
+    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope);
 
-    bool LookUpVariable(const string & function, const string & name, const string & scope = "") const;
+    bool LookUpVariable(const string & function, const string & name, const string & scope) const;
 
     bool LookUpFunction(const string & function) const;
 
     string CreateTempVar(const string & function, Type type);
 
-    Type GetVariableType(const string & function, const string & name, const string & scope = "") const;
+    Type GetVariableType(const string & function, const string & name, const string & scope) const;
 
-    int GetVariableOffset(const string & function, const string & name, const string & scope = "") const;
+    int GetVariableOffset(const string & function, const string & name, const string & scope) const;
 
-    bool IsUsedVariable(const string & function, const string & name, const string & scope = "") const;
+    bool IsUsedVariable(const string & function, const string & name, const string & scope) const;
 
     void UnusedVariableAnalysis() const;
 
@@ -92,7 +92,7 @@ class SymbolTable {
 
     void FunctionReturnAnalysis() const;
 
-    void SetUsedVariable(const string & function, const string & name, const string & scope = "");
+    void SetUsedVariable(const string & function, const string & name, const string & scope);
 
     void SetUsedFunction(const string & function);
 
@@ -121,7 +121,7 @@ class SymbolTable {
 
   protected:
     //----------------------------------------------------- Méthodes privées
-    struct ContextVariable * getVariable(const string & function, const string & name, const string & scope = "") const;
+    struct ContextVariable * getVariable(const string & function, const string & name, const string & scope) const;
 
     struct ContextTable * getFunction(const string & function) const;
 
