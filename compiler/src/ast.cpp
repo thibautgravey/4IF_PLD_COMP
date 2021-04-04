@@ -223,8 +223,11 @@ VarAffInstr::~VarAffInstr() {
 void VarAffInstr::GenerateIR(CFG * cfg) {
     VarAffInstr * tmpInstr = this;
     while (tmpInstr != nullptr) {
-        string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
-        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name), {tmpInstr->name, tmpVar});
+        if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), tmpInstr->name)) {
+            string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name), {tmpInstr->name, tmpVar});
+        }
+
         tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
     }
 }
