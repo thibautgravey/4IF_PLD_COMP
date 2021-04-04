@@ -67,6 +67,10 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        movl     %eax, " << p1 << endl;
             break;
         case div:
+            if (p3[0] == '$') {
+                o << "        movl     " << p3 << ", %ecx" << endl;
+                p3 = "%ecx";
+            }
             o << "        movl     " << p2 << ", %eax" << endl;
             o << "        cltd     " << endl;
             o << "        idivl    " << p3 << endl;
