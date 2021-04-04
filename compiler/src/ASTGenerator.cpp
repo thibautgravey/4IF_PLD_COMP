@@ -72,7 +72,7 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 
     lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
-    if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
+    if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), currentScope)) {
 
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
@@ -106,7 +106,7 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
     Instr * ret = nullptr;
 
-    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
+    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), currentScope)) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             if (!checkExpr(expr)) {
@@ -137,8 +137,8 @@ antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
     if (!checkExpr(affExpr)) {
         return (Expr *)nullptr;
     }
-    Expr * var = new Var(ctx->start->getLine(), ctx->ID()->getText());
-    return (Expr *)new OpBin(ctx->start->getLine(), var, affExpr, EQ);
+    Expr * var = new Var(ctx->start->getLine(), ctx->ID()->getText(), currentScope);
+    return (Expr *)new OpBin(ctx->start->getLine(), var, affExpr, EQ, currentScope);
 
 } //----- Fin de visitVar_aff
 
@@ -194,13 +194,13 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
     if (op1Const && op2Const) {
 
         if (binaryOperator == MINUS) {
-            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() - op2Const->GetValue());
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() - op2Const->GetValue(), currentScope);
         } else {
-            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() + op2Const->GetValue());
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() + op2Const->GetValue(), currentScope);
         }
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator, currentScope);
 } //----- Fin de visitLess_or_add
 
 antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ctx) {
@@ -237,13 +237,13 @@ antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ct
 
     if (op1Const && op2Const) {
         if (binaryOperator == DIV) {
-            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() / op2Const->GetValue());
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() / op2Const->GetValue(), currentScope);
         } else {
-            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() * op2Const->GetValue());
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), op1Const->GetValue() * op2Const->GetValue(), currentScope);
         }
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator, currentScope);
 } //----- Fin de visitDiv_or_mult
 
 antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
@@ -258,7 +258,7 @@ antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
         return (Expr *)nullptr;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorOr);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorOr, currentScope);
 } //----- Fin de visitOr
 
 antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
@@ -270,7 +270,7 @@ antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
 
     BinaryOperator binaryOperatorAnd = AND;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorAnd);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorAnd, currentScope);
 } //----- Fin de visitAnd
 
 antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
@@ -282,19 +282,19 @@ antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
 
     BinaryOperator binaryOperatorXor = XOR;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorXor);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorXor, currentScope);
 } //----- Fin de visitXor
 
 antlrcpp::Any ASTGenerator::visitLiteral(ifccParser::LiteralContext * ctx) {
     Expr * ret = nullptr;
     if (ctx->CONST()) {
-        ret = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()));
+        ret = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()), currentScope);
     } else if (ctx->CHAR()) {
-        ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1]);
+        ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1], currentScope);
     } else if (ctx->ID()) {
-        if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText())) {
-            ret = new Var(ctx->start->getLine(), ctx->ID()->getText());
-            program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText());
+        if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
+            ret = new Var(ctx->start->getLine(), ctx->ID()->getText(), currentScope);
+            program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), currentScope);
         } else {
             program->SetErrorFlag(true);
             cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
@@ -318,11 +318,11 @@ antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx)
         unitOperator = NOT;
     }
 
-    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperator);
+    return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperator, currentScope);
 } //----- Fin de visitOpp_or_not
 
 antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
-    Function * ret = new Function(ctx->start->getLine(), ctx->ID()->getText());
+    Function * ret = new Function(ctx->start->getLine(), ctx->ID()->getText(), currentScope);
 
     vector<Expr *> params;
     if (ctx->expr_list()) {
@@ -370,12 +370,13 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
 
     if (program->GetSymbolTable().DefineFunction(func_name, func_type, paramList, ctx->start->getLine())) {
         this->currentFunction = func_name;
+        this->currentScope = "0";
 
         def_func = new DefFuncInstr(ctx->start->getLine(), func_name, func_type);
 
         // TEMP (?)
         for (FunctionParam * param : paramList) {
-            program->GetSymbolTable().DefineVariable(func_name, param->name, param->type, ctx->start->getLine());
+            program->GetSymbolTable().DefineVariable(func_name, param->name, param->type, ctx->start->getLine(), currentScope);
         }
 
         for (int i = 0; i < ctx->line().size(); i++) {
@@ -387,7 +388,7 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
         }
 
         if (func_name.compare("main") == 0 && !program->GetSymbolTable().FunctionHasReturn("main")) {
-            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0);
+            Expr * retExpr = new ConstLiteral(ctx->start->getLine(), 0, currentScope);
             Instr * retInstr = new ReturnInstr(ctx->start->getLine(), retExpr);
             def_func->AddInstr(retInstr);
         }
@@ -520,7 +521,7 @@ antlrcpp::Any ASTGenerator::visitCdtand(ifccParser::CdtandContext * ctx) {
 
     BinaryOperator binaryOperatorCdtAnd = CDTAND;
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtAnd);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtAnd, currentScope);
 }
 
 antlrcpp::Any ASTGenerator::visitCdtor(ifccParser::CdtorContext * ctx) {
@@ -531,7 +532,7 @@ antlrcpp::Any ASTGenerator::visitCdtor(ifccParser::CdtorContext * ctx) {
         return (Expr *)nullptr;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtOr);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtOr, currentScope);
 }
 
 antlrcpp::Any ASTGenerator::visitEqual(ifccParser::EqualContext * ctx) {
@@ -542,7 +543,7 @@ antlrcpp::Any ASTGenerator::visitEqual(ifccParser::EqualContext * ctx) {
         return (Expr *)nullptr;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorEqual);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorEqual, currentScope);
 }
 
 antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
@@ -553,7 +554,7 @@ antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
         return (Expr *)nullptr;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorNotEqual);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorNotEqual, currentScope);
 }
 
 antlrcpp::Any ASTGenerator::visitGreater_equal_lesser_equal(ifccParser::Greater_equal_lesser_equalContext * ctx) {
@@ -576,7 +577,7 @@ antlrcpp::Any ASTGenerator::visitGreater_equal_lesser_equal(ifccParser::Greater_
         binaryOperator = LESS;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator);
+    return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator, currentScope);
 }
 
 //-------------------------------------------- Constructeurs - destructeur
