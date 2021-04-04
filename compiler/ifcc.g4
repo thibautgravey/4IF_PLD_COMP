@@ -6,7 +6,13 @@ prog: def_func+;
 
 def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
-line: var_decl | expr ';' | return_stmt | ifblock | whileblock;
+line:
+	var_decl
+	| expr ';'
+	| return_stmt
+	| block
+	| ifblock
+	| whileblock;
 
 param_list: param (',' param)*;
 
@@ -23,6 +29,8 @@ ifblock: ('if' '(' expr ')' (line | block) elseblock?);
 elseblock: 'else' (line | block | ifblock);
 
 whileblock: ('while' '(' expr ')' (line | block));
+
+block: '{' line* '}';
 
 expr:
 	(CONST | CHAR | ID)					# literal
@@ -71,8 +79,6 @@ OP_LOGICAL_AND: '&&';
 OP_LOGICAL_OR: '||';
 
 ID: [_a-zA-Z][_a-zA-Z0-9]*;
-
-block: '{' line* '}';
 
 SINGLE_COMMENT: '//' .*? '\n' -> skip;
 
