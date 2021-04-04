@@ -92,10 +92,10 @@ Possible optimization:
 
 class BasicBlock {
   public:
-    BasicBlock(CFG * cfg, string entry_label);
+    BasicBlock(CFG * cfg, string entry_label, string scope = "0");
     void gen_asm(ostream & o); /**< x86 assembly code generation for this basic block (very simple) */
 
-    void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params);
+    void add_IRInstr(IRInstr::Operation op, Type t, vector<string> params, string scope);
 
     virtual ~BasicBlock();
 
@@ -103,6 +103,7 @@ class BasicBlock {
     BasicBlock * exit_true;   /**< pointer to the next basic block, true branch. If nullptr, return from procedure */
     BasicBlock * exit_false;  /**< pointer to the next basic block, false branch. If null_ptr, the basic block ends with an unconditional jump */
     string label;             /**< label of the BB, also will be the label in the generated code */
+    string scope;             /**< scope of the BB, in order to find right variables in symbol table */
     CFG * cfg;                /** < the CFG where this block belongs */
     vector<IRInstr *> instrs; /** < the instructions themselves. */
     string test_var_name;     /** < when generating IR code for an if(expr) or while(expr) etc,
@@ -128,7 +129,7 @@ class CFG {
 
     // x86 code generation: could be encapsulated in a processor class in a retargetable compiler
     void gen_asm(ostream & o);
-    string IR_reg_to_asm(string reg); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
+    string IR_reg_to_asm(string reg, string scope); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
     void gen_asm_prologue(ostream & o, BasicBlock * bb);
     void gen_asm_epilogue(ostream & o, BasicBlock * bb);
     BasicBlock * GetCurrentBB();

@@ -78,7 +78,7 @@ class SymbolTable {
 
     bool LookUpFunction(const string & function) const;
 
-    string CreateTempVar(const string & function, Type type);
+    string CreateTempVar(const string & function, Type type, const string & scope);
 
     Type GetVariableType(const string & function, const string & name, const string & scope) const;
 

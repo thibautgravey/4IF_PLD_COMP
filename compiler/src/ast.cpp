@@ -25,8 +25,8 @@ int32_t ConstLiteral::GetValue() const {
 }
 
 string ConstLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar, to_string(this->GetValue())});
+    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar, to_string(this->GetValue())}, this->scope);
     return tmpVar;
 }
 
@@ -37,8 +37,8 @@ char CharLiteral::GetValue() const {
 }
 
 string CharLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::CHAR);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::CHAR, {tmpVar, to_string((int)this->GetValue())});
+    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::CHAR, this->GetScope());
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::CHAR, {tmpVar, to_string((int)this->GetValue())}, this->scope);
     return tmpVar;
 }
 
@@ -66,58 +66,58 @@ string OpBin::GenerateIR(CFG * cfg) {
     string tmpVar2 = this->operand2->GenerateIR(cfg);
     string tmpResVar;
     if (this->op != BinaryOperator::EQ) {
-        tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
+        tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
     }
 
     switch (this->op) {
         case BinaryOperator::PLUS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::MINUS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::MULT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::DIV:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::OR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::AND:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::XOR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::EQ:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2}, this->scope);
             tmpResVar = tmpVar1;
             break;
         case BinaryOperator::EQUAL:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::NEQUAL:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_neq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_neq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::GREATER:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_g, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_g, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::GREATERE:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_ge, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_ge, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::LESS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_l, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_l, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::LESSE:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_le, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_le, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::CDTAND:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtAnd, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtAnd, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::CDTOR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtOr, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtOr, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         default:
             break;
@@ -136,13 +136,13 @@ UnitOperator OpUn::GetOp() {
 
 string OpUn::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
     switch (this->op) {
         case UnitOperator::NOT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT32_T, {tmpResVar, tmpVar1});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT32_T, {tmpResVar, tmpVar1}, this->scope);
             break;
         case UnitOperator::OPP:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT32_T, {tmpResVar, tmpVar1});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT32_T, {tmpResVar, tmpVar1}, this->scope);
             break;
         default:
             break;
@@ -174,10 +174,10 @@ string Function::GenerateIR(CFG * cfg) {
     for (Expr * param : this->params) {
         paramsIRInstr.push_back(param->GenerateIR(cfg));
     }
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT32_T, paramsIRInstr);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT32_T, paramsIRInstr, this->scope);
 
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpResVar, "reg1"});
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpResVar, "reg1"}, this->scope);
 
     // TODO: vérifier pour le registre
     return tmpResVar;
@@ -203,7 +203,7 @@ ReturnInstr::~ReturnInstr() {
 void ReturnInstr::GenerateIR(CFG * cfg) {
     string tmpRetVar = this->returnExpr->GenerateIR(cfg);
     // TODO : voir pour le type (ex : si c'est une fonction)
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar, this->returnExpr->GetScope()), {tmpRetVar});
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar, this->returnExpr->GetScope()), {tmpRetVar}, this->scope);
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -231,7 +231,7 @@ void VarAffInstr::GenerateIR(CFG * cfg) {
     VarAffInstr * tmpInstr = this;
     while (tmpInstr != nullptr) {
         string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
-        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name, this->GetRightExpr()->GetScope()), {tmpInstr->name, tmpVar});
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name, this->GetRightExpr()->GetScope()), {tmpInstr->name, tmpVar}, this->scope);
         tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
     }
 }
@@ -290,7 +290,7 @@ void DefFuncInstr::GenerateIR(CFG * cfg) {
     vector<FunctionParam *> functionParams = cfg->GetSymbolTable()->GetFunctionParams(cfg->GetName());
     for (int i = 0; i < functionParams.size(); i++) {
         string reg = "paramReg" + to_string(i + 1);
-        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg});
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg}, this->scope);
     }
 
     for (Instr * instr : this->GetListInstr()) {

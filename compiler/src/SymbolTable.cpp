@@ -129,7 +129,7 @@ bool SymbolTable::IsUsedVariable(const string & function, const string & name, c
     return variable->used;
 } //----- Fin de IsUsedVariable
 
-string SymbolTable::CreateTempVar(const string & function, Type type) {
+string SymbolTable::CreateTempVar(const string & function, Type type, const string & scope) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         printError("function " + function + " does not exist in globalFunctionTable");
@@ -137,7 +137,6 @@ string SymbolTable::CreateTempVar(const string & function, Type type) {
     }
 
     decreaseContextOffset(function);
-
     string completeName = "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
 
     ContextTable * contextTable = globalFunctionTableIterator->second;
@@ -145,7 +144,7 @@ string SymbolTable::CreateTempVar(const string & function, Type type) {
     ContextVariable * contextVariable = new ContextVariable;
     contextVariable->type = type;
     contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
-    contextTable->contextVariableTable.insert(make_pair(completeName, contextVariable));
+    contextTable->contextVariableTable.insert(make_pair(scope + completeName, contextVariable));
 
     return completeName;
 } //----- Fin de CreateTempVar

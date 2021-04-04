@@ -179,10 +179,13 @@ class Instr : public Node {
     //----------------------------------------------------- Méthodes publiques
     virtual void GenerateIR(CFG * cfg) = 0;
     //-------------------------------------------- Constructeurs - destructeur
-    Instr(int line)
-        : Node(line){};
+    Instr(int line, string scope)
+        : Node(line), scope(scope){};
 
     virtual ~Instr() = default;
+
+  protected:
+    string scope;
 };
 
 //---------- Interface de la classe <ReturnInstr> ----------------
@@ -192,8 +195,8 @@ class ReturnInstr : public Instr {
     Expr * GetReturnExpr();
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    ReturnInstr(int line, Expr * expr)
-        : Instr(line), returnExpr(expr){};
+    ReturnInstr(int line, Expr * expr, string scope)
+        : Instr(line, scope), returnExpr(expr){};
 
     virtual ~ReturnInstr();
 
@@ -213,8 +216,8 @@ class VarAffInstr : public Instr {
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    VarAffInstr(int line, string name, Type type, Expr * rightExpr, Instr * next = nullptr)
-        : Instr(line), name(name), type(type), rightExpr(rightExpr), varAffInstrNext(next){};
+    VarAffInstr(int line, string name, Type type, Expr * rightExpr, string scope, Instr * next = nullptr)
+        : Instr(line, scope), name(name), type(type), rightExpr(rightExpr), varAffInstrNext(next){};
 
     virtual ~VarAffInstr();
 
@@ -232,8 +235,8 @@ class ExprInstr : public Instr {
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    ExprInstr(int line, Expr * expr)
-        : Instr(line), expr(expr){};
+    ExprInstr(int line, Expr * expr, string scope)
+        : Instr(line, scope), expr(expr){};
     virtual ~ExprInstr();
 
   protected:
@@ -244,8 +247,8 @@ class ExprInstr : public Instr {
 class Param : public VarAffInstr {
     //-------------------------------------------- Constructeurs - destructeur
   public:
-    Param(int line, string name, Type type)
-        : VarAffInstr(line, name, type, nullptr) {}
+    Param(int line, string name, Type type, string scope)
+        : VarAffInstr(line, name, type, nullptr, scope) {}
 
     virtual ~Param();
 };
@@ -261,8 +264,8 @@ class DefFuncInstr : public Instr {
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    DefFuncInstr(int line, string name, Type type)
-        : Instr(line), name(name), type(type) {}
+    DefFuncInstr(int line, string name, Type type, string scope)
+        : Instr(line, scope), name(name), type(type) {}
 
     virtual ~DefFuncInstr();
 
@@ -279,8 +282,8 @@ class BlockInstr : public Instr {
     virtual void GenerateIR(CFG * cfg);
     void AddInstr(Instr * instr);
     //-------------------------------------------- Constructeurs - destructeur
-    BlockInstr(int line)
-        : Instr(line){};
+    BlockInstr(int line, string scope)
+        : Instr(line, scope){};
 
     virtual ~BlockInstr();
 
@@ -296,8 +299,8 @@ class IfElseInstr : public Instr {
     BlockInstr * GetElseBlock();
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock)
-        : Instr(line), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
+    IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock, string scope)
+        : Instr(line, scope), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
 
     virtual ~IfElseInstr();
 
@@ -314,8 +317,8 @@ class WhileInstr : public Instr {
     BlockInstr * GetWhileBlock();
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    WhileInstr(int line, Expr * expr, BlockInstr * whileBlock)
-        : Instr(line), whileExpr(expr), whileBlock(whileBlock){};
+    WhileInstr(int line, Expr * expr, BlockInstr * whileBlock, string scope)
+        : Instr(line, scope), whileExpr(expr), whileBlock(whileBlock){};
 
     virtual ~WhileInstr();
 

@@ -30,17 +30,17 @@ void IRInstr::gen_asm(ostream & o) {
     if (this->op != call) {
         switch (this->params.size()) {
             case 3:
-                p3 = this->bb->cfg->IR_reg_to_asm(this->params[2]);
+                p3 = this->bb->cfg->IR_reg_to_asm(this->params[2], this->bb->scope);
             case 2:
-                p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
+                p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope);
             case 1:
-                p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
+                p1 = this->bb->cfg->IR_reg_to_asm(this->params[0], this->bb->scope);
             default:
                 break;
         }
     } else {
-        p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
-        p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
+        p1 = this->bb->cfg->IR_reg_to_asm(this->params[0], this->bb->scope);
+        p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope);
     }
 
     switch (this->op) {
@@ -107,7 +107,7 @@ void IRInstr::gen_asm(ostream & o) {
         case call: {
             // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
             for (int i = 2; i < params.size(); i++) {
-                p3 = this->bb->cfg->IR_reg_to_asm(this->params[i]);
+                p3 = this->bb->cfg->IR_reg_to_asm(this->params[i], this->bb->scope);
                 string dest;
                 switch (i - 2) {
                     case 0:
@@ -200,7 +200,10 @@ void IRInstr::gen_asm(ostream & o) {
 void BasicBlock::gen_asm(ostream & o) {
 } //fin de gen_asm(Basic_Block)
 
-void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params) {
+void BasicBlock::add_IRInstr(IRInstr::Operation op, Type t, vector<string> params, string scope) {
+    if (this->instrs.empty()) {
+        this->scope = scope;
+    }
     this->instrs.push_back(new IRInstr(this, op, t, params));
 } //fin de add_IRInst
 
@@ -227,7 +230,7 @@ void CFG::gen_asm(ostream & o) {
         if ((*it)->exit_false == nullptr) {
             o << "        jmp      " << (*it)->exit_true->label << endl;
         } else {
-            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name) << endl;
+            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name, this->current_bb->scope) << endl;
             o << "        jne      " << (*it)->exit_false->label << endl;
             o << "        jmp      " << (*it)->exit_true->label << endl;
         }
@@ -236,7 +239,7 @@ void CFG::gen_asm(ostream & o) {
     gen_asm_epilogue(o, this->bbs[this->bbs.size() - 1]);
 } //fin de gen_asm(CFG)
 
-string CFG::IR_reg_to_asm(string reg) {
+string CFG::IR_reg_to_asm(string reg, string scope) {
 
     string ret;
 
@@ -257,8 +260,8 @@ string CFG::IR_reg_to_asm(string reg) {
     } else if (reg == "paramReg6") {
         ret = "%r9d";
     } else {
-        if (this->symbolTable->LookUpVariable(cfgName, reg)) {
-            int offset = this->symbolTable->GetVariableOffset(cfgName, reg);
+        if (this->symbolTable->LookUpVariable(cfgName, reg, scope)) {
+            int offset = this->symbolTable->GetVariableOffset(cfgName, reg, scope);
             ret = to_string(offset) + "(%rbp)";
         } else {
             ret = reg;
@@ -361,9 +364,10 @@ IRInstr::IRInstr(BasicBlock * bb_, Operation op, Type t, vector<string> params)
 
 } //fin de constructeur de IRInst
 
-BasicBlock::BasicBlock(CFG * cfg, string entry_label) {
+BasicBlock::BasicBlock(CFG * cfg, string entry_label, string scope) {
     this->cfg = cfg;
     this->label = entry_label;
+    this->scope = scope;
     this->exit_true = nullptr;
     this->exit_false = nullptr;
 } //fin de constructeur de BasicBlock
