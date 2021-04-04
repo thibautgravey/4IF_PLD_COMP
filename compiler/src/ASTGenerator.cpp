@@ -318,6 +318,22 @@ antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx)
         unitOperator = NOT;
     }
 
+    ConstLiteral * opConst = dynamic_cast<ConstLiteral *>(op);
+
+    if (unitOperator == OPP) {
+        if (opConst) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), -opConst->GetValue());
+        }
+    } else if (unitOperator == NOT) {
+        if (opConst) {
+            if (opConst->GetValue() == 0) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0);
+            }
+        }
+    }
+
     return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperator);
 } //----- Fin de visitOpp_or_not
 
