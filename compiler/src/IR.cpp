@@ -39,7 +39,7 @@ void IRInstr::gen_asm(ostream & o) {
                 break;
         }
     } else {
-        p1 = this->bb->cfg->IR_reg_to_asm(this->params[0]);
+        p1 = this->params[0];
         p2 = this->bb->cfg->IR_reg_to_asm(this->params[1]);
     }
 
@@ -261,7 +261,7 @@ string CFG::IR_reg_to_asm(string reg) {
             int offset = this->symbolTable->GetVariableOffset(cfgName, reg);
             ret = to_string(offset) + "(%rbp)";
         } else {
-            ret = reg;
+            ret = "$" + reg;
         }
     }
 

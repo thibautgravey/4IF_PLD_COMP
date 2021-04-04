@@ -22,9 +22,7 @@ int32_t ConstLiteral::GetValue() const {
 }
 
 string ConstLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar, to_string(this->GetValue())});
-    return tmpVar;
+    return to_string(this->GetValue());
 }
 
 //------- Réalisation de la classe <CharLiteral> ---
