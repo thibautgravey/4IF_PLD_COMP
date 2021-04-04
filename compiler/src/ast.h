@@ -53,11 +53,16 @@ class Expr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     virtual string GenerateIR(CFG * cfg) = 0;
+
+    string GetScope() const;
     //-------------------------------------------- Constructeurs - destructeur
-    Expr(int line)
-        : Node(line){};
+    Expr(int line, string scope)
+        : Node(line), scope(scope){};
 
     virtual ~Expr() = default;
+
+  protected:
+    string scope;
 };
 
 //---------- Interface de la classe <Var> ----------------
@@ -67,8 +72,8 @@ class Var : public Expr {
     string GetName();
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    Var(int line, string name)
-        : Expr(line), name(name){};
+    Var(int line, string name, string scope)
+        : Expr(line, scope), name(name){};
 
     virtual ~Var() = default;
 
@@ -83,8 +88,8 @@ class ConstLiteral : public Expr {
     int GetValue() const;
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    ConstLiteral(int line, int32_t value)
-        : Expr(line), value(value){};
+    ConstLiteral(int line, int32_t value, string scope)
+        : Expr(line, scope), value(value){};
 
     virtual ~ConstLiteral() = default;
 
@@ -99,8 +104,8 @@ class CharLiteral : public Expr {
     char GetValue() const;
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    CharLiteral(int line, char value)
-        : Expr(line), value(value){};
+    CharLiteral(int line, char value, string scope)
+        : Expr(line, scope), value(value){};
 
     virtual ~CharLiteral() = default;
 
@@ -118,8 +123,8 @@ class OpBin : public Expr {
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
-        : Expr(line), operand1(operand1), operand2(operand2), op(op){};
+    OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op, string scope)
+        : Expr(line, scope), operand1(operand1), operand2(operand2), op(op){};
 
     virtual ~OpBin();
 
@@ -138,8 +143,8 @@ class OpUn : public Expr {
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    OpUn(int line, Expr * operand, UnitOperator op)
-        : Expr(line), operand(operand), op(op){};
+    OpUn(int line, Expr * operand, UnitOperator op, string scope)
+        : Expr(line, scope), operand(operand), op(op){};
 
     virtual ~OpUn();
 
@@ -158,8 +163,8 @@ class Function : public Expr {
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    Function(int line, string name)
-        : Expr(line), name(name){};
+    Function(int line, string name, string scope)
+        : Expr(line, scope), name(name){};
 
     virtual ~Function();
 

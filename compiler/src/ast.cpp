@@ -6,6 +6,9 @@ int Node::GetLine() const {
 }
 
 //------- Réalisation de la classe <Expr> ---
+string Expr::GetScope() const {
+    return this->scope;
+}
 
 //------- Réalisation de la classe <Var> ---
 string Var::GetName() {
@@ -200,7 +203,7 @@ ReturnInstr::~ReturnInstr() {
 void ReturnInstr::GenerateIR(CFG * cfg) {
     string tmpRetVar = this->returnExpr->GenerateIR(cfg);
     // TODO : voir pour le type (ex : si c'est une fonction)
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar), {tmpRetVar});
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar, this->returnExpr->GetScope()), {tmpRetVar});
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -228,7 +231,7 @@ void VarAffInstr::GenerateIR(CFG * cfg) {
     VarAffInstr * tmpInstr = this;
     while (tmpInstr != nullptr) {
         string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
-        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name), {tmpInstr->name, tmpVar});
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name, this->GetRightExpr()->GetScope()), {tmpInstr->name, tmpVar});
         tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
     }
 }
