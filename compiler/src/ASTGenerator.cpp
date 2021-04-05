@@ -368,7 +368,9 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
 
     if (program->GetSymbolTable().DefineFunction(func_name, func_type, paramList, ctx->start->getLine())) {
         this->currentFunction = func_name;
-        this->currentScope = "0";
+        this->scopeIndexIncrement.clear();
+        this->scopeIndexIncrement.push_back(0);
+        this->currentScope = SCOPE_ALPHABET[0];
 
         def_func = new DefFuncInstr(ctx->start->getLine(), func_name, func_type, currentScope);
 
@@ -440,8 +442,10 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
     // Récupération des intructions du IF
     BlockInstr * ifblock;
     if (ctx->line()) {
+        expandScope();
         ifblock = new BlockInstr(ctx->start->getLine(), currentScope);
         ifblock->AddInstr((Instr *)visit(ctx->line()));
+        reduceScope();
     } else {
         ifblock = (BlockInstr *)visit(ctx->block());
     }
@@ -462,13 +466,17 @@ antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
     BlockInstr * elseblock;
 
     if (ctx->line()) {
+        expandScope();
         elseblock = new BlockInstr(ctx->start->getLine(), currentScope);
         elseblock->AddInstr((Instr *)visit(ctx->line()));
+        reduceScope();
     } else if (ctx->block()) { //
         elseblock = (BlockInstr *)visit(ctx->block());
     } else {
+        expandScope();
         elseblock = new BlockInstr(ctx->start->getLine(), currentScope);
         elseblock->AddInstr((Instr *)visit(ctx->ifblock()));
+        reduceScope();
     }
 
     return elseblock;
@@ -484,8 +492,10 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     BlockInstr * whileblock;
     if (ctx->line()) {
         //TO DO : ajouter vérification instruction non nulle
+        expandScope();
         whileblock = new BlockInstr(ctx->start->getLine(), currentScope);
         whileblock->AddInstr((Instr *)visit(ctx->line()));
+        reduceScope();
     } else { //
         whileblock = (BlockInstr *)visit(ctx->block());
     }
@@ -497,6 +507,7 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
 }
 
 antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
+    expandScope();
     BlockInstr * blockInstr = new BlockInstr(ctx->start->getLine(), currentScope);
 
     for (int i = 0; i < ctx->line().size(); i++) {
@@ -506,7 +517,7 @@ antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
             blockInstr->AddInstr(instr);
         }
     }
-
+    reduceScope();
     return blockInstr;
 }
 
@@ -602,4 +613,19 @@ bool ASTGenerator::checkExpr(Expr * expr) {
         this->program->SetErrorFlag(true);
     }
     return res;
-}
+} //----- Fin de checkExpr
+
+void ASTGenerator::expandScope() {
+    int currentSize = currentScope.size();
+    if (currentSize >= scopeIndexIncrement.size()) {
+        scopeIndexIncrement.push_back(0);
+    }
+
+    currentScope = currentScope + SCOPE_ALPHABET[scopeIndexIncrement[currentSize]++];
+} //----- Fin de incrScope
+
+void ASTGenerator::reduceScope() {
+    if (currentScope.size() > 0) {
+        currentScope = currentScope.substr(0, currentScope.size() - 1);
+    }
+} //----- Fin de decrScope

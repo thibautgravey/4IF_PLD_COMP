@@ -18,6 +18,7 @@
 using namespace std;
 
 //------------------------------------------------------------- Constantes
+const char SCOPE_ALPHABET[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 //------------------------------------------------------------------ Types
 
@@ -106,12 +107,16 @@ class ASTGenerator : public ifccBaseVisitor {
 
   protected:
     bool checkExpr(Expr * expr);
+    void expandScope();
+    void reduceScope();
+
     //----------------------------------------------------- Attributs protégés
 
     Program * program;
     Type lastDeclaredType;
     string currentFunction;
     string currentScope;
+    vector<int> scopeIndexIncrement;
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 
