@@ -223,8 +223,16 @@ void CFG::gen_asm(ostream & o) {
     gen_asm_prologue(o, this->bbs[0]);
 
     vector<BasicBlock *>::iterator it;
+    vector<BasicBlock *>::iterator it2;
+    bool delete_jump = false;
+    bool use_block_label = false;
     for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
-        o << (*it)->label << ":" << endl;
+        if (delete_jump == false) {
+            o << (*it)->label << ":" << endl;
+        } else {
+            delete_jump = false;
+        }
+
         for (IRInstr * instr : (*it)->instrs) {
             instr->gen_asm(o);
         }
@@ -233,7 +241,18 @@ void CFG::gen_asm(ostream & o) {
         } else {
             o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name) << endl;
             o << "        jne      " << (*it)->exit_false->label << endl;
-            o << "        jmp      " << (*it)->exit_true->label << endl;
+            use_block_label = false;
+            for (it2 = it + 1; it2 != (this->bbs.end() - 1); it2++) {
+                if ((*it2)->exit_true == (*it)->exit_true) {
+                    use_block_label = true;
+                    break;
+                }
+            }
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        jmp      " << (*it)->exit_true->label << endl;
+            } else {
+                delete_jump = true;
+            }
         }
     }
 
