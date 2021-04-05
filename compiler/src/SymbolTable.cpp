@@ -279,15 +279,21 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
         return nullptr;
     }
 
-    string completeName = scope + name;
-    ContextTable * contextTable = globalFunctionTableIterator->second;
-    auto it = contextTable->contextVariableTable.find(completeName);
-    if (it == contextTable->contextVariableTable.end()) {
-        printError("variable " + completeName + " does not exist in contextVariableTable from " + function);
-        return nullptr;
+    string tmpScope = scope;
+
+    while (tmpScope.size() > 0) {
+        ContextTable * contextTable = globalFunctionTableIterator->second;
+        auto it = contextTable->contextVariableTable.find(tmpScope + name);
+        if (it != contextTable->contextVariableTable.end()) {
+            return it->second;
+        }
+
+        //reduce the scope
+        tmpScope = tmpScope.substr(0, tmpScope.size() - 1);
     }
 
-    return it->second;
+    printError("variable " + name + " does not exist in contextVariableTable from " + function + " with scope " + scope);
+    return nullptr;
 } //----- Fin de getVariable
 
 struct ContextTable * SymbolTable::getFunction(const string & function) const {
