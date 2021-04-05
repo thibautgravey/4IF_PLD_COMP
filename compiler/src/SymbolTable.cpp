@@ -84,13 +84,24 @@ bool SymbolTable::LookUpVariable(const string & function, const string & name, c
         return false;
     }
 
-    string completeName = scope + name;
-    ContextTable * contextTable = globalFunctionTableIterator->second;
-    auto it = contextTable->contextVariableTable.find(completeName);
-    if (it == contextTable->contextVariableTable.end()) {
-        return false;
+    string tmpScope = scope;
+
+    while (tmpScope.size() > 0) {
+
+        cout << "trying to find " << name << " in scope " << tmpScope << endl;
+
+        ContextTable * contextTable = globalFunctionTableIterator->second;
+        auto it = contextTable->contextVariableTable.find(tmpScope + name);
+        if (it != contextTable->contextVariableTable.end()) {
+            return true;
+        }
+
+        //reduce the scope
+        tmpScope = tmpScope.substr(0, tmpScope.size() - 1);
     }
-    return true;
+
+    cout << "not found :c" << endl;
+    return false;
 } //----- Fin de LookUpVariable
 
 bool SymbolTable::LookUpFunction(const string & function) const {
@@ -145,6 +156,8 @@ string SymbolTable::CreateTempVar(const string & function, Type type, const stri
     contextVariable->type = type;
     contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
     contextTable->contextVariableTable.insert(make_pair(scope + completeName, contextVariable));
+
+    cout << "temp var " << scope << completeName << endl;
 
     return completeName;
 } //----- Fin de CreateTempVar
