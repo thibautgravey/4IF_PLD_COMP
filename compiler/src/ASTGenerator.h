@@ -18,7 +18,7 @@
 using namespace std;
 
 //------------------------------------------------------------- Constantes
-const char SCOPE_ALPHABET[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+const char SCOPE_ALPHABET[] = "0123456789";
 
 //------------------------------------------------------------------ Types
 
