@@ -379,6 +379,7 @@ antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
 } //----- Fin de visitFunction
 
 antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
+    // TODO : modifier la grammaire pour accepter les déclarations de fonction avec juste "void" en arg
     string func_name = ctx->ID()->getText();
     Type func_type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
     DefFuncInstr * def_func = nullptr;
