@@ -178,6 +178,8 @@ class Instr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     virtual void GenerateIR(CFG * cfg) = 0;
+
+    string GetScope() const;
     //-------------------------------------------- Constructeurs - destructeur
     Instr(int line, string scope)
         : Node(line), scope(scope){};

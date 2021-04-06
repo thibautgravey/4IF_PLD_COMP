@@ -430,6 +430,7 @@ antlrcpp::Any ASTGenerator::visitExpr_list(ifccParser::Expr_listContext * ctx) {
 
     return params;
 } //----- Fin de visitExpr_list
+
 antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
 
     // Création de l'expression
@@ -442,10 +443,9 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
     // Récupération des intructions du IF
     BlockInstr * ifblock;
     if (ctx->line()) {
-        expandScope();
-        ifblock = new BlockInstr(ctx->start->getLine(), currentScope);
-        ifblock->AddInstr((Instr *)visit(ctx->line()));
-        reduceScope();
+        Instr * instr = visit(ctx->line());
+        ifblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+        ifblock->AddInstr(instr);
     } else {
         ifblock = (BlockInstr *)visit(ctx->block());
     }
@@ -466,21 +466,20 @@ antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
     BlockInstr * elseblock;
 
     if (ctx->line()) {
-        expandScope();
-        elseblock = new BlockInstr(ctx->start->getLine(), currentScope);
-        elseblock->AddInstr((Instr *)visit(ctx->line()));
-        reduceScope();
-    } else if (ctx->block()) { //
+        Instr * instr = visit(ctx->line());
+        elseblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+        elseblock->AddInstr(instr);
+    } else if (ctx->block()) {
         elseblock = (BlockInstr *)visit(ctx->block());
     } else {
-        expandScope();
-        elseblock = new BlockInstr(ctx->start->getLine(), currentScope);
-        elseblock->AddInstr((Instr *)visit(ctx->ifblock()));
-        reduceScope();
+        Instr * instr = visit(ctx->ifblock());
+        elseblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+        elseblock->AddInstr(instr);
     }
 
     return elseblock;
 }
+
 antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx) {
     // Création de l'expression
     Expr * exprWhile = (Expr *)visit(ctx->expr());
@@ -492,10 +491,9 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     BlockInstr * whileblock;
     if (ctx->line()) {
         //TO DO : ajouter vérification instruction non nulle
-        expandScope();
-        whileblock = new BlockInstr(ctx->start->getLine(), currentScope);
-        whileblock->AddInstr((Instr *)visit(ctx->line()));
-        reduceScope();
+        Instr * instr = visit(ctx->line());
+        whileblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+        whileblock->AddInstr(instr);
     } else { //
         whileblock = (BlockInstr *)visit(ctx->block());
     }

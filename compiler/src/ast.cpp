@@ -190,6 +190,9 @@ Function::~Function() {
 }
 
 //------- Réalisation de la classe <Instr> ---
+string Instr::GetScope() const {
+    return scope;
+}
 
 //------- Réalisation de la classe <ReturnInstr> ---
 Expr * ReturnInstr::GetReturnExpr() {

@@ -230,7 +230,7 @@ void CFG::gen_asm(ostream & o) {
         if ((*it)->exit_false == nullptr) {
             o << "        jmp      " << (*it)->exit_true->label << endl;
         } else {
-            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name, this->current_bb->scope) << endl;
+            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name, (*it)->scope) << endl;
             o << "        jne      " << (*it)->exit_false->label << endl;
             o << "        jmp      " << (*it)->exit_true->label << endl;
         }
