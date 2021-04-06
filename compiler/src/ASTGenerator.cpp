@@ -370,7 +370,7 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
         this->currentFunction = func_name;
         this->scopeIndexIncrement.clear();
         this->scopeIndexIncrement.push_back(0);
-        this->currentScope = SCOPE_ALPHABET[0];
+        this->currentScope = "0";
 
         def_func = new DefFuncInstr(ctx->start->getLine(), func_name, func_type, currentScope);
 
@@ -619,11 +619,12 @@ void ASTGenerator::expandScope() {
         scopeIndexIncrement.push_back(0);
     }
 
-    currentScope = currentScope + SCOPE_ALPHABET[scopeIndexIncrement[currentSize]++];
+    currentScope = currentScope + "." + to_string(scopeIndexIncrement[currentSize]++);
 } //----- Fin de incrScope
 
 void ASTGenerator::reduceScope() {
-    if (currentScope.size() > 0) {
-        currentScope = currentScope.substr(0, currentScope.size() - 1);
+    size_t lastPos = currentScope.find_last_of('.');
+    if (currentScope.size() > 0 && lastPos != string::npos) {
+        currentScope = currentScope.substr(0, lastPos);
     }
 } //----- Fin de decrScope

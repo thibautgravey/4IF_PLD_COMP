@@ -101,7 +101,12 @@ bool SymbolTable::LookUpVariable(const string & function, const string & name, c
         }
 
         //reduce the scope
-        tmpScope = tmpScope.substr(0, tmpScope.size() - 1);
+        size_t lastPos = tmpScope.find_last_of('.');
+        if (lastPos != string::npos) {
+            tmpScope = tmpScope.substr(0, lastPos);
+        } else {
+            tmpScope = "";
+        }
     }
 
     return false;
@@ -151,7 +156,12 @@ string SymbolTable::GetVariableScope(const string & function, const string & nam
         }
 
         //reduce the scope
-        tmpScope = tmpScope.substr(0, tmpScope.size() - 1);
+        size_t lastPos = tmpScope.find_last_of('.');
+        if (lastPos != string::npos) {
+            tmpScope = tmpScope.substr(0, lastPos);
+        } else {
+            tmpScope = "";
+        }
     }
 
     return "";
@@ -333,7 +343,12 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
         }
 
         //reduce the scope
-        tmpScope = tmpScope.substr(0, tmpScope.size() - 1);
+        size_t lastPos = tmpScope.find_last_of('.');
+        if (lastPos != string::npos) {
+            tmpScope = tmpScope.substr(0, lastPos);
+        } else {
+            tmpScope = "";
+        }
     }
 
     printError("variable " + name + " does not exist in contextVariableTable from " + function + " with scope " + scope);
@@ -360,7 +375,7 @@ int SymbolTable::computeScopeSize(const string & name) const {
     int scopeSize(0);
 
     for (int i = 0; i < name.size(); i++) {
-        if (isdigit(name[i]))
+        if (isdigit(name[i]) || name[i] == '.')
             scopeSize++;
         else
             break;
