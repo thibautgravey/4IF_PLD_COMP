@@ -6,13 +6,22 @@ prog: def_func+;
 
 def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
-line: var_decl | expr ';' | return_stmt | ifblock | whileblock | block;
+line:
+	var_decl
+	| tab_decl
+	| expr ';'
+	| return_stmt
+	| ifblock
+	| whileblock
+	| block;
 
 param_list: param (',' param)*;
 
 param: TYPE ID;
 
 var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
+
+tab_decl: TYPE ID '[' CONST? ']' ('=' '{' expr_list '}')? ';';
 
 inline_var_decl: (',' ID ('=' expr)?);
 
@@ -27,7 +36,8 @@ whileblock: ('while' '(' expr ')' (line | block));
 block: '{' line* '}';
 
 expr:
-	(CONST | CHAR | ID)					# literal
+	ID '[' expr ']'						# tab
+	| (CONST | CHAR | ID)				# literal
 	| '(' expr ')'						# par
 	| ID '(' expr_list? ')'				# function
 	| (OP_LESS | OP_UNAIRE_NOT) expr	# opp_or_not
