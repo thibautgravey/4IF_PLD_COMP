@@ -85,7 +85,13 @@ string OpBin::GenerateIR(CFG * cfg) {
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
             break;
         case BinaryOperator::EQ:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2});
+            if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), tmpVar1)) {
+                if (dynamic_cast<ConstLiteral *>(this->operand2)) {
+                    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar1, tmpVar2});
+                } else {
+                    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2});
+                }
+            }
             tmpResVar = tmpVar1;
             break;
         case BinaryOperator::EQUAL:
