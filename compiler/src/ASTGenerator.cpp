@@ -48,7 +48,14 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
     if (ctx->return_stmt()) {
         instr = (Instr *)visit(ctx->return_stmt());
     } else if (ctx->var_decl()) {
-        instr = (Instr *)visit(ctx->var_decl());
+        vector<Instr *> retVecInstr;
+        vector<Expr *> retVarDecl = visit(ctx->var_decl()).as<vector<Expr *>>();
+        for (Expr * expr : retVarDecl) {
+            if (checkExpr(expr)) {
+                retVecInstr.push_back(new ExprInstr(ctx->start->getLine(), expr));
+            }
+        }
+        return retVecInstr;
     } else if (ctx->expr()) {
         Expr * expr = visit(ctx->expr());
         if (expr == nullptr) {
@@ -67,9 +74,7 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
 } //----- Fin de visitLine
 
 antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
-    Instr * tmpRet = nullptr;
-    Instr * ret = nullptr;
-
+    vector<Expr *> ret;
     lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
     if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
@@ -77,61 +82,60 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             if (!checkExpr(expr)) {
-                return (Instr *)nullptr;
+                return {};
             }
 
-            tmpRet = new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
-            ret = tmpRet;
+            // si on affecte une autre affectation de variable (opération EQ), indique que la variable de
+            // l'affectation à droite du '=' est utilisée
+            OpBin * tmpOpBin = dynamic_cast<OpBin *>(expr);
+            if (tmpOpBin && tmpOpBin->GetOp() == EQ) {
+                Var * tmpVar = dynamic_cast<Var *>(tmpOpBin->GetOperand1());
+                if (tmpVar)
+                    program->GetSymbolTable().SetUsedVariable(currentFunction, tmpVar->GetName());
+            }
+
+            ret.push_back(((Expr *)new OpBin(ctx->start->getLine(), ((Expr *)new Var(ctx->start->getLine(), ctx->ID()->getText())), expr, EQ)));
         }
 
         for (int i = 0; i < ctx->inline_var_decl().size(); i++) {
-            Instr * instr = (Instr *)visit(ctx->inline_var_decl(i));
-            if (instr != nullptr) {
-                if (tmpRet == nullptr) {
-                    tmpRet = instr;
-                    ret = tmpRet;
-                } else {
-                    ((VarAffInstr *)tmpRet)->SetVarAffInstrNext(instr);
-                    tmpRet = instr;
-                }
+            Expr * inlineExpr = (Expr *)visit(ctx->inline_var_decl(i));
+            if (inlineExpr != nullptr) {
+                ret.push_back(inlineExpr);
             }
         }
     } else {
         program->SetErrorFlag(true);
     }
-
     return ret;
 }
 
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
-    Instr * ret = nullptr;
-
     if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine())) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             if (!checkExpr(expr)) {
-                return (Instr *)nullptr;
+                return (Expr *)nullptr;
             }
 
-            ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
+            // si on affecte une autre affectation de variable (opération EQ), indique que la variable de
+            // l'affectation à droite du '=' est utilisée
+            OpBin * tmpOpBin = dynamic_cast<OpBin *>(expr);
+            if (tmpOpBin && tmpOpBin->GetOp() == EQ) {
+                Var * tmpVar = dynamic_cast<Var *>(tmpOpBin->GetOperand1());
+                if (tmpVar)
+                    program->GetSymbolTable().SetUsedVariable(currentFunction, tmpVar->GetName());
+            }
+
+            return (Expr *)new OpBin(ctx->start->getLine(), ((Expr *)new Var(ctx->start->getLine(), ctx->ID()->getText())), expr, EQ);
         }
     } else {
         program->SetErrorFlag(true);
     }
-
-    return ret;
+    return (Expr *)nullptr;
 }
 
 antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
     // TODO: voir pour la règle var_aff (operande de gauche)
-
-    //TODO: considérer l'affectation comme une opération binaire (EQ)
-
-    /*
-    Expr * expr = (Expr *)visit(ctx->expr());
-
-    return (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
-    */
 
     Expr * affExpr = (Expr *)visit(ctx->expr());
     if (!checkExpr(affExpr)) {
@@ -395,10 +399,20 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
         }
 
         for (int i = 0; i < ctx->line().size(); i++) {
-            Instr * instr = visit(ctx->line(i));
+            antlrcpp::Any tmpVisitLine = visit(ctx->line(i));
 
-            if (instr != nullptr) {
-                def_func->AddInstr(instr);
+            if (tmpVisitLine.is<Instr *>()) {
+                Instr * instr = tmpVisitLine.as<Instr *>();
+                if (instr != nullptr) {
+                    def_func->AddInstr(instr);
+                }
+            } else if (tmpVisitLine.is<vector<Instr *>>()) {
+                vector<Instr *> vectInstr = tmpVisitLine.as<vector<Instr *>>();
+                for (Instr * instr : vectInstr) {
+                    if (instr != nullptr) {
+                        def_func->AddInstr(instr);
+                    }
+                }
             }
         }
 
