@@ -84,6 +84,8 @@ class SymbolTable {
 
     int GetVariableOffset(const string & function, const string & name, const string & scope) const;
 
+    string GetVariableScope(const string & function, const string & name, const string & scope) const;
+
     bool IsUsedVariable(const string & function, const string & name, const string & scope) const;
 
     void UnusedVariableAnalysis() const;
@@ -126,6 +128,8 @@ class SymbolTable {
     struct ContextTable * getFunction(const string & function) const;
 
     void decreaseContextOffset(const string & function);
+
+    int computeScopeSize(const string & name) const;
 
     static void printError(const string & error);
 

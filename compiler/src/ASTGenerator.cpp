@@ -291,8 +291,8 @@ antlrcpp::Any ASTGenerator::visitLiteral(ifccParser::LiteralContext * ctx) {
         ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1], currentScope);
     } else if (ctx->ID()) {
         if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
-            ret = new Var(ctx->start->getLine(), ctx->ID()->getText(), currentScope);
-            program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), currentScope);
+            ret = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
         } else {
             program->SetErrorFlag(true);
             cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;

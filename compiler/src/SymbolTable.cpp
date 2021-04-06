@@ -84,12 +84,18 @@ bool SymbolTable::LookUpVariable(const string & function, const string & name, c
         return false;
     }
 
-    string tmpScope = scope;
+    //Generate scope :
+    int scopeSize = computeScopeSize(name);
+    string tmpScope = name.substr(0, scopeSize);
+    string tmpName = name.substr(scopeSize, name.size());
+
+    //If it's a variable without scope, use the current scope instead
+    if (scopeSize == 0)
+        tmpScope = scope;
 
     while (tmpScope.size() > 0) {
-
         ContextTable * contextTable = globalFunctionTableIterator->second;
-        auto it = contextTable->contextVariableTable.find(tmpScope + name);
+        auto it = contextTable->contextVariableTable.find(tmpScope + tmpName);
         if (it != contextTable->contextVariableTable.end()) {
             return true;
         }
@@ -128,6 +134,29 @@ int SymbolTable::GetVariableOffset(const string & function, const string & name,
     return variable->offset;
 } //----- Fin de GetVariableOffset
 
+string SymbolTable::GetVariableScope(const string & function, const string & name, const string & scope) const {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        return "";
+    }
+
+    string tmpScope = scope;
+
+    while (tmpScope.size() > 0) {
+
+        ContextTable * contextTable = globalFunctionTableIterator->second;
+        auto it = contextTable->contextVariableTable.find(tmpScope + name);
+        if (it != contextTable->contextVariableTable.end()) {
+            return tmpScope;
+        }
+
+        //reduce the scope
+        tmpScope = tmpScope.substr(0, tmpScope.size() - 1);
+    }
+
+    return "";
+} //----- Fin de GetVariableScope
+
 bool SymbolTable::IsUsedVariable(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable == nullptr) {
@@ -145,14 +174,14 @@ string SymbolTable::CreateTempVar(const string & function, Type type, const stri
     }
 
     decreaseContextOffset(function);
-    string completeName = "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
+    string completeName = scope + "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
 
     ContextTable * contextTable = globalFunctionTableIterator->second;
 
     ContextVariable * contextVariable = new ContextVariable;
     contextVariable->type = type;
     contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
-    contextTable->contextVariableTable.insert(make_pair(scope + completeName, contextVariable));
+    contextTable->contextVariableTable.insert(make_pair(completeName, contextVariable));
 
     return completeName;
 } //----- Fin de CreateTempVar
@@ -287,11 +316,18 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
         return nullptr;
     }
 
-    string tmpScope = scope;
+    //Generate scope :
+    int scopeSize = computeScopeSize(name);
+    string tmpScope = name.substr(0, scopeSize);
+    string tmpName = name.substr(scopeSize, name.size());
+
+    //If it's a variable without scope, use the current scope instead
+    if (scopeSize == 0)
+        tmpScope = scope;
 
     while (tmpScope.size() > 0) {
         ContextTable * contextTable = globalFunctionTableIterator->second;
-        auto it = contextTable->contextVariableTable.find(tmpScope + name);
+        auto it = contextTable->contextVariableTable.find(tmpScope + tmpName);
         if (it != contextTable->contextVariableTable.end()) {
             return it->second;
         }
@@ -319,6 +355,19 @@ void SymbolTable::decreaseContextOffset(const string & function) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     globalFunctionTableIterator->second->offsetContext -= 4;
 } //----- Fin de decreaseContextOffset
+
+int SymbolTable::computeScopeSize(const string & name) const {
+    int scopeSize(0);
+
+    for (int i = 0; i < name.size(); i++) {
+        if (isdigit(name[i]))
+            scopeSize++;
+        else
+            break;
+    }
+
+    return scopeSize;
+} //----- Fin de computeScopeSize
 
 void SymbolTable::printError(const string & error) {
     cerr << error << endl;

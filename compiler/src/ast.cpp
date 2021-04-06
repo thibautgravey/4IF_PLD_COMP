@@ -16,7 +16,7 @@ string Var::GetName() {
 }
 
 string Var::GenerateIR(CFG * cfg) {
-    return this->name;
+    return this->scope + this->name;
 }
 
 //------- Réalisation de la classe <ConstLiteral> ---

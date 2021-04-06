@@ -6,15 +6,14 @@ int32_t main()
 
     if (a == 0)
     {
-        int32_t a = 1;
         if (a == 0)
             r = r + 1;
+        int32_t a = 1;
         if (a == 1)
         {
-            int32_t a = 2;
             if (a == 1)
                 r = r + 2;
-
+            int32_t a = 2;
             if (a == 2)
             {
                 r = r + 4;
