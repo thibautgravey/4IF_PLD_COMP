@@ -39,13 +39,13 @@ void IRInstr::gen_asm(ostream & o) {
                 break;
         }
     } else {
-        p1 = this->bb->cfg->IR_reg_to_asm(this->params[0], this->bb->scope);
+        p1 = this->params[0];
         p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope);
     }
 
     switch (this->op) {
         case ldconst:
-            o << "        movl    $" << p2 << ", " << p1 << endl;
+            o << "        movl    " << p2 << ", " << p1 << endl;
             break;
         case copy:
             o << "        movl     " << p2 << ", %eax" << endl;
@@ -67,6 +67,10 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        movl     %eax, " << p1 << endl;
             break;
         case div:
+            if (p3[0] == '$') {
+                o << "        movl     " << p3 << ", %ecx" << endl;
+                p3 = "%ecx";
+            }
             o << "        movl     " << p2 << ", %eax" << endl;
             o << "        cltd     " << endl;
             o << "        idivl    " << p3 << endl;
@@ -219,20 +223,55 @@ void CFG::add_bb(BasicBlock * bb) {
 } //fin de add_bb
 
 void CFG::gen_asm(ostream & o) {
-    gen_asm_prologue(o, this->bbs[0]);
+    bool delete_jump = gen_asm_prologue(o, this->bbs[0]);
 
     vector<BasicBlock *>::iterator it;
+    vector<BasicBlock *>::iterator it2;
+
+    bool use_block_label = false;
     for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
-        o << (*it)->label << ":" << endl;
+        if (delete_jump == false) {
+            o << (*it)->label << ":" << endl;
+        } else {
+            delete_jump = false;
+        }
+
         for (IRInstr * instr : (*it)->instrs) {
             instr->gen_asm(o);
         }
+
+        use_block_label = false;
+
+        for (it2 = this->bbs.begin() + 1; it2 != (it); it2++) {
+            if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
+                use_block_label = true;
+                break;
+            }
+        }
+
+        for (it2 = it + 1; it2 != (this->bbs.end() - 1); it2++) {
+            if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
+                use_block_label = true;
+                break;
+            }
+        }
         if ((*it)->exit_false == nullptr) {
-            o << "        jmp      " << (*it)->exit_true->label << endl;
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        jmp      " << (*it)->exit_true->label << endl;
+
+            } else {
+                delete_jump = true;
+            }
+
         } else {
             o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name, (*it)->scope) << endl;
             o << "        jne      " << (*it)->exit_false->label << endl;
-            o << "        jmp      " << (*it)->exit_true->label << endl;
+
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        jmp      " << (*it)->exit_true->label << endl;
+            } else {
+                delete_jump = true;
+            }
         }
     }
 
@@ -264,18 +303,29 @@ string CFG::IR_reg_to_asm(string reg, string scope) {
             int offset = this->symbolTable->GetVariableOffset(cfgName, reg, scope);
             ret = to_string(offset) + "(%rbp)";
         } else {
-            ret = reg;
+            ret = "$" + reg;
         }
     }
 
     return ret;
 } //fin de IR_reg_to_asm
 
-void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
+bool CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
+    bool jump = true;
+    vector<BasicBlock *>::iterator it2;
+    for (it2 = this->bbs.begin() + 1; it2 != (this->bbs.end() - 1); it2++) {
+        if ((*it2)->exit_true == bb->exit_true || (*it2)->exit_false == bb->exit_true) {
+            jump = false;
+            break;
+        }
+    }
     o << "        .globl " << cfgName << endl
       << endl;
     o << cfgName << ":" << endl;
-    o << bb->label << ":" << endl;
+    if (jump == false) {
+        o << bb->label << ":" << endl;
+    }
+
     o << "        pushq    %rbp" << endl;
     o << "        movq     %rsp, %rbp" << endl;
 
@@ -287,7 +337,11 @@ void CFG::gen_asm_prologue(ostream & o, BasicBlock * bb) {
     }
 
     o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
-    o << "        jmp " << bb->exit_true->label << endl;
+
+    if (jump == false) {
+        o << "        jmp " << bb->exit_true->label << endl;
+    }
+    return jump;
 } //fin de gen_asm_prologue
 
 void CFG::gen_asm_epilogue(ostream & o, BasicBlock * bb) {

@@ -47,7 +47,14 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
     if (ctx->return_stmt()) {
         instr = (Instr *)visit(ctx->return_stmt());
     } else if (ctx->var_decl()) {
-        instr = (Instr *)visit(ctx->var_decl());
+        vector<Instr *> retVecInstr;
+        vector<Expr *> retVarDecl = visit(ctx->var_decl()).as<vector<Expr *>>();
+        for (Expr * expr : retVarDecl) {
+            if (checkExpr(expr)) {
+                retVecInstr.push_back(new ExprInstr(ctx->start->getLine(), expr, currentScope));
+            }
+        }
+        return retVecInstr;
     } else if (ctx->expr()) {
         Expr * expr = visit(ctx->expr());
         if (expr == nullptr) {
@@ -65,9 +72,7 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
 } //----- Fin de visitLine
 
 antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
-    Instr * tmpRet = nullptr;
-    Instr * ret = nullptr;
-
+    vector<Expr *> ret;
     lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
 
     if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), currentScope)) {
@@ -75,67 +80,93 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             if (!checkExpr(expr)) {
-                return (Instr *)nullptr;
+                return {};
             }
 
-            tmpRet = new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr, currentScope);
-            ret = tmpRet;
+            // si on affecte une autre affectation de variable (opération EQ), indique que la variable de
+            // l'affectation à droite du '=' est utilisée
+            OpBin * tmpOpBin = dynamic_cast<OpBin *>(expr);
+            if (tmpOpBin && tmpOpBin->GetOp() == EQ) {
+                Var * tmpVar = dynamic_cast<Var *>(tmpOpBin->GetOperand1());
+                if (tmpVar)
+                    program->GetSymbolTable().SetUsedVariable(currentFunction, tmpVar->GetName(), currentScope);
+            }
+
+            Var * var;
+            if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
+                var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+                program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            } else {
+                program->SetErrorFlag(true);
+                cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+            }
+
+            ret.push_back(((Expr *)new OpBin(ctx->start->getLine(), ((Expr *)var), expr, EQ, currentScope)));
         }
 
         for (int i = 0; i < ctx->inline_var_decl().size(); i++) {
-            Instr * instr = (Instr *)visit(ctx->inline_var_decl(i));
-            if (instr != nullptr) {
-                if (tmpRet == nullptr) {
-                    tmpRet = instr;
-                    ret = tmpRet;
-                } else {
-                    ((VarAffInstr *)tmpRet)->SetVarAffInstrNext(instr);
-                    tmpRet = instr;
-                }
+            Expr * inlineExpr = (Expr *)visit(ctx->inline_var_decl(i));
+            if (inlineExpr != nullptr) {
+                ret.push_back(inlineExpr);
             }
         }
     } else {
         program->SetErrorFlag(true);
     }
-
     return ret;
 }
 
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
-    Instr * ret = nullptr;
-
     if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), currentScope)) {
         if (ctx->expr()) {
             Expr * expr = (Expr *)visit(ctx->expr());
             if (!checkExpr(expr)) {
-                return (Instr *)nullptr;
+                return (Expr *)nullptr;
             }
 
-            ret = (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr, currentScope);
+            // si on affecte une autre affectation de variable (opération EQ), indique que la variable de
+            // l'affectation à droite du '=' est utilisée
+            OpBin * tmpOpBin = dynamic_cast<OpBin *>(expr);
+            if (tmpOpBin && tmpOpBin->GetOp() == EQ) {
+                Var * tmpVar = dynamic_cast<Var *>(tmpOpBin->GetOperand1());
+                if (tmpVar)
+                    program->GetSymbolTable().SetUsedVariable(currentFunction, tmpVar->GetName(), currentScope);
+            }
+
+            Var * var;
+            if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
+                var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+                program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            } else {
+                program->SetErrorFlag(true);
+                cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+            }
+
+            return (Expr *)new OpBin(ctx->start->getLine(), ((Expr *)var), expr, EQ, currentScope);
         }
     } else {
         program->SetErrorFlag(true);
     }
-
-    return ret;
+    return (Expr *)nullptr;
 }
 
 antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
     // TODO: voir pour la règle var_aff (operande de gauche)
 
-    //TODO: considérer l'affectation comme une opération binaire (EQ)
-
-    /*
-    Expr * expr = (Expr *)visit(ctx->expr());
-
-    return (Instr *)new VarAffInstr(ctx->start->getLine(), ctx->ID()->getText(), lastDeclaredType, expr);
-    */
-
     Expr * affExpr = (Expr *)visit(ctx->expr());
     if (!checkExpr(affExpr)) {
         return (Expr *)nullptr;
     }
-    Expr * var = new Var(ctx->start->getLine(), ctx->ID()->getText(), currentScope);
+
+    Var * var;
+    if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
+        var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+        program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+    } else {
+        program->SetErrorFlag(true);
+        cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+    }
+
     return (Expr *)new OpBin(ctx->start->getLine(), var, affExpr, EQ, currentScope);
 
 } //----- Fin de visitVar_aff
@@ -316,6 +347,22 @@ antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx)
         unitOperator = NOT;
     }
 
+    ConstLiteral * opConst = dynamic_cast<ConstLiteral *>(op);
+
+    if (unitOperator == OPP) {
+        if (opConst) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), -opConst->GetValue(), currentScope);
+        }
+    } else if (unitOperator == NOT) {
+        if (opConst) {
+            if (opConst->GetValue() == 0) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+            }
+        }
+    }
+
     return (Expr *)new OpUn(ctx->start->getLine(), op, unitOperator, currentScope);
 } //----- Fin de visitOpp_or_not
 
@@ -357,6 +404,7 @@ antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
 } //----- Fin de visitFunction
 
 antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
+    // TODO : modifier la grammaire pour accepter les déclarations de fonction avec juste "void" en arg
     string func_name = ctx->ID()->getText();
     Type func_type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
     DefFuncInstr * def_func = nullptr;
@@ -380,10 +428,20 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
         }
 
         for (int i = 0; i < ctx->line().size(); i++) {
-            Instr * instr = visit(ctx->line(i));
+            antlrcpp::Any tmpVisitLine = visit(ctx->line(i));
 
-            if (instr != nullptr) {
-                def_func->AddInstr(instr);
+            if (tmpVisitLine.is<Instr *>()) {
+                Instr * instr = tmpVisitLine.as<Instr *>();
+                if (instr != nullptr) {
+                    def_func->AddInstr(instr);
+                }
+            } else if (tmpVisitLine.is<vector<Instr *>>()) {
+                vector<Instr *> vectInstr = tmpVisitLine.as<vector<Instr *>>();
+                for (Instr * instr : vectInstr) {
+                    if (instr != nullptr) {
+                        def_func->AddInstr(instr);
+                    }
+                }
             }
         }
 
@@ -438,7 +496,6 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
     if (!checkExpr(exprIf)) {
         return (Instr *)nullptr;
     }
-    //ifElseInstr * ifelseblock = new ifElseInstr(ctx->start->getLine(), exprIf);
 
     // Récupération des intructions du IF
     BlockInstr * ifblock;
@@ -456,10 +513,18 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
         elseblock = (BlockInstr *)visit(ctx->elseblock());
     }
 
-    // Création du ifElseInstr
-    Instr * ifelse = new IfElseInstr(ctx->start->getLine(), exprIf, ifblock, elseblock, currentScope);
+    ConstLiteral * exprConst = dynamic_cast<ConstLiteral *>(exprIf);
 
-    return ifelse;
+    if (exprConst) {
+        if (exprConst->GetValue() == 0) {
+            return (Instr *)elseblock;
+        } else {
+            return (Instr *)ifblock;
+        }
+    } else {
+        // Création du ifElseInstr
+        return (Instr *)new IfElseInstr(ctx->start->getLine(), exprIf, ifblock, elseblock, currentScope);
+    }
 }
 
 antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
@@ -498,6 +563,17 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
         whileblock = (BlockInstr *)visit(ctx->block());
     }
 
+    // TODO : en cas d'évaluation directe, voir pour les delete
+
+    ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(exprWhile);
+    if (constExpr) {
+        if (constExpr->GetValue() == 0) {
+            return (Instr *)nullptr;
+        } else {
+            // TODO : voir quoi faire en cas de boucle infinie
+        }
+    }
+
     // Création du whileInstr
     Instr * whileInstr = new WhileInstr(ctx->start->getLine(), exprWhile, whileblock, currentScope);
 
@@ -509,10 +585,21 @@ antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
     BlockInstr * blockInstr = new BlockInstr(ctx->start->getLine(), currentScope);
 
     for (int i = 0; i < ctx->line().size(); i++) {
-        Instr * instr = (Instr *)visit(ctx->line(i));
 
-        if (instr != nullptr) {
-            blockInstr->AddInstr(instr);
+        antlrcpp::Any tmpVisitLine = visit(ctx->line(i));
+
+        if (tmpVisitLine.is<Instr *>()) {
+            Instr * instr = tmpVisitLine.as<Instr *>();
+            if (instr != nullptr) {
+                blockInstr->AddInstr(instr);
+            }
+        } else if (tmpVisitLine.is<vector<Instr *>>()) {
+            vector<Instr *> vectInstr = tmpVisitLine.as<vector<Instr *>>();
+            for (Instr * instr : vectInstr) {
+                if (instr != nullptr) {
+                    blockInstr->AddInstr(instr);
+                }
+            }
         }
     }
     reduceScope();
@@ -522,11 +609,35 @@ antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
 antlrcpp::Any ASTGenerator::visitCdtand(ifccParser::CdtandContext * ctx) {
     Expr * op1 = visit(ctx->expr(0));
     Expr * op2 = visit(ctx->expr(1));
+
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
     }
 
     BinaryOperator binaryOperatorCdtAnd = CDTAND;
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() != 0 && op2Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+        }
+    } else if (op1Const && !op2Const) {
+        if (op1Const->GetValue() != 0) {
+            return op2;
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+        }
+    } else if (op2Const && !op1Const) {
+        if (op2Const->GetValue() != 0) {
+            return op1;
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+        }
+    }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtAnd, currentScope);
 }
@@ -537,6 +648,29 @@ antlrcpp::Any ASTGenerator::visitCdtor(ifccParser::CdtorContext * ctx) {
     BinaryOperator binaryOperatorCdtOr = CDTOR;
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() != 0 || op2Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+        }
+    } else if (op1Const && !op2Const) {
+        if (op1Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+        } else {
+            return op2;
+        }
+    } else if (op2Const && !op1Const) {
+        if (op2Const->GetValue() != 0) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+        } else {
+            return op1;
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorCdtOr, currentScope);
@@ -550,6 +684,17 @@ antlrcpp::Any ASTGenerator::visitEqual(ifccParser::EqualContext * ctx) {
         return (Expr *)nullptr;
     }
 
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() == op2Const->GetValue()) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+        }
+    }
+
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorEqual, currentScope);
 }
 
@@ -559,6 +704,17 @@ antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
     BinaryOperator binaryOperatorNotEqual = NEQUAL;
     if (!checkExpr(op1) || !checkExpr(op2)) {
         return (Expr *)nullptr;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (op1Const->GetValue() != op2Const->GetValue()) {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+        } else {
+            return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperatorNotEqual, currentScope);
@@ -582,6 +738,37 @@ antlrcpp::Any ASTGenerator::visitGreater_equal_lesser_equal(ifccParser::Greater_
         binaryOperator = LESSE;
     } else if (ctx->OP_LESSER()) {
         binaryOperator = LESS;
+    }
+
+    ConstLiteral * op1Const = dynamic_cast<ConstLiteral *>(op1);
+    ConstLiteral * op2Const = dynamic_cast<ConstLiteral *>(op2);
+
+    if (op1Const && op2Const) {
+        if (binaryOperator == GREATERE) {
+            if (op1Const->GetValue() >= op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+            }
+        } else if (binaryOperator == GREATER) {
+            if (op1Const->GetValue() > op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+            }
+        } else if (binaryOperator == LESSE) {
+            if (op1Const->GetValue() <= op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+            }
+        } else if (binaryOperator == LESS) {
+            if (op1Const->GetValue() < op2Const->GetValue()) {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
+            } else {
+                return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
+            }
+        }
     }
 
     return (Expr *)new OpBin(ctx->start->getLine(), op1, op2, binaryOperator, currentScope);
