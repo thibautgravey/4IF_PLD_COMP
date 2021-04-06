@@ -45,7 +45,7 @@ void IRInstr::gen_asm(ostream & o) {
 
     switch (this->op) {
         case ldconst:
-            o << "        movl    $" << p2 << ", " << p1 << endl;
+            o << "        movl    " << p2 << ", " << p1 << endl;
             break;
         case copy:
             o << "        movl     " << p2 << ", %eax" << endl;
