@@ -32,7 +32,7 @@ char CharLiteral::GetValue() const {
 }
 
 string CharLiteral::GenerateIR(CFG * cfg) {
-    return to_string((int)this->GetValue());
+    return to_string((char)this->GetValue());
 }
 
 //------- Réalisation de la classe <OpBin> ---
