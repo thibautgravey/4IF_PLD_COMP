@@ -167,6 +167,12 @@ string Function::GenerateIR(CFG * cfg) {
     for (Expr * param : this->params) {
         paramsIRInstr.push_back(param->GenerateIR(cfg));
     }
+
+    if (cfg->GetSymbolTable()->GetFunctionParams(this->name).size() == 0) {
+        // si la fonction n'attend pas d'args
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {"reg1", "0"});
+    }
+
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT32_T, paramsIRInstr);
 
     string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T);
