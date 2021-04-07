@@ -56,7 +56,19 @@ class IRInstr {
     /** Actual code generation */
     void gen_asm(ostream & o); /**< x86 assembly code generation for this IR instruction */
 
-  private:
+  protected:
+    string getMovInstr();
+    string getMovInstr(Type requestType);
+    string getAddInstr();
+    string getSubInstr();
+    string getCmpInstr();
+    string getMullInstr();
+    string getDivInstr();
+    string getOrInstr();
+    string getAndInstr();
+    string getXorInstr();
+    string getNegInstr();
+
     BasicBlock * bb; /**< The BB this instruction belongs to, which provides a pointer to the CFG this instruction belong to */
     Operation op;
     Type t;
@@ -129,7 +141,7 @@ class CFG {
 
     // x86 code generation: could be encapsulated in a processor class in a retargetable compiler
     void gen_asm(ostream & o);
-    string IR_reg_to_asm(string reg, string scope); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
+    string IR_reg_to_asm(string reg, string scope, Type type); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
     bool gen_asm_prologue(ostream & o, BasicBlock * bb);
     void gen_asm_epilogue(ostream & o, BasicBlock * bb);
     BasicBlock * GetCurrentBB();

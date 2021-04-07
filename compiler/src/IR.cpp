@@ -10,6 +10,8 @@
 
 //-------------------------------------------------------- Include système
 #include <iostream>
+#include <sstream>
+#include <stdint.h>
 
 using namespace std;
 
@@ -30,169 +32,211 @@ void IRInstr::gen_asm(ostream & o) {
     if (this->op != call) {
         switch (this->params.size()) {
             case 3:
-                p3 = this->bb->cfg->IR_reg_to_asm(this->params[2], this->bb->scope);
+                p3 = this->bb->cfg->IR_reg_to_asm(this->params[2], this->bb->scope, this->t);
             case 2:
-                p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope);
+                p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope, this->t);
             case 1:
-                p1 = this->bb->cfg->IR_reg_to_asm(this->params[0], this->bb->scope);
+                p1 = this->bb->cfg->IR_reg_to_asm(this->params[0], this->bb->scope, this->t);
             default:
                 break;
         }
     } else {
         p1 = this->params[0];
-        p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope);
+        p2 = this->bb->cfg->IR_reg_to_asm(this->params[1], this->bb->scope, this->t);
     }
 
     switch (this->op) {
         case ldconst:
-            o << "        movl    " << p2 << ", " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
             break;
         case copy:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        movl    %eax, " << p1 << endl;
+            if ((p2.at(0) == '%' && p1.at(0) != '%') || (p2.at(0) != '%' && p1.at(0) == '%')) {
+                o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
+            } else {
+                o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+                o << "        " << getMovInstr() << "    %eax, " << p1 << endl;
+            }
             break;
         case add:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        addl     " << p3 << ", %eax" << endl;
-            o << "        movl    %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getAddInstr() << "     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "    %eax, " << p1 << endl;
             break;
         case sub:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        subl     " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getSubInstr() << "     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case mul:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        imull    " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getMullInstr() << "     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case div:
             if (p3[0] == '$') {
-                o << "        movl     " << p3 << ", %ecx" << endl;
+                o << "        " << getMovInstr() << "     " << p3 << ", %ecx" << endl;
                 p3 = "%ecx";
             }
-            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
             o << "        cltd     " << endl;
-            o << "        idivl    " << p3 << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getDivInstr() << "    " << p3 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case orB:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        orl      " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getOrInstr() << "      " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case andB:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        andl     " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getAndInstr() << "     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case xorB:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        xorl     " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getXorInstr() << "     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case neg:
-            o << "        cmpl     $0, " << p2 << endl;
+            o << "        " << getCmpInstr() << "     $0, " << p2 << endl;
             o << "        sete     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case opp:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        negl     %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getNegInstr() << "     %eax" << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case rmem:
-            o << "        movl     " << p2 << ", " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
             break;
         case wmem:
-            o << "        movl     " << p2 << ", " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
             break;
         case call: {
-            // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
             for (int i = 2; i < params.size(); i++) {
-                p3 = this->bb->cfg->IR_reg_to_asm(this->params[i], this->bb->scope);
+                p3 = this->bb->cfg->IR_reg_to_asm(this->params[i], this->bb->scope, this->t);
+                Type paramType;
+                if (this->bb->cfg->GetSymbolTable()->LookUpFunction(p1)) {
+                    // fonction interne --> Type des paramètres de la fonction appelé
+                    paramType = this->bb->cfg->GetSymbolTable()->GetFunctionParams(p1)[i - 2]->type;
+                } else {
+                    // fonction externe --> Type des paramètres dans l'appelant
+                    if (this->bb->cfg->GetSymbolTable()->LookUpVariable(this->bb->cfg->GetName(), this->params[i], this->bb->scope)) {
+                        // passage de paramètre via une variable
+                        paramType = this->bb->cfg->GetSymbolTable()->GetVariableType(this->bb->cfg->GetName(), this->params[i], this->bb->scope);
+                    } else {
+                        // passage direct de valeur
+                        int64_t value;
+                        istringstream tmpSS(this->params[i]);
+                        tmpSS >> value;
+                        if (value > INT32_MAX) {
+                            paramType = INT64_T;
+                        } else {
+                            paramType = INT32_T;
+                        }
+                    }
+                }
                 string dest;
                 switch (i - 2) {
                     case 0:
-                        dest = "%edi";
+                        if (paramType == INT64_T)
+                            dest = "%rdi";
+                        else
+                            dest = "%edi";
                         break;
                     case 1:
-                        dest = "%esi";
+                        if (paramType == INT64_T)
+                            dest = "%rsi";
+                        else
+                            dest = "%esi";
                         break;
                     case 2:
-                        dest = "%edx";
+                        if (paramType == INT64_T)
+                            dest = "%rdx";
+                        else
+                            dest = "%edx";
                         break;
                     case 3:
-                        dest = "%ecx";
+                        if (paramType == INT64_T)
+                            dest = "%rcx";
+                        else
+                            dest = "%ecx";
                         break;
                     case 4:
-                        dest = "%r8d";
+                        if (paramType == INT64_T)
+                            dest = "%r8";
+                        else
+                            dest = "%r8d";
                         break;
                     case 5:
-                        dest = "%r9d";
+                        if (paramType == INT64_T)
+                            dest = "%r9";
+                        else
+                            dest = "%r9d";
                         break;
                 }
-                o << "        movl    " << p3 << ", " << dest << endl;
+                o << "        " << getMovInstr(paramType) << "    " << p3 << ", " << dest << endl;
             }
             o << "        call    " << p1 << endl;
             break;
         }
         case cmp_eq:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", %eax" << endl;
             o << "        sete     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case cmp_neq:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", %eax" << endl;
             o << "        setne    %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case cmp_g:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", %eax" << endl;
             o << "        setg     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case cmp_ge:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", %eax" << endl;
             o << "        setge    %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case cmp_l:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", %eax" << endl;
             o << "        setl     %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case cmp_le:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", %eax" << endl;
             o << "        setle    %al" << endl;
             o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
 
         case cdtAnd:
-            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
             o << "        and      " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case cdtOr:
-            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", %eax" << endl;
             o << "        or       " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     %eax, " << p1 << endl;
             break;
         case ret:
-            o << "        movl     " << p1 << ", %eax" << endl;
+            o << "        " << getMovInstr() << "     " << p1 << ", %eax" << endl;
             o << "        jmp      " << bb->cfg->bb_epilogue->label << endl;
             break;
 
@@ -264,7 +308,8 @@ void CFG::gen_asm(ostream & o) {
             }
 
         } else {
-            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name, (*it)->scope) << endl;
+            Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
+            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm((*it)->test_var_name, (*it)->scope, type) << endl;
             o << "        jne      " << (*it)->exit_false->label << endl;
 
             if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
@@ -278,26 +323,50 @@ void CFG::gen_asm(ostream & o) {
     gen_asm_epilogue(o, this->bbs[this->bbs.size() - 1]);
 } //fin de gen_asm(CFG)
 
-string CFG::IR_reg_to_asm(string reg, string scope) {
+string CFG::IR_reg_to_asm(string reg, string scope, Type type) {
 
     string ret;
 
     if (reg == "reg1") {
-        ret = "%eax";
+        if (type == Type::INT64_T)
+            ret = "%rax";
+        else
+            ret = "%eax";
     } else if (reg == "reg2") {
-        ret = "%ebx";
+        if (type == Type::INT64_T)
+            ret = "%rbx";
+        else
+            ret = "%ebx";
     } else if (reg == "paramReg1") {
-        ret = "%edi";
+        if (type == Type::INT64_T)
+            ret = "%rdi";
+        else
+            ret = "%edi";
     } else if (reg == "paramReg2") {
-        ret = "%esi";
+        if (type == Type::INT64_T)
+            ret = "%rsi";
+        else
+            ret = "%esi";
     } else if (reg == "paramReg3") {
-        ret = "%edx";
+        if (type == Type::INT64_T)
+            ret = "%rdx";
+        else
+            ret = "%edx";
     } else if (reg == "paramReg4") {
-        ret = "%ecx";
+        if (type == Type::INT64_T)
+            ret = "%rcx";
+        else
+            ret = "%ecx";
     } else if (reg == "paramReg5") {
-        ret = "%r8d";
+        if (type == Type::INT64_T)
+            ret = "%r8";
+        else
+            ret = "%r8d";
     } else if (reg == "paramReg6") {
-        ret = "%r9d";
+        if (type == Type::INT64_T)
+            ret = "%r9";
+        else
+            ret = "%r9d";
     } else {
         if (this->symbolTable->LookUpVariable(cfgName, reg, scope)) {
             int offset = this->symbolTable->GetVariableOffset(cfgName, reg, scope);
@@ -429,3 +498,211 @@ BasicBlock::BasicBlock(CFG * cfg, string entry_label, string scope) {
 //------------------------------------------------------------------ PRIVE
 
 //----------------------------------------------------- Méthodes privées
+string IRInstr::getMovInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "movl";
+            break;
+        case Type::INT64_T:
+            instr = "movq";
+            break;
+        case Type::CHAR:
+            instr = "movb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrMov";
+            break;
+    }
+    return instr;
+} //--------- Fin de getMovInstr
+
+string IRInstr::getMovInstr(Type requestType) {
+    string instr;
+    switch (requestType) {
+        case Type::INT32_T:
+            instr = "movl";
+            break;
+        case Type::INT64_T:
+            instr = "movq";
+            break;
+        case Type::CHAR:
+            instr = "movb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrMov";
+            break;
+    }
+    return instr;
+} //--------- Fin de getMovInstr
+
+string IRInstr::getAddInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "addl";
+            break;
+        case Type::INT64_T:
+            instr = "addq";
+            break;
+        case Type::CHAR:
+            instr = "addb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrAdd";
+            break;
+    }
+    return instr;
+} //--------- Fin de getAddInstr
+
+string IRInstr::getSubInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "subl";
+            break;
+        case Type::INT64_T:
+            instr = "subq";
+            break;
+        case Type::CHAR:
+            instr = "subb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrSub";
+            break;
+    }
+    return instr;
+} //--------- Fin de getSubInstr
+
+string IRInstr::getCmpInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "cmpl";
+            break;
+        case Type::INT64_T:
+            instr = "cmpq";
+            break;
+        case Type::CHAR:
+            instr = "cmpb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrCmp";
+            break;
+    }
+    return instr;
+} //--------- Fin de getCmpInstr
+
+string IRInstr::getMullInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "imull";
+            break;
+        case Type::INT64_T:
+            instr = "imulq";
+            break;
+        case Type::CHAR:
+            instr = "imulb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrMull";
+            break;
+    }
+    return instr;
+} //--------- Fin de getMullInstr
+
+string IRInstr::getDivInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "idivl";
+            break;
+        case Type::INT64_T:
+            instr = "idivq";
+            break;
+        case Type::CHAR:
+            instr = "idivb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrDiv";
+            break;
+    }
+    return instr;
+} //--------- Fin de getDivInstr
+
+string IRInstr::getOrInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "orl";
+            break;
+        case Type::INT64_T:
+            instr = "orq";
+            break;
+        case Type::CHAR:
+            instr = "orb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrOr";
+            break;
+    }
+    return instr;
+} //--------- Fin de getOrInstr
+
+string IRInstr::getAndInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "andl";
+            break;
+        case Type::INT64_T:
+            instr = "andb";
+            break;
+        case Type::CHAR:
+            instr = "andq";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrAnd";
+            break;
+    }
+    return instr;
+} //--------- Fin de getAndInstr
+
+string IRInstr::getXorInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "xorl";
+            break;
+        case Type::INT64_T:
+            instr = "xorq";
+            break;
+        case Type::CHAR:
+            instr = "xorb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrXor";
+            break;
+    }
+    return instr;
+} //--------- Fin de getXorInstr
+
+string IRInstr::getNegInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "negl";
+            break;
+        case Type::INT64_T:
+            instr = "negq";
+            break;
+        case Type::CHAR:
+            instr = "negb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrNeg";
+            break;
+    }
+    return instr;
+} //--------- Fin de getNegInstr
