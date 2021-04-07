@@ -9,6 +9,7 @@
 //---------------------------------------------------------------- INCLUDE
 
 //-------------------------------------------------------- Include système
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -587,19 +588,8 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
 
 antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
 
-    // Récupération des intructions du FOR
-    BlockInstr * forBlock;
-    if (ctx->line()) {
-        //TODO : ajouter vérification instruction non nulle
-        Instr * instr = visit(ctx->line());
-        forBlock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
-        forBlock->AddInstr(instr);
-    } else {
-        forBlock = (BlockInstr *)visit(ctx->block());
-    }
-
-    //On se place dans le scope du for pour générer les expressions dans le bon scope
-    currentScope = forBlock->GetScope();
+    // On augmente le scope pour se placer dans le futur du for
+    expandScope();
 
     // Création de la liste d'expression d'initialisation (1)
     vector<Expr *> initExprs;
@@ -621,8 +611,21 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
         updateExprs = visit(ctx->expr_list(1)).as<vector<Expr *>>();
     }
 
-    //On réduit le scope à nouveau
+    //On ajuste le scope afin que celui entrant du for sera la même et on réduit
+    int currentSize = count(currentScope.begin(), currentScope.end(), '.');
+    scopeIndexIncrement[currentSize]--;
     reduceScope();
+
+    // Récupération des intructions du FOR
+    BlockInstr * forBlock;
+    if (ctx->line()) {
+        //TODO : ajouter vérification instruction non nulle
+        Instr * instr = visit(ctx->line());
+        forBlock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+        forBlock->AddInstr(instr);
+    } else {
+        forBlock = (BlockInstr *)visit(ctx->block());
+    }
 
     // TODO : en cas d'évaluation directe, voir pour les delete
 
@@ -862,7 +865,7 @@ bool ASTGenerator::checkExpr(Expr * expr) {
 } //----- Fin de checkExpr
 
 void ASTGenerator::expandScope() {
-    int currentSize = currentScope.size();
+    int currentSize = count(currentScope.begin(), currentScope.end(), '.') + 1;
     if (currentSize >= scopeIndexIncrement.size()) {
         scopeIndexIncrement.push_back(0);
     }
