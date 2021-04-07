@@ -582,6 +582,10 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     return whileInstr;
 }
 
+antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
+    return nullptr;
+}
+
 antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
     expandScope();
     BlockInstr * blockInstr = new BlockInstr(ctx->start->getLine(), currentScope);

@@ -92,6 +92,8 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitWhileblock(ifccParser::WhileblockContext * ctx) override;
 
+    virtual antlrcpp::Any visitForblock(ifccParser::ForblockContext * ctx) override;
+
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()
         : program(nullptr), lastDeclaredType(ERROR), currentScope("0") {}
