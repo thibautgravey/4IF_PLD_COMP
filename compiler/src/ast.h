@@ -4,6 +4,7 @@
 #include "IR.h"
 #include "SymbolTable.h"
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 using namespace std;
@@ -85,19 +86,19 @@ class Var : public Expr {
 class ConstLiteral : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
-    int GetValue() const;
+    int64_t GetValue() const;
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    ConstLiteral(int line, int32_t value, string scope)
+    ConstLiteral(int line, int64_t value, string scope)
         : Expr(line, scope), value(value){};
 
     virtual ~ConstLiteral() = default;
 
   protected:
-    int32_t value;
+    int64_t value;
 };
 
-//---------- Interface de la classe <ConstLiteral> ----------------
+//---------- Interface de la classe <CharLiteral> ----------------
 class CharLiteral : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
