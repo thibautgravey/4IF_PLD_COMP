@@ -10,6 +10,7 @@
 
 //-------------------------------------------------------- Include système
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -21,7 +22,7 @@ using namespace std;
 //----------------------------------------------------------------- PUBLIC
 
 //----------------------------------------------------- Méthodes publiques
-bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLine) {
+bool SymbolTable::DefineFunction(const string & name, Type type, vector<FunctionParam *> params, int declaredLine) {
 
     auto iterator = globalFunctionTable.find(name);
     if (iterator != globalFunctionTable.end()) {
@@ -37,6 +38,7 @@ bool SymbolTable::DefineFunction(const string & name, Type type, int declaredLin
     ContextTable * contextTable = new ContextTable;
     contextTable->returnType = type;
     contextTable->declaredLine = declaredLine;
+    contextTable->params = params;
     globalFunctionTable.insert(make_pair(name, contextTable));
 
     return true;
@@ -76,21 +78,48 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
     return true;
 } //----- Fin de DefineVariable
 
-bool SymbolTable::LookUp(const string & function, const string & name, const string & scope) const {
+bool SymbolTable::LookUpVariable(const string & function, const string & name, const string & scope) const {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         return false;
     }
 
-    string completeName = scope + name;
-    ContextTable * contextTable = globalFunctionTableIterator->second;
-    auto it = contextTable->contextVariableTable.find(completeName);
-    if (it == contextTable->contextVariableTable.end()) {
+    //Generate scope :
+    int scopeSize = computeScopeSize(name);
+    string tmpScope = name.substr(0, scopeSize);
+    string tmpName = name.substr(scopeSize, name.size());
+
+    //If it's a variable without scope, use the current scope instead
+    if (scopeSize == 0)
+        tmpScope = scope;
+
+    while (tmpScope.size() > 0) {
+        ContextTable * contextTable = globalFunctionTableIterator->second;
+        auto it = contextTable->contextVariableTable.find(tmpScope + tmpName);
+        if (it != contextTable->contextVariableTable.end()) {
+            return true;
+        }
+
+        //reduce the scope
+        size_t lastPos = tmpScope.find_last_of('.');
+        if (lastPos != string::npos) {
+            tmpScope = tmpScope.substr(0, lastPos);
+        } else {
+            tmpScope = "";
+        }
+    }
+
+    return false;
+} //----- Fin de LookUpVariable
+
+bool SymbolTable::LookUpFunction(const string & function) const {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
         return false;
     }
 
     return true;
-} //----- Fin de LookUp
+} //----- Fin de LookUpFunction
 
 Type SymbolTable::GetVariableType(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
@@ -110,6 +139,34 @@ int SymbolTable::GetVariableOffset(const string & function, const string & name,
     return variable->offset;
 } //----- Fin de GetVariableOffset
 
+string SymbolTable::GetVariableScope(const string & function, const string & name, const string & scope) const {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        return "";
+    }
+
+    string tmpScope = scope;
+
+    while (tmpScope.size() > 0) {
+
+        ContextTable * contextTable = globalFunctionTableIterator->second;
+        auto it = contextTable->contextVariableTable.find(tmpScope + name);
+        if (it != contextTable->contextVariableTable.end()) {
+            return tmpScope;
+        }
+
+        //reduce the scope
+        size_t lastPos = tmpScope.find_last_of('.');
+        if (lastPos != string::npos) {
+            tmpScope = tmpScope.substr(0, lastPos);
+        } else {
+            tmpScope = "";
+        }
+    }
+
+    return "";
+} //----- Fin de GetVariableScope
+
 bool SymbolTable::IsUsedVariable(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable == nullptr) {
@@ -119,7 +176,7 @@ bool SymbolTable::IsUsedVariable(const string & function, const string & name, c
     return variable->used;
 } //----- Fin de IsUsedVariable
 
-string SymbolTable::CreateTempVar(const string & function, Type type) {
+string SymbolTable::CreateTempVar(const string & function, Type type, const string & scope) {
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
         printError("function " + function + " does not exist in globalFunctionTable");
@@ -127,8 +184,7 @@ string SymbolTable::CreateTempVar(const string & function, Type type) {
     }
 
     decreaseContextOffset(function);
-
-    string completeName = "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
+    string completeName = scope + "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
 
     ContextTable * contextTable = globalFunctionTableIterator->second;
 
@@ -154,11 +210,52 @@ void SymbolTable::UnusedVariableAnalysis() const {
     }
 } //----- Fin de UnusedVariableAnalysis
 
+void SymbolTable::UnusedFunctionAnalysis() const {
+    for (const auto & function : globalFunctionTable) {
+        if (!function.second->used && !(function.first.compare("main") == 0)) {
+            printError("WARN : function " + function.first + " is declared at line " + to_string(function.second->declaredLine) + " but never used in the program");
+        }
+    }
+} //----- Fin de UnusedFunctionAnalysis
+
+void SymbolTable::FunctionReturnAnalysis() const {
+    for (const auto & function : globalFunctionTable) {
+        if (function.second->returnType == Type::VOID && function.second->hasReturned) {
+            printError("WARN : function " + function.first + " is a void function with a return statement");
+        } else if (function.second->returnType != Type::VOID && !function.second->hasReturned) {
+            printError("WARN : function " + function.first + " is a non-void function without a return statement");
+        }
+    }
+} //----- Fin de FunctionReturnAnalysis
+
 void SymbolTable::SetUsedVariable(const string & function, const string & name, const string & scope) {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable != nullptr) {
         variable->used = true;
     }
+}
+
+void SymbolTable::SetUsedFunction(const string & function) {
+    ContextTable * functionPointer = getFunction(function);
+    if (functionPointer != nullptr) {
+        functionPointer->used = true;
+    }
+}
+
+void SymbolTable::SetHasReturnFunction(const string & function) {
+    ContextTable * functionPointer = getFunction(function);
+    if (functionPointer != nullptr) {
+        functionPointer->hasReturned = true;
+    }
+}
+
+bool SymbolTable::FunctionHasReturn(const string & function) {
+    ContextTable * functionPointer = getFunction(function);
+    if (functionPointer == nullptr) {
+        return false;
+    }
+
+    return functionPointer->hasReturned;
 }
 
 int SymbolTable::CalculateSpaceForFunction(const string & function) {
@@ -181,18 +278,36 @@ Type SymbolTable::StringToType(const string & name) {
     }
 } //----- Fin de ~StringToType
 
+vector<FunctionParam *> SymbolTable::GetFunctionParams(const string & function) {
+    ContextTable * contextTable = getFunction(function);
+    if (contextTable != nullptr) {
+        return contextTable->params;
+    }
+
+    return {};
+} //----- Fin de GetFunctionParams
+
+Type SymbolTable::GetFunctionType(const string & function) {
+    ContextTable * contextTable = getFunction(function);
+    if (contextTable != nullptr) {
+        return contextTable->returnType;
+    }
+
+    return ERROR;
+}
+
 //-------------------------------------------- Constructeurs - destructeur
 SymbolTable::~SymbolTable() {
-#ifdef MAP
-    cout << "Appel au destructeur de <SymbolTable>" << endl;
-#endif
-
     for (auto & it : globalFunctionTable) {
 
         ContextTable * contextTable = it.second;
 
         for (auto & it2 : contextTable->contextVariableTable) {
             delete (it2.second);
+        }
+
+        for (FunctionParam * fp : contextTable->params) {
+            delete (fp);
         }
 
         delete (contextTable);
@@ -211,22 +326,63 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
         return nullptr;
     }
 
-    string completeName = scope + name;
-    ContextTable * contextTable = globalFunctionTableIterator->second;
-    auto it = contextTable->contextVariableTable.find(completeName);
-    if (it == contextTable->contextVariableTable.end()) {
-        printError("variable " + completeName + " does not exist in contextVariableTable from " + function);
+    //Generate scope :
+    int scopeSize = computeScopeSize(name);
+    string tmpScope = name.substr(0, scopeSize);
+    string tmpName = name.substr(scopeSize, name.size());
+
+    //If it's a variable without scope, use the current scope instead
+    if (scopeSize == 0)
+        tmpScope = scope;
+
+    while (tmpScope.size() > 0) {
+        ContextTable * contextTable = globalFunctionTableIterator->second;
+        auto it = contextTable->contextVariableTable.find(tmpScope + tmpName);
+        if (it != contextTable->contextVariableTable.end()) {
+            return it->second;
+        }
+
+        //reduce the scope
+        size_t lastPos = tmpScope.find_last_of('.');
+        if (lastPos != string::npos) {
+            tmpScope = tmpScope.substr(0, lastPos);
+        } else {
+            tmpScope = "";
+        }
+    }
+
+    printError("variable " + name + " does not exist in contextVariableTable from " + function + " with scope " + scope);
+    return nullptr;
+} //----- Fin de getVariable
+
+struct ContextTable * SymbolTable::getFunction(const string & function) const {
+    auto globalFunctionTableIterator = globalFunctionTable.find(function);
+    if (globalFunctionTableIterator == globalFunctionTable.end()) {
+        printError("function " + function + " does not exist in globalFunctionTable");
         return nullptr;
     }
 
-    return it->second;
-} //----- Fin de getVariable
+    return globalFunctionTableIterator->second;
+} //----- Fin de getFunction
 
 void SymbolTable::decreaseContextOffset(const string & function) {
     // In this function, we've already check the existence of the function
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     globalFunctionTableIterator->second->offsetContext -= 4;
 } //----- Fin de decreaseContextOffset
+
+int SymbolTable::computeScopeSize(const string & name) const {
+    int scopeSize(0);
+
+    for (int i = 0; i < name.size(); i++) {
+        if (isdigit(name[i]) || name[i] == '.')
+            scopeSize++;
+        else
+            break;
+    }
+
+    return scopeSize;
+} //----- Fin de computeScopeSize
 
 void SymbolTable::printError(const string & error) {
     cerr << error << endl;

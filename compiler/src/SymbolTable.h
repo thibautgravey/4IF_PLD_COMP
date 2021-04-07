@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 using namespace std;
 
@@ -24,11 +25,21 @@ using namespace std;
 enum Type {
     INT32_T,
     INT64_T,
-    ERROR 
+    CHAR,
+    VOID,
+    ERROR
     // CHAR, LONG, DOUBLE, STRING
 };
 
-static unordered_map<string, Type> const TYPE_TABLE = {{"int32_t", INT32_T}};
+typedef struct fp {
+    Type type;
+    string name;
+    // TODO: voir pour avoir une valeur par défaut ?
+    fp(Type t, string n)
+        : type(t), name(n){};
+} FunctionParam;
+
+static unordered_map<string, Type> const TYPE_TABLE = {{"int32_t", INT32_T}, {"int64_t", INT64_T}, {"char", CHAR}, {"void", VOID}};
 
 struct ContextVariable {
     Type type;
@@ -42,6 +53,9 @@ struct ContextTable {
     int declaredLine;
     int offsetContext = 0;
     Type returnType;
+    bool used = false;
+    bool hasReturned = false;
+    vector<FunctionParam *> params;
 };
 
 //------------------------------------------------------------------------
@@ -56,27 +70,45 @@ class SymbolTable {
 
   public:
     //----------------------------------------------------- Méthodes publiques
-    bool DefineFunction(const string & name, Type type, int declaredLine);
+    bool DefineFunction(const string & name, Type type, vector<FunctionParam *> params, int declaredLine);
 
-    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope = "");
+    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope);
 
-    bool LookUp(const string & function, const string & name, const string & scope = "") const;
+    bool LookUpVariable(const string & function, const string & name, const string & scope) const;
 
-    string CreateTempVar(const string & function, Type type);
+    bool LookUpFunction(const string & function) const;
 
-    Type GetVariableType(const string & function, const string & name, const string & scope = "") const;
+    string CreateTempVar(const string & function, Type type, const string & scope);
 
-    int GetVariableOffset(const string & function, const string & name, const string & scope = "") const;
+    Type GetVariableType(const string & function, const string & name, const string & scope) const;
 
-    bool IsUsedVariable(const string & function, const string & name, const string & scope = "") const;
+    int GetVariableOffset(const string & function, const string & name, const string & scope) const;
+
+    string GetVariableScope(const string & function, const string & name, const string & scope) const;
+
+    bool IsUsedVariable(const string & function, const string & name, const string & scope) const;
 
     void UnusedVariableAnalysis() const;
 
-    void SetUsedVariable(const string & function, const string & name, const string & scope = "");
+    void UnusedFunctionAnalysis() const;
+
+    void FunctionReturnAnalysis() const;
+
+    void SetUsedVariable(const string & function, const string & name, const string & scope);
+
+    void SetUsedFunction(const string & function);
+
+    void SetHasReturnFunction(const string & function);
+
+    bool FunctionHasReturn(const string & function);
 
     int CalculateSpaceForFunction(const string & function);
 
     Type StringToType(const string & name);
+
+    vector<FunctionParam *> GetFunctionParams(const string & function);
+
+    Type GetFunctionType(const string & function);
 
     //-------------------------------------------- Constructeurs - destructeur
     SymbolTable() = default;
@@ -91,9 +123,13 @@ class SymbolTable {
 
   protected:
     //----------------------------------------------------- Méthodes privées
-    struct ContextVariable * getVariable(const string & function, const string & name, const string & scope = "") const;
+    struct ContextVariable * getVariable(const string & function, const string & name, const string & scope) const;
+
+    struct ContextTable * getFunction(const string & function) const;
 
     void decreaseContextOffset(const string & function);
+
+    int computeScopeSize(const string & name) const;
 
     static void printError(const string & error);
 

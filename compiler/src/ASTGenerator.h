@@ -5,7 +5,7 @@
 *******************************************************************************/
 
 //-------- Interface de la classe <ASTGenerator> (fichier ASTGenerator.h) ---------
-#if !defined(ASTGENERATOR_H)
+#ifndef ASTGENERATOR_H
 #define ASTGENERATOR_H
 
 //--------------------------------------------------- Interfaces utilisées
@@ -58,19 +58,43 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitXor(ifccParser::XorContext * ctx) override;
 
-    virtual antlrcpp::Any visitConst(ifccParser::ConstContext * ctx) override;
+    virtual antlrcpp::Any visitLiteral(ifccParser::LiteralContext * ctx) override;
 
-    virtual antlrcpp::Any visitNot(ifccParser::NotContext * ctx) override;
+    virtual antlrcpp::Any visitOpp_or_not(ifccParser::Opp_or_notContext * ctx) override;
 
-    virtual antlrcpp::Any visitOpp(ifccParser::OppContext * ctx) override;
-
-    virtual antlrcpp::Any visitVar(ifccParser::VarContext * ctx) override;
+    virtual antlrcpp::Any visitFunction(ifccParser::FunctionContext * ctx) override;
 
     virtual antlrcpp::Any visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) override;
 
+    virtual antlrcpp::Any visitDef_func(ifccParser::Def_funcContext * ctx) override;
+
+    virtual antlrcpp::Any visitParam_list(ifccParser::Param_listContext * ctx) override;
+
+    virtual antlrcpp::Any visitParam(ifccParser::ParamContext * ctx) override;
+
+    virtual antlrcpp::Any visitExpr_list(ifccParser::Expr_listContext * ctx) override;
+
+    virtual antlrcpp::Any visitIfblock(ifccParser::IfblockContext * ctx) override;
+
+    virtual antlrcpp::Any visitElseblock(ifccParser::ElseblockContext * ctx) override;
+
+    virtual antlrcpp::Any visitBlock(ifccParser::BlockContext * ctx) override;
+
+    virtual antlrcpp::Any visitCdtand(ifccParser::CdtandContext * ctx) override;
+
+    virtual antlrcpp::Any visitCdtor(ifccParser::CdtorContext * ctx) override;
+
+    virtual antlrcpp::Any visitEqual(ifccParser::EqualContext * ctx) override;
+
+    virtual antlrcpp::Any visitNotequal(ifccParser::NotequalContext * ctx) override;
+
+    virtual antlrcpp::Any visitGreater_equal_lesser_equal(ifccParser::Greater_equal_lesser_equalContext * ctx) override;
+
+    virtual antlrcpp::Any visitWhileblock(ifccParser::WhileblockContext * ctx) override;
+
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()
-        : program(nullptr), lastDeclaredType(ERROR), hasReturn(false) {}
+        : program(nullptr), lastDeclaredType(ERROR), currentScope("0") {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -81,11 +105,17 @@ class ASTGenerator : public ifccBaseVisitor {
     //------------------------------------------------------------------ PRIVE
 
   protected:
+    bool checkExpr(Expr * expr);
+    void expandScope();
+    void reduceScope();
+
     //----------------------------------------------------- Attributs protégés
 
     Program * program;
     Type lastDeclaredType;
-    bool hasReturn;
+    string currentFunction;
+    string currentScope;
+    vector<int> scopeIndexIncrement;
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 

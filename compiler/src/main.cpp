@@ -40,12 +40,15 @@ int main(int argn, const char ** argv) {
 
     Program * program = astGenerator.visit(tree);
 
+    if (program->GetErrorFlag()) {
+        return EXIT_FAILURE;
+    }
+
     //TODO : Other static analysis
 
     program->UnusedVariableAnalysis();
-
-    if (program->GetErrorFlag())
-        return EXIT_FAILURE;
+    program->UnusedFunctionAnalysis();
+    program->FunctionReturnAnalysis();
 
     //TODO : Create an IR and generate ASM
     IR * ir = program->GenerateIR();
@@ -81,6 +84,8 @@ int main(int argn, const char ** argv) {
     }
 
     //TODO : Generate an exec file with a an "as file.s -o file.o" and then link using gcc
+
+    delete (ir);
 
     return EXIT_SUCCESS;
 }

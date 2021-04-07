@@ -6,6 +6,9 @@ int Node::GetLine() const {
 }
 
 //------- Réalisation de la classe <Expr> ---
+string Expr::GetScope() const {
+    return this->scope;
+}
 
 //------- Réalisation de la classe <Var> ---
 string Var::GetName() {
@@ -13,7 +16,7 @@ string Var::GetName() {
 }
 
 string Var::GenerateIR(CFG * cfg) {
-    return this->name;
+    return this->scope + this->name;
 }
 
 //------- Réalisation de la classe <ConstLiteral> ---
@@ -22,9 +25,17 @@ int32_t ConstLiteral::GetValue() const {
 }
 
 string ConstLiteral::GenerateIR(CFG * cfg) {
-    string tmpVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT32_T);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar, to_string(this->GetValue())});
-    return tmpVar;
+    return to_string(this->GetValue());
+}
+
+//------- Réalisation de la classe <CharLiteral> ---
+
+char CharLiteral::GetValue() const {
+    return this->value;
+}
+
+string CharLiteral::GenerateIR(CFG * cfg) {
+    return to_string((char)this->GetValue());
 }
 
 //------- Réalisation de la classe <OpBin> ---
@@ -46,32 +57,70 @@ OpBin::~OpBin() {
 }
 
 string OpBin::GenerateIR(CFG * cfg) {
+    // TODO: changer les types
     string tmpVar1 = this->operand1->GenerateIR(cfg);
     string tmpVar2 = this->operand2->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT32_T);
+    string tmpResVar;
+    if (this->op != BinaryOperator::EQ) {
+        tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
+    }
+
     switch (this->op) {
         case BinaryOperator::PLUS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::MINUS:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::sub, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::MULT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::mul, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::DIV:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::div, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::OR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::orB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::AND:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::andB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
         case BinaryOperator::XOR:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
             break;
-
+        case BinaryOperator::EQ:
+            if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), tmpVar1, this->scope)) {
+                if (dynamic_cast<ConstLiteral *>(this->operand2)) {
+                    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar1, tmpVar2}, this->scope);
+                } else {
+                    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2}, this->scope);
+                }
+            }
+            tmpResVar = tmpVar1;
+            break;
+        case BinaryOperator::EQUAL:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::NEQUAL:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_neq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::GREATER:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_g, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::GREATERE:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_ge, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::LESS:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_l, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::LESSE:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_le, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::CDTAND:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtAnd, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
+        case BinaryOperator::CDTOR:
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::cdtOr, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
+            break;
         default:
             break;
     }
@@ -89,13 +138,13 @@ UnitOperator OpUn::GetOp() {
 
 string OpUn::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar("main", Type::INT32_T);
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
     switch (this->op) {
         case UnitOperator::NOT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT32_T, {tmpResVar, tmpVar1});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT32_T, {tmpResVar, tmpVar1}, this->scope);
             break;
         case UnitOperator::OPP:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT32_T, {tmpResVar, tmpVar1});
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT32_T, {tmpResVar, tmpVar1}, this->scope);
             break;
         default:
             break;
@@ -107,7 +156,51 @@ OpUn::~OpUn() {
     delete (operand);
 }
 
+//------- Réalisation de la classe <Function> ---
+vector<Expr *> Function::GetParams() {
+    return params;
+}
+
+string Function::GetName() {
+    return name;
+}
+
+void Function::SetParams(vector<Expr *> params) {
+    this->params = params;
+}
+
+string Function::GenerateIR(CFG * cfg) {
+    // TODO : a voir pour le type
+    // TODO : a voir pour la destination (pour l'instant : reg1)
+    vector<string> paramsIRInstr = {this->name, "reg1"};
+    for (Expr * param : this->params) {
+        paramsIRInstr.push_back(param->GenerateIR(cfg));
+    }
+
+    if (cfg->GetSymbolTable()->GetFunctionParams(this->name).size() == 0) {
+        // si la fonction n'attend pas d'args
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {"reg1", "0"}, this->scope);
+    }
+
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::INT32_T, paramsIRInstr, this->scope);
+
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpResVar, "reg1"}, this->scope);
+
+    // TODO: vérifier pour le registre
+    return tmpResVar;
+}
+
+Function::~Function() {
+    for (Expr * param : params) {
+        delete (param);
+    }
+}
+
 //------- Réalisation de la classe <Instr> ---
+string Instr::GetScope() const {
+    return scope;
+}
 
 //------- Réalisation de la classe <ReturnInstr> ---
 Expr * ReturnInstr::GetReturnExpr() {
@@ -120,7 +213,8 @@ ReturnInstr::~ReturnInstr() {
 
 void ReturnInstr::GenerateIR(CFG * cfg) {
     string tmpRetVar = this->returnExpr->GenerateIR(cfg);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType("main", tmpRetVar), {tmpRetVar});
+    // TODO : voir pour le type (ex : si c'est une fonction)
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar, this->returnExpr->GetScope()), {tmpRetVar}, this->scope);
 }
 
 //------- Réalisation de la classe <VarAffInstr> ---
@@ -147,11 +241,220 @@ VarAffInstr::~VarAffInstr() {
 void VarAffInstr::GenerateIR(CFG * cfg) {
     VarAffInstr * tmpInstr = this;
     while (tmpInstr != nullptr) {
-        string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
-        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType("main", tmpInstr->name), {tmpInstr->name, tmpVar});
+        if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), tmpInstr->name, this->scope)) {
+            string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name, this->GetRightExpr()->GetScope()), {tmpInstr->name, tmpVar}, this->scope);
+        }
+
         tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
     }
 }
+
+Type VarAffInstr::GetType() {
+    return this->type;
+}
+
+//------- Réalisation de la classe <ExprInstr> ---
+void ExprInstr::GenerateIR(CFG * cfg) {
+    this->expr->GenerateIR(cfg);
+}
+
+ExprInstr::~ExprInstr() {
+    delete (expr);
+}
+
+//------- Réalisation de la classe <Param> ---
+Param::~Param() {
+}
+
+//------- Réalisation de la classe <DefFuncInstr> ---
+void DefFuncInstr::AddInstr(Instr * instr) {
+    listInstr.push_back(instr);
+}
+
+Type DefFuncInstr::GetType() {
+    return type;
+}
+
+string DefFuncInstr::GetName() {
+    return name;
+}
+
+vector<Instr *> DefFuncInstr::GetListInstr() {
+    return listInstr;
+}
+
+void DefFuncInstr::GenerateIR(CFG * cfg) {
+
+    // EMPTY BB FOR PROLOGUE
+    BasicBlock * entry = new BasicBlock(cfg, cfg->new_BB_name("prologue"));
+
+    // EMPTY BB FOR EPILOGUE
+    BasicBlock * output = new BasicBlock(cfg, cfg->new_BB_name("epilogue"));
+
+    BasicBlock * body = new BasicBlock(cfg, cfg->new_BB_name());
+
+    cfg->add_bb(entry);
+
+    entry->exit_true = body;
+    cfg->add_bb(body);
+    cfg->bb_epilogue = output;
+
+    // TODO: recuperer les variables passees en arguments pour plus que 6
+    vector<FunctionParam *> functionParams = cfg->GetSymbolTable()->GetFunctionParams(cfg->GetName());
+    for (int i = 0; i < functionParams.size(); i++) {
+        string reg = "paramReg" + to_string(i + 1);
+        cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionParams[i]->type, {functionParams[i]->name, reg}, this->scope);
+    }
+
+    for (Instr * instr : this->GetListInstr()) {
+        instr->GenerateIR(cfg);
+    }
+
+    cfg->GetCurrentBB()->exit_true = output;
+    cfg->add_bb(output);
+}
+
+DefFuncInstr::~DefFuncInstr() {
+    for (Instr * instr : listInstr) {
+        delete (instr);
+    }
+}
+//---------------//
+//  IfElseInstr  //
+//---------------//
+
+Expr * IfElseInstr::GetIfExpr() {
+    return ifExpr;
+}
+
+BlockInstr * IfElseInstr::GetIfBlock() {
+    return ifBlock;
+}
+
+BlockInstr * IfElseInstr::GetElseBlock() {
+    return elseBlock;
+}
+
+void IfElseInstr::GenerateIR(CFG * cfg) {
+    BasicBlock *ifBB, *elseBB, *endif;
+
+    // Génération IR test if et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = ifExpr->GenerateIR(cfg);
+
+    // Création du BB de fin de if
+    endif = new BasicBlock(cfg, cfg->new_BB_name());
+
+    // Création du BB pour le ifblock
+    ifBB = new BasicBlock(cfg, cfg->new_BB_name());
+    cfg->GetCurrentBB()->exit_true = ifBB;
+
+    // Création du BB pour le elseBlock si besoin
+    if (elseBlock != nullptr) {
+        elseBB = new BasicBlock(cfg, cfg->new_BB_name());
+        cfg->GetCurrentBB()->exit_false = elseBB;
+    } else {
+        cfg->GetCurrentBB()->exit_false = endif;
+    }
+
+    // Ajout des instructions ifBB
+    cfg->add_bb(ifBB);
+    ifBlock->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = endif;
+
+    // Ajout des instructins elseBB si besoin
+    if (elseBlock != nullptr) {
+        cfg->add_bb(elseBB);
+        elseBlock->GenerateIR(cfg);
+        cfg->GetCurrentBB()->exit_true = endif;
+    }
+
+    cfg->add_bb(endif);
+}
+
+IfElseInstr::~IfElseInstr() {
+
+    delete (ifExpr);
+    delete (ifBlock);
+    delete (elseBlock);
+
+} //----- Fin de ~IfElseInstr
+
+//---------------//
+//  WhileInstr  //
+//---------------//
+
+Expr * WhileInstr::GetWhileExpr() {
+    return whileExpr;
+}
+
+BlockInstr * WhileInstr::GetWhileBlock() {
+    return whileBlock;
+}
+
+void WhileInstr::GenerateIR(CFG * cfg) {
+    BasicBlock *whileBB, *endwhile;
+
+    // Génération IR test while et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
+
+    // Création du BB de fin de while
+    endwhile = new BasicBlock(cfg, cfg->new_BB_name());
+
+    // Création du BB pour le whileBlock
+    whileBB = new BasicBlock(cfg, cfg->new_BB_name());
+    cfg->GetCurrentBB()->exit_true = whileBB;
+
+    cfg->GetCurrentBB()->exit_false = endwhile;
+
+    // Ajout des instructions whileBB
+    cfg->add_bb(whileBB);
+    whileBlock->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = whileBB;
+
+    cfg->GetCurrentBB()->exit_false = endwhile;
+
+    // Génération IR test while et enregistrement du résultat
+    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
+
+    cfg->add_bb(endwhile);
+}
+
+WhileInstr::~WhileInstr() {
+    delete (whileExpr);
+    delete (whileBlock);
+
+} //----- Fin de ~WhileInstr
+
+//----------------//
+//   BlockInstr   //
+//----------------//
+
+vector<Instr *> BlockInstr::GetListInstr() {
+    return listInstr;
+}
+
+void BlockInstr::GenerateIR(CFG * cfg) {
+
+    // TODO: change scope at the begining and the end of the block
+    //cfg->enterblock();
+
+    for (Instr * instr : listInstr) {
+        instr->GenerateIR(cfg);
+    }
+
+    //cfg->leaveblock();
+}
+
+void BlockInstr::AddInstr(Instr * instr) {
+    listInstr.push_back(instr);
+}
+
+BlockInstr::~BlockInstr() {
+    for (Instr * instr : listInstr) {
+        delete (instr);
+    }
+} //----- Fin de ~BlockInstr
 
 //------- Réalisation de la classe <Program> ---
 vector<Instr *> Program::GetListInstr() {
@@ -170,6 +473,14 @@ void Program::UnusedVariableAnalysis() const {
     this->symbolTable.UnusedVariableAnalysis();
 } //----- Fin de UnusedVariableAnalysis
 
+void Program::UnusedFunctionAnalysis() const {
+    this->symbolTable.UnusedFunctionAnalysis();
+}
+
+void Program::FunctionReturnAnalysis() const {
+    this->symbolTable.FunctionReturnAnalysis();
+}
+
 void Program::SetErrorFlag(bool flag) {
     this->errorFlag = flag;
 } //----- Fin de SetErrorFlag
@@ -179,7 +490,7 @@ bool Program::GetErrorFlag() {
 } //----- Fin de GetErrorFlag
 
 Program::~Program() {
-    for (const auto & instr : listInstr) {
+    for (Instr * instr : listInstr) {
         delete (instr);
     }
 } //----- Fin de ~Program
@@ -187,31 +498,18 @@ Program::~Program() {
 IR * Program::GenerateIR() {
     IR * ir = new IR();
 
-    // TODO : foreach function definition
-    CFG * tmpCFG = new CFG(&(this->symbolTable));
-
-    // EMPTY BB FOR PROLOGUE
-    BasicBlock * entry = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("prologue"));
-
-    tmpCFG->add_bb(entry);
-
-    BasicBlock * body = new BasicBlock(tmpCFG, tmpCFG->new_BB_name());
-
-    entry->exit_true = body;
-    tmpCFG->add_bb(body);
-
-    // TODO : move this INT32_To GenerateIR of function definition
     for (Instr * instr : this->listInstr) {
-        instr->GenerateIR(tmpCFG);
+        // TODO: deplacer tout ce code dans GenerateIR de DefFuncInstr (besoin d'un CFG contenant tout les autres CFG ?)
+
+        // Normally all instructions in listInstr are def function instruction
+        DefFuncInstr * defFuncInstr = dynamic_cast<DefFuncInstr *>(instr);
+
+        CFG * tmpCFG = new CFG(&(this->symbolTable), defFuncInstr->GetName());
+
+        defFuncInstr->GenerateIR(tmpCFG);
+
+        ir->AddCFG(tmpCFG);
     }
-
-    // EMPTY BB FOR EPILOGUE
-    BasicBlock * output = new BasicBlock(tmpCFG, tmpCFG->new_BB_name("epilogue"));
-
-    body->exit_true = output;
-    tmpCFG->add_bb(output);
-
-    ir->AddCFG(tmpCFG);
 
     return ir;
 }

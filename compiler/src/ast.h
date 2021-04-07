@@ -15,7 +15,17 @@ enum BinaryOperator {
     DIV,
     OR,
     XOR,
-    AND
+    AND,
+    CDTAND,
+    CDTOR,
+    EQ,
+    EQUAL,
+    NEQUAL,
+    GREATER,
+    GREATERE,
+    LESS,
+    LESSE
+
 };
 
 enum UnitOperator {
@@ -43,11 +53,16 @@ class Expr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     virtual string GenerateIR(CFG * cfg) = 0;
+
+    string GetScope() const;
     //-------------------------------------------- Constructeurs - destructeur
-    Expr(int line)
-        : Node(line){};
+    Expr(int line, string scope)
+        : Node(line), scope(scope){};
 
     virtual ~Expr() = default;
+
+  protected:
+    string scope;
 };
 
 //---------- Interface de la classe <Var> ----------------
@@ -57,8 +72,8 @@ class Var : public Expr {
     string GetName();
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    Var(int line, string name)
-        : Expr(line), name(name){};
+    Var(int line, string name, string scope)
+        : Expr(line, scope), name(name){};
 
     virtual ~Var() = default;
 
@@ -73,13 +88,29 @@ class ConstLiteral : public Expr {
     int GetValue() const;
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    ConstLiteral(int line, int32_t value)
-        : Expr(line), value(value){};
+    ConstLiteral(int line, int32_t value, string scope)
+        : Expr(line, scope), value(value){};
 
     virtual ~ConstLiteral() = default;
 
   protected:
     int32_t value;
+};
+
+//---------- Interface de la classe <ConstLiteral> ----------------
+class CharLiteral : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    char GetValue() const;
+    virtual string GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    CharLiteral(int line, char value, string scope)
+        : Expr(line, scope), value(value){};
+
+    virtual ~CharLiteral() = default;
+
+  protected:
+    char value;
 };
 
 //---------- Interface de la classe <OpBin> ----------------
@@ -92,8 +123,8 @@ class OpBin : public Expr {
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op)
-        : Expr(line), operand1(operand1), operand2(operand2), op(op){};
+    OpBin(int line, Expr * operand1, Expr * operand2, BinaryOperator op, string scope)
+        : Expr(line, scope), operand1(operand1), operand2(operand2), op(op){};
 
     virtual ~OpBin();
 
@@ -112,8 +143,8 @@ class OpUn : public Expr {
     virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    OpUn(int line, Expr * operand, UnitOperator op)
-        : Expr(line), operand(operand), op(op){};
+    OpUn(int line, Expr * operand, UnitOperator op, string scope)
+        : Expr(line, scope), operand(operand), op(op){};
 
     virtual ~OpUn();
 
@@ -122,16 +153,41 @@ class OpUn : public Expr {
     UnitOperator op;
 };
 
+//---------- Interface de la classe <Function> ----------------
+class Function : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    vector<Expr *> GetParams();
+    string GetName();
+    void SetParams(vector<Expr *> params);
+    virtual string GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    Function(int line, string name, string scope)
+        : Expr(line, scope), name(name){};
+
+    virtual ~Function();
+
+  protected:
+    vector<Expr *> params;
+    string name;
+};
+
 //---------- Interface de la classe <Instr> ----------------
 class Instr : public Node {
   public:
     //----------------------------------------------------- Méthodes publiques
     virtual void GenerateIR(CFG * cfg) = 0;
+
+    string GetScope() const;
     //-------------------------------------------- Constructeurs - destructeur
-    Instr(int line)
-        : Node(line){};
+    Instr(int line, string scope)
+        : Node(line), scope(scope){};
 
     virtual ~Instr() = default;
+
+  protected:
+    string scope;
 };
 
 //---------- Interface de la classe <ReturnInstr> ----------------
@@ -141,8 +197,8 @@ class ReturnInstr : public Instr {
     Expr * GetReturnExpr();
     virtual void GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    ReturnInstr(int line, Expr * expr)
-        : Instr(line), returnExpr(expr){};
+    ReturnInstr(int line, Expr * expr, string scope)
+        : Instr(line, scope), returnExpr(expr){};
 
     virtual ~ReturnInstr();
 
@@ -156,20 +212,121 @@ class VarAffInstr : public Instr {
     //----------------------------------------------------- Méthodes publiques
     string GetName();
     Expr * GetRightExpr();
+    Type GetType();
     void SetVarAffInstrNext(Instr * next);
     Instr * GetvarAffInstrNext();
     virtual void GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    VarAffInstr(int line, string name, Expr * rightExpr, Instr * next = nullptr)
-        : Instr(line), name(name), rightExpr(rightExpr), varAffInstrNext(next){};
+    VarAffInstr(int line, string name, Type type, Expr * rightExpr, string scope, Instr * next = nullptr)
+        : Instr(line, scope), name(name), type(type), rightExpr(rightExpr), varAffInstrNext(next){};
 
     virtual ~VarAffInstr();
 
   protected:
     string name;
+    Type type;
     Expr * rightExpr;
     Instr * varAffInstrNext;
+};
+
+//---------- Interface de la classe <ExprInstr> ----------------
+class ExprInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual void GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    ExprInstr(int line, Expr * expr, string scope)
+        : Instr(line, scope), expr(expr){};
+    virtual ~ExprInstr();
+
+  protected:
+    Expr * expr;
+};
+
+//---------- Interface de la classe <Param> ----------------
+class Param : public VarAffInstr {
+    //-------------------------------------------- Constructeurs - destructeur
+  public:
+    Param(int line, string name, Type type, string scope)
+        : VarAffInstr(line, name, type, nullptr, scope) {}
+
+    virtual ~Param();
+};
+
+//---------- Interface de la classe <DefFuncInstr> ----------------
+class DefFuncInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    void AddInstr(Instr * instr);
+    Type GetType();
+    string GetName();
+    vector<Instr *> GetListInstr();
+    virtual void GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    DefFuncInstr(int line, string name, Type type, string scope)
+        : Instr(line, scope), name(name), type(type) {}
+
+    virtual ~DefFuncInstr();
+
+  protected:
+    Type type;
+    string name;
+    vector<Instr *> listInstr;
+};
+
+class BlockInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    vector<Instr *> GetListInstr();
+    virtual void GenerateIR(CFG * cfg);
+    void AddInstr(Instr * instr);
+    //-------------------------------------------- Constructeurs - destructeur
+    BlockInstr(int line, string scope)
+        : Instr(line, scope){};
+
+    virtual ~BlockInstr();
+
+  protected:
+    vector<Instr *> listInstr;
+};
+
+class IfElseInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetIfExpr();
+    BlockInstr * GetIfBlock();
+    BlockInstr * GetElseBlock();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    IfElseInstr(int line, Expr * expr, BlockInstr * ifBlock, BlockInstr * elseBlock, string scope)
+        : Instr(line, scope), ifExpr(expr), ifBlock(ifBlock), elseBlock(elseBlock){};
+
+    virtual ~IfElseInstr();
+
+  protected:
+    Expr * ifExpr;
+    BlockInstr * ifBlock;
+    BlockInstr * elseBlock;
+};
+
+class WhileInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    Expr * GetWhileExpr();
+    BlockInstr * GetWhileBlock();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    WhileInstr(int line, Expr * expr, BlockInstr * whileBlock, string scope)
+        : Instr(line, scope), whileExpr(expr), whileBlock(whileBlock){};
+
+    virtual ~WhileInstr();
+
+  protected:
+    Expr * whileExpr;
+    BlockInstr * whileBlock;
 };
 
 //---------- Interface de la classe <Program> ----------------
@@ -180,6 +337,8 @@ class Program : public Node {
     SymbolTable & GetSymbolTable();
     void AddInstr(Instr * instr);
     void UnusedVariableAnalysis() const;
+    void UnusedFunctionAnalysis() const;
+    void FunctionReturnAnalysis() const;
     void SetErrorFlag(bool flag);
     bool GetErrorFlag();
     IR * GenerateIR();
