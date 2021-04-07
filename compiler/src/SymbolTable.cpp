@@ -352,7 +352,7 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
         }
     }
 
-    if (!all_of(name.begin(), name.end(), ::isdigit))
+    if (!all_of(name.begin(), name.end(), [](char c) { return isdigit(c) || (c == '-'); }))
         printError("variable " + name + " does not exist in contextVariableTable from " + function + " with scope " + scope);
 
     return nullptr;
