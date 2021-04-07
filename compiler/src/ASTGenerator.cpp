@@ -10,6 +10,8 @@
 
 //-------------------------------------------------------- Include système
 #include <iostream>
+#include <sstream>
+#include <stdint.h>
 #include <string>
 
 using namespace std;
@@ -319,7 +321,10 @@ antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
 antlrcpp::Any ASTGenerator::visitLiteral(ifccParser::LiteralContext * ctx) {
     Expr * ret = nullptr;
     if (ctx->CONST()) {
-        ret = new ConstLiteral(ctx->start->getLine(), stoi(ctx->getText()), currentScope);
+        int64_t value;
+        istringstream tmpSS(ctx->getText());
+        tmpSS >> value;
+        ret = new ConstLiteral(ctx->start->getLine(), value, currentScope);
     } else if (ctx->CHAR()) {
         ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1], currentScope);
     } else if (ctx->ID()) {
