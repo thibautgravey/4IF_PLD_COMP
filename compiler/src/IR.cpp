@@ -27,6 +27,7 @@ using namespace std;
 void IRInstr::gen_asm(ostream & o) {
 
     string p1, p2, p3;
+    Type t;
     // TODO : voir si on peut améliorer
 
     if (this->op != call) {
@@ -55,12 +56,12 @@ void IRInstr::gen_asm(ostream & o) {
             }
             break;
         case copy:
-            if ((p2.at(0) == '%' && p1.at(0) != '%') || (p2.at(0) != '%' && p1.at(0) == '%')) {
-                o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
-            } else {
-                o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
-                o << "        " << getMovInstr() << "    " << getReg1() << ", " << p1 << endl;
+            t = this->t;
+            if (p2.at(0) == '%') {
+                t = findRegType(p2);
             }
+            o << "        " << getMovInstr(t) << "     " << p2 << ", " << getReg1(t) << endl;
+            o << "        " << getMovInstr() << "    " << getReg1() << ", " << p1 << endl;
             break;
         case add:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
@@ -736,6 +737,25 @@ string IRInstr::getReg1() {
     return reg;
 } //--------- Fin de getReg1
 
+string IRInstr::getReg1(Type requestType) {
+    string reg;
+    switch (requestType) {
+        case Type::INT32_T:
+            reg = "%eax";
+            break;
+        case Type::INT64_T:
+            reg = "%rax";
+            break;
+        case Type::CHAR:
+            reg = "%al";
+            break;
+        default:
+            reg = "UndefinedTypeForReg1";
+            break;
+    }
+    return reg;
+} //--------- Fin de getReg1
+
 string IRInstr::getTmpReg() {
     string reg;
     switch (this->t) {
@@ -754,3 +774,21 @@ string IRInstr::getTmpReg() {
     }
     return reg;
 } //--------- Fin de getTmpReg
+
+Type IRInstr::findRegType(string reg) {
+    if (reg.at(1) == 'r') {
+        if (reg.at(2) == '8' || reg.at(2) == '9') {
+            if (reg.size() == 3) {
+                return INT64_T;
+            } else {
+                return INT32_T;
+            }
+        } else {
+            return INT64_T;
+        }
+    } else if (reg.at(1) == 'e') {
+        return INT32_T;
+    } else {
+        return CHAR;
+    }
+} //--------- Fin de findRegType
