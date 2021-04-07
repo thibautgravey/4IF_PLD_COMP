@@ -95,7 +95,7 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
             ExprVarLvalue * lValue;
             string varname = ctx->ID()->getText();
             //string scope = program->GetSymbolTable().GetVariableScope(currentFunction, varname, currentScope);
-              
+
             if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
                 lValue = new ExprVarLvalue(line, varname, currentScope);
                 program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
@@ -105,7 +105,6 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
             }
 
             ret.push_back(((Expr *)new ExprAffectation(lValue, rValue, line, currentScope)));
-
         }
 
         for (int i = 0; i < ctx->inline_var_decl().size(); i++) {
@@ -127,12 +126,12 @@ antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declCont
     //string scope = program->GetSymbolTable().GetVariableScope(currentFunction, varname, currentScope);
 
     if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, varname, lastDeclaredType, line, currentScope)) {
-        if (ctx->expr()) { 
+        if (ctx->expr()) {
             Expr * rValue = (Expr *)visit(ctx->expr());
             if (!checkExpr(rValue)) {
                 return (Expr *)nullptr;
             }
-              
+
             if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
                 lValue = new ExprVarLvalue(line, varname, currentScope);
                 program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
@@ -142,8 +141,6 @@ antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declCont
             }
 
             return (Expr *)new ExprAffectation(lValue, rValue, line, currentScope);
-
-
         }
     } else {
         program->SetErrorFlag(true);
@@ -646,9 +643,14 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     }
 
     //Création de l'expression de la condition (2)
-    Expr * conditionalExpr = (Expr *)visit(ctx->expr());
-    if (!checkExpr(conditionalExpr)) {
-        return (Instr *)nullptr;
+    Expr * conditionalExpr;
+    if (ctx->expr()) {
+        conditionalExpr = (Expr *)visit(ctx->expr());
+        if (!checkExpr(conditionalExpr)) {
+            return (Instr *)nullptr;
+        }
+    } else {
+        conditionalExpr = new ConstLiteral(ctx->start->getLine(), 1, currentScope);
     }
 
     //Création de la liste d'expression des mises à jour (3)
