@@ -18,7 +18,6 @@ enum BinaryOperator {
     AND,
     CDTAND,
     CDTOR,
-    EQ,
     EQUAL,
     NEQUAL,
     GREATER,
@@ -66,16 +65,16 @@ class Expr : public Node {
 };
 
 //---------- Interface de la classe <Var> ----------------
-class Var : public Expr {
+class ExprVarRvalue : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
     string GetName();
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    Var(int line, string name, string scope)
+    ExprVarRvalue(int line, string name, string scope)
         : Expr(line, scope), name(name){};
 
-    virtual ~Var() = default;
+    virtual ~ExprVarRvalue() = default;
 
   protected:
     string name;
@@ -100,6 +99,23 @@ class Array : public Expr {
     int length;
     vector<Expr *> values;
 };
+
+//---------- Interface de la classe <ExprVarLvalue> ----------------
+class ExprVarLvalue : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    string GetName();
+    virtual string GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    ExprVarLvalue(int line, string name, string scope)
+        : Expr(line, scope), name(name){};
+
+    virtual ~ExprVarLvalue() = default;
+
+  protected:
+    string name;
+};
+
 
 //---------- Interface de la classe <ConstLiteral> ----------------
 class ConstLiteral : public Expr {
@@ -227,27 +243,22 @@ class ReturnInstr : public Instr {
 };
 
 //---------- Interface de la classe <VarAffInstr> ----------------
-class VarAffInstr : public Instr {
+class ExprAffectation : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
-    string GetName();
-    Expr * GetRightExpr();
-    Type GetType();
-    void SetVarAffInstrNext(Instr * next);
-    Instr * GetvarAffInstrNext();
-    virtual void GenerateIR(CFG * cfg);
+    Expr * GetLValue();
+    Expr * GetRValue();
+    virtual string GenerateIR(CFG * cfg);
 
     //-------------------------------------------- Constructeurs - destructeur
-    VarAffInstr(int line, string name, Type type, Expr * rightExpr, string scope, Instr * next = nullptr)
-        : Instr(line, scope), name(name), type(type), rightExpr(rightExpr), varAffInstrNext(next){};
+    ExprAffectation(Expr * lValue, Expr * rValue, int line, string scope)
+        : Expr(line, scope), lValue(lValue), rValue(rValue) {};
 
-    virtual ~VarAffInstr();
+    virtual ~ExprAffectation();
 
   protected:
-    string name;
-    Type type;
-    Expr * rightExpr;
-    Instr * varAffInstrNext;
+    Expr * lValue;
+    Expr * rValue;
 };
 
 //---------- Interface de la classe <ExprInstr> ----------------
@@ -263,16 +274,6 @@ class ExprInstr : public Instr {
 
   protected:
     Expr * expr;
-};
-
-//---------- Interface de la classe <Param> ----------------
-class Param : public VarAffInstr {
-    //-------------------------------------------- Constructeurs - destructeur
-  public:
-    Param(int line, string name, Type type, string scope)
-        : VarAffInstr(line, name, type, nullptr, scope) {}
-
-    virtual ~Param();
 };
 
 //---------- Interface de la classe <DefFuncInstr> ----------------

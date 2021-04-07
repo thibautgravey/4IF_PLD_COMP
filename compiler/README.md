@@ -1,5 +1,13 @@
 # C compiler with antlr4/c++
 
+to run the programm using docker, use:
+
+#### ./wrapper.sh ./ifcc INPUT_FILE [OUTPUT_FILE, [--as=ASSEMBLY_TYPE]]
+
+INPUT_FILE : a path to .c file with the code you want to compile
+OUTPUT_FILE: a path to .s file, where the assembly code is going to be written
+ASSEMBLY_TYPE: the assembly language you want to compile in. supported : x86, arm.   default: x86 
+
 ## Instructions
 
 This minimal example shows how to build a basic C compiler using Antlr4 for C++. The only file the compiler can deal with is:

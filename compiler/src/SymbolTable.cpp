@@ -170,8 +170,8 @@ string SymbolTable::GetVariableScope(const string & function, const string & nam
     return "";
 } //----- Fin de GetVariableScope
 
-int SymbolTable::GetArrayElementOffset(const string & function, const string & name, int index, const string & scope) const {
-}
+//int SymbolTable::GetArrayElementOffset(const string & function, const string & name, int index, const string & scope) const {
+//}
 
 bool SymbolTable::IsUsedVariable(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
@@ -189,7 +189,7 @@ string SymbolTable::CreateTempVar(const string & function, Type type, const stri
         return "";
     }
 
-    decreaseContextOffset(function);
+    decreaseContextOffset(function, type, 1);
     string completeName = scope + "tmp" + to_string(abs(globalFunctionTableIterator->second->offsetContext));
 
     ContextTable * contextTable = globalFunctionTableIterator->second;
@@ -386,10 +386,13 @@ void SymbolTable::decreaseContextOffset(const string & function, const Type & ty
             break;
         case Type::INT64_T:
         case Type::VOID:
-        case default:
+        case default :
             bytes = 8;
             break;
     }
+    int total = bytes * size; 
+    if ( total % 8 > 0)
+        total += 8 - total % 8;
     globalFunctionTableIterator->second->offsetContext -= bytes * size;
 
 } //----- Fin de decreaseContextOffset
