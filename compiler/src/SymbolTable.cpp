@@ -368,7 +368,7 @@ struct ContextTable * SymbolTable::getFunction(const string & function) const {
 void SymbolTable::decreaseContextOffset(const string & function) {
     // In this function, we've already check the existence of the function
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
-    globalFunctionTableIterator->second->offsetContext -= 4;
+    globalFunctionTableIterator->second->offsetContext -= 8;
 } //----- Fin de decreaseContextOffset
 
 int SymbolTable::computeScopeSize(const string & name) const {

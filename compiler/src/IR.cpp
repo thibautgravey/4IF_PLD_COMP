@@ -45,68 +45,70 @@ void IRInstr::gen_asm_X86(ostream & o) {
 
     switch (this->op) {
         case ldconst:
-            o << "        movl    " << p2 << ", " << p1 << endl;
+            o << "        movq     " << p2 << ", " << p1 << endl;
             break;
         case copy:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        movl    %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case add:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        addl     " << p3 << ", %eax" << endl;
-            o << "        movl    %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        addq     " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case sub:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        subl     " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        subq     " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case mul:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        imull    " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        imulq    " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case div:
             if (p3[0] == '$') {
-                o << "        movl     " << p3 << ", %ecx" << endl;
-                p3 = "%ecx";
+                o << "        movq     " << p3 << ", %rcx" << endl;
+                p3 = "%rcx";
             }
-            o << "        movl     " << p2 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
             o << "        cltd     " << endl;
-            o << "        idivl    " << p3 << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        idivq    " << p3 << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case orB:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        orl      " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        orq      " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case andB:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        andl     " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        andq     " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case xorB:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        xorl     " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        xorq     " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case neg:
-            o << "        cmpl     $0, " << p2 << endl;
+            o << "        cmpq     $0, " << p2 << endl;
             o << "        sete     %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case opp:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        negl     %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        negq     %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case rmem:
-            o << "        movl     " << p2 << ", " << p1 << endl;
+            o << "        movq     " << p2 << ", " << p1 << endl;
             break;
         case wmem:
-            o << "        movl     " << p2 << ", " << p1 << endl;
+            o << "        movq     " << p1 << ", %rax" << endl;
+            o << "        movq     " << p2 << ", %rbx" << endl;
+            o << "        movq     %rbx, (%rax)" << endl;
             break;
         case call: {
             // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
@@ -115,84 +117,84 @@ void IRInstr::gen_asm_X86(ostream & o) {
                 string dest;
                 switch (i - 2) {
                     case 0:
-                        dest = "%edi";
+                        dest = "%rdi";
                         break;
                     case 1:
-                        dest = "%esi";
+                        dest = "%rsi";
                         break;
                     case 2:
-                        dest = "%edx";
+                        dest = "%rdx";
                         break;
                     case 3:
-                        dest = "%ecx";
+                        dest = "%rcx";
                         break;
                     case 4:
-                        dest = "%r8d";
+                        dest = "%r8";
                         break;
                     case 5:
-                        dest = "%r9d";
+                        dest = "%r9";
                         break;
                 }
-                o << "        movl    " << p3 << ", " << dest << endl;
+                o << "        movq    " << p3 << ", " << dest << endl;
             }
             o << "        call    " << p1 << endl;
             break;
         }
         case cmp_eq:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        cmpq     " << p3 << ", %rax" << endl;
             o << "        sete     %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_neq:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        cmpq     " << p3 << ", %rax" << endl;
             o << "        setne    %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_g:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        cmpq     " << p3 << ", %rax" << endl;
             o << "        setg     %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_ge:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        cmpq     " << p3 << ", %rax" << endl;
             o << "        setge    %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_l:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        cmpq     " << p3 << ", %rax" << endl;
             o << "        setl     %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_le:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        cmpl     " << p3 << ", %eax" << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        cmpq     " << p3 << ", %rax" << endl;
             o << "        setle    %al" << endl;
-            o << "        movzbl   %al, %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movzbq   %al, %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
 
         case cdtAnd:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        and      " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        and      " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case cdtOr:
-            o << "        movl     " << p2 << ", %eax" << endl;
-            o << "        or       " << p3 << ", %eax" << endl;
-            o << "        movl     %eax, " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        or       " << p3 << ", %rax" << endl;
+            o << "        movq     %rax, " << p1 << endl;
             break;
         case ret:
-            o << "        movl     " << p1 << ", %eax" << endl;
+            o << "        movq     " << p1 << ", %rax" << endl;
             o << "        jmp      " << bb->cfg->bb_epilogue->label << endl;
             break;
 
@@ -238,7 +240,7 @@ void IRInstr::gen_asm_ARM(ostream & o) {
         case sub:
             o << "        ldr     r2, " << p2 << endl;
             o << "        ldr     r3, " << p3 << endl;
-            o << "        subs     r3, r2, r3" << endl;
+            o << "        subs    r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case mul:
@@ -257,7 +259,7 @@ void IRInstr::gen_asm_ARM(ostream & o) {
         case orB:
             o << "        ldr     r2, " << p2 << endl;
             o << "        ldr     r3, " << p3 << endl;
-            o << "        orrs     r3, r2, r3" << endl;
+            o << "        orrs    r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case andB:
@@ -287,10 +289,10 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        str     r3, " << p1 << endl;
             break;
         case rmem:
-            o << " rmem NOT IMPLEMENDTED" << endl;
+            o << "        rmem" << endl;
             break;
         case wmem:
-            o << " wmem NOT IMPLEMENDTED" << endl;
+            o << "wmem NOT IMPLEMENDTED" << endl;
             break;
         case call:
             o << "        bl    " << p1 << endl;
@@ -413,21 +415,23 @@ string CFG::IR_reg_to_asm_X86(string reg, string scope) {
     string ret;
 
     if (reg == "reg1") {
-        ret = "%eax";
+        ret = "%rax";
     } else if (reg == "reg2") {
-        ret = "%ebx";
+        ret = "%rbx";
     } else if (reg == "paramReg1") {
-        ret = "%edi";
+        ret = "%rdi";
     } else if (reg == "paramReg2") {
-        ret = "%esi";
+        ret = "%rsi";
     } else if (reg == "paramReg3") {
-        ret = "%edx";
+        ret = "%rdx";
     } else if (reg == "paramReg4") {
-        ret = "%ecx";
+        ret = "%rcx";
     } else if (reg == "paramReg5") {
-        ret = "%r8d";
+        ret = "%r8";
     } else if (reg == "paramReg6") {
-        ret = "%r9d";
+        ret = "%r9";
+    } else if (reg == "base_pointer") {
+        ret = "%rbp";
     } else {
         if (this->symbolTable->LookUpVariable(cfgName, reg, scope)) {
             int offset = this->symbolTable->GetVariableOffset(cfgName, reg, scope);

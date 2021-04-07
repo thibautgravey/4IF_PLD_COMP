@@ -11,12 +11,25 @@ string Expr::GetScope() const {
 }
 
 //------- Réalisation de la classe <Var> ---
-string Var::GetName() {
+string ExprVarRvalue::GetName() {
     return this->name;
 }
 
-string Var::GenerateIR(CFG * cfg) {
+string ExprVarRvalue::GenerateIR(CFG * cfg) {
     return this->scope + this->name;
+}
+
+//------- Réalisation de la classe <Var> ---
+string ExprVarLvalue::GetName() {
+    return this->name;
+}
+
+string ExprVarLvalue::GenerateIR(CFG * cfg) {
+    int offset = cfg->GetSymbolTable()->GetVariableOffset(cfg->GetName(), this->name, this->scope);
+    string tempVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, { tempVar, to_string ( offset ) }, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
+    return tempVar;
 }
 
 //------- Réalisation de la classe <ConstLiteral> ---
@@ -61,9 +74,7 @@ string OpBin::GenerateIR(CFG * cfg) {
     string tmpVar1 = this->operand1->GenerateIR(cfg);
     string tmpVar2 = this->operand2->GenerateIR(cfg);
     string tmpResVar;
-    if (this->op != BinaryOperator::EQ) {
-        tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
-    }
+    tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
 
     switch (this->op) {
         case BinaryOperator::PLUS:
@@ -86,16 +97,6 @@ string OpBin::GenerateIR(CFG * cfg) {
             break;
         case BinaryOperator::XOR:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::xorB, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
-            break;
-        case BinaryOperator::EQ:
-            if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), tmpVar1, this->scope)) {
-                if (dynamic_cast<ConstLiteral *>(this->operand2)) {
-                    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tmpVar1, tmpVar2}, this->scope);
-                } else {
-                    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpVar1, tmpVar2}, this->scope);
-                }
-            }
-            tmpResVar = tmpVar1;
             break;
         case BinaryOperator::EQUAL:
             cfg->GetCurrentBB()->add_IRInstr(IRInstr::cmp_eq, Type::INT32_T, {tmpResVar, tmpVar1, tmpVar2}, this->scope);
@@ -217,41 +218,42 @@ void ReturnInstr::GenerateIR(CFG * cfg) {
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::ret, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpRetVar, this->returnExpr->GetScope()), {tmpRetVar}, this->scope);
 }
 
-//------- Réalisation de la classe <VarAffInstr> ---
-string VarAffInstr::GetName() {
-    return this->name;
+//------- Réalisation de la classe <ExprAffectation> ---
+
+Expr * ExprAffectation::GetLValue() {
+    return this->lValue;
+
 }
 
-Expr * VarAffInstr::GetRightExpr() {
-    return this->rightExpr;
+Expr * ExprAffectation::GetRValue() {
+    return rValue;
 }
 
-void VarAffInstr::SetVarAffInstrNext(Instr * next) {
-    this->varAffInstrNext = next;
+ExprAffectation::~ExprAffectation() {
+    delete (rValue);
+    delete (lValue);
 }
 
-Instr * VarAffInstr::GetvarAffInstrNext() {
-    return this->varAffInstrNext;
-}
+string ExprAffectation::GenerateIR(CFG * cfg) {
 
-VarAffInstr::~VarAffInstr() {
-    delete (rightExpr);
-}
+    string rightVarName = rValue->GenerateIR(cfg);
 
-void VarAffInstr::GenerateIR(CFG * cfg) {
-    VarAffInstr * tmpInstr = this;
-    while (tmpInstr != nullptr) {
-        if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), tmpInstr->name, this->scope)) {
-            string tmpVar = tmpInstr->rightExpr->GenerateIR(cfg);
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpInstr->name, this->GetRightExpr()->GetScope()), {tmpInstr->name, tmpVar}, this->scope);
+    string leftVarName = lValue->GenerateIR(cfg);
+    //vector<string> params = { right, left };
+
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::wmem, Type::INT32_T, { leftVarName, rightVarName }, this->scope);
+    
+    /*
+    if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), leftVarName, this->scope)) {
+        if (dynamic_cast<ConstLiteral *>(rValue)) {
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {leftVarName, rightVarName}, this->scope);
+        } else
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {leftVarName, rightVarName}, this->scope);
         }
-
-        tmpInstr = dynamic_cast<VarAffInstr *>(tmpInstr->varAffInstrNext);
     }
-}
+    */
 
-Type VarAffInstr::GetType() {
-    return this->type;
+    return rightVarName;
 }
 
 //------- Réalisation de la classe <ExprInstr> ---
@@ -261,10 +263,6 @@ void ExprInstr::GenerateIR(CFG * cfg) {
 
 ExprInstr::~ExprInstr() {
     delete (expr);
-}
-
-//------- Réalisation de la classe <Param> ---
-Param::~Param() {
 }
 
 //------- Réalisation de la classe <DefFuncInstr> ---

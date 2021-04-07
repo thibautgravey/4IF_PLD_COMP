@@ -76,34 +76,30 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
 antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
     vector<Expr *> ret;
     lastDeclaredType = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+    int line = ctx->start->getLine();
 
     if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), currentScope)) {
 
         if (ctx->expr()) {
-            Expr * expr = (Expr *)visit(ctx->expr());
-            if (!checkExpr(expr)) {
-                return {};
+            Expr * rValue = (Expr *)visit(ctx->expr());
+            if (!checkExpr(rValue)) {
+                return (Expr *)nullptr;
             }
 
-            // si on affecte une autre affectation de variable (opération EQ), indique que la variable de
-            // l'affectation à droite du '=' est utilisée
-            OpBin * tmpOpBin = dynamic_cast<OpBin *>(expr);
-            if (tmpOpBin && tmpOpBin->GetOp() == EQ) {
-                Var * tmpVar = dynamic_cast<Var *>(tmpOpBin->GetOperand1());
-                if (tmpVar)
-                    program->GetSymbolTable().SetUsedVariable(currentFunction, tmpVar->GetName(), currentScope);
-            }
-
-            Var * var;
-            if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
-                var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
-                program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            ExprVarLvalue * lValue;
+            string varname = ctx->ID()->getText();
+            //string scope = program->GetSymbolTable().GetVariableScope(currentFunction, varname, currentScope);
+              
+            if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
+                lValue = new ExprVarLvalue(line, varname, currentScope);
+                program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
             } else {
                 program->SetErrorFlag(true);
-                cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+                cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
             }
 
-            ret.push_back(((Expr *)new OpBin(ctx->start->getLine(), ((Expr *)var), expr, EQ, currentScope)));
+            ret.push_back(((Expr *)new ExprAffectation(lValue, rValue, line, currentScope)));
+
         }
 
         for (int i = 0; i < ctx->inline_var_decl().size(); i++) {
@@ -119,32 +115,29 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 }
 
 antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declContext * ctx) {
-    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), currentScope)) {
-        if (ctx->expr()) {
-            Expr * expr = (Expr *)visit(ctx->expr());
-            if (!checkExpr(expr)) {
+    int line = ctx->start->getLine();
+    ExprVarLvalue * lValue;
+    string varname = ctx->ID()->getText();
+    //string scope = program->GetSymbolTable().GetVariableScope(currentFunction, varname, currentScope);
+
+    if (lastDeclaredType != ERROR && program->GetSymbolTable().DefineVariable(currentFunction, varname, lastDeclaredType, line, currentScope)) {
+        if (ctx->expr()) { 
+            Expr * rValue = (Expr *)visit(ctx->expr());
+            if (!checkExpr(rValue)) {
                 return (Expr *)nullptr;
             }
-
-            // si on affecte une autre affectation de variable (opération EQ), indique que la variable de
-            // l'affectation à droite du '=' est utilisée
-            OpBin * tmpOpBin = dynamic_cast<OpBin *>(expr);
-            if (tmpOpBin && tmpOpBin->GetOp() == EQ) {
-                Var * tmpVar = dynamic_cast<Var *>(tmpOpBin->GetOperand1());
-                if (tmpVar)
-                    program->GetSymbolTable().SetUsedVariable(currentFunction, tmpVar->GetName(), currentScope);
-            }
-
-            Var * var;
-            if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
-                var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
-                program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+              
+            if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
+                lValue = new ExprVarLvalue(line, varname, currentScope);
+                program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
             } else {
                 program->SetErrorFlag(true);
-                cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+                cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
             }
 
-            return (Expr *)new OpBin(ctx->start->getLine(), ((Expr *)var), expr, EQ, currentScope);
+            return (Expr *)new ExprAffectation(lValue, rValue, line, currentScope);
+
+
         }
     } else {
         program->SetErrorFlag(true);
@@ -153,23 +146,29 @@ antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declCont
 }
 
 antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
-    // TODO: voir pour la règle var_aff (operande de gauche)
 
-    Expr * affExpr = (Expr *)visit(ctx->expr());
-    if (!checkExpr(affExpr)) {
+    int line = ctx->start->getLine();
+
+    // Right value
+    Expr * rValue = (Expr *)visit(ctx->expr());
+    if (!checkExpr(rValue)) {
         return (Expr *)nullptr;
     }
 
-    Var * var;
-    if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
-        var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
-        program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+    // Left value
+    ExprVarLvalue * lValue;
+    string varname = ctx->ID()->getText();
+    string scope = program->GetSymbolTable().GetVariableScope(currentFunction, varname, currentScope);
+
+    if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
+        lValue = new ExprVarLvalue(line, varname, scope);
+        program->GetSymbolTable().SetUsedVariable(currentFunction, varname, scope);
     } else {
         program->SetErrorFlag(true);
-        cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+        cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
     }
 
-    return (Expr *)new OpBin(ctx->start->getLine(), var, affExpr, EQ, currentScope);
+    return (Expr *)new ExprAffectation(lValue, rValue, line, currentScope);
 
 } //----- Fin de visitVar_aff
 
@@ -324,7 +323,7 @@ antlrcpp::Any ASTGenerator::visitLiteral(ifccParser::LiteralContext * ctx) {
         ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1], currentScope);
     } else if (ctx->ID()) {
         if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
-            ret = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            ret = new ExprVarRvalue(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
             program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
         } else {
             program->SetErrorFlag(true);
