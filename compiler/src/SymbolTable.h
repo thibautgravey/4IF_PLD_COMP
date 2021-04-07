@@ -23,9 +23,9 @@ using namespace std;
 //------------------------------------------------------------------ Types
 
 enum Type {
+    CHAR,
     INT32_T,
     INT64_T,
-    CHAR,
     VOID,
     ERROR
     // CHAR, LONG, DOUBLE, STRING
