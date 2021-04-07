@@ -18,3 +18,5 @@ main.elf: main.s
 
 clean:
 	rm -f main.elf *.s objdump*.txt mspdebug-log.txt
+
+
