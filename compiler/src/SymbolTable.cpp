@@ -45,7 +45,7 @@ bool SymbolTable::DefineFunction(const string & name, Type type, vector<Function
 
 } //----- Fin de DefineFunction
 
-bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope) {
+bool SymbolTable::DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope, int size) {
 
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     if (globalFunctionTableIterator == globalFunctionTable.end()) {
@@ -67,9 +67,12 @@ bool SymbolTable::DefineVariable(const string & function, const string & name, T
         return false;
     }
 
-    decreaseContextOffset(function);
+    decreaseContextOffset(function, type, size);
 
     ContextVariable * contextVariable = new ContextVariable;
+    if (size != -1) {
+        contextVariable->size = size;
+    }
     contextVariable->type = type;
     contextVariable->declaredLine = declaredLine;
     contextVariable->offset = globalFunctionTableIterator->second->offsetContext;
@@ -167,6 +170,9 @@ string SymbolTable::GetVariableScope(const string & function, const string & nam
     return "";
 } //----- Fin de GetVariableScope
 
+int SymbolTable::GetArrayElementOffset(const string & function, const string & name, int index, const string & scope) const {
+}
+
 bool SymbolTable::IsUsedVariable(const string & function, const string & name, const string & scope) const {
     ContextVariable * variable = getVariable(function, name, scope);
     if (variable == nullptr) {
@@ -197,6 +203,7 @@ string SymbolTable::CreateTempVar(const string & function, Type type, const stri
 } //----- Fin de CreateTempVar
 
 void SymbolTable::UnusedVariableAnalysis() const {
+
     for (const auto & function : globalFunctionTable) {
 
         map<string, ContextVariable *> contextVariables = function.second->contextVariableTable;
@@ -365,10 +372,26 @@ struct ContextTable * SymbolTable::getFunction(const string & function) const {
     return globalFunctionTableIterator->second;
 } //----- Fin de getFunction
 
-void SymbolTable::decreaseContextOffset(const string & function) {
+// TODO: Il faut plu
+void SymbolTable::decreaseContextOffset(const string & function, const Type & type, uint size) {
     // In this function, we've already check the existence of the function
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
-    globalFunctionTableIterator->second->offsetContext -= 4;
+    int bytes;
+    switch (type) {
+        case Type::CHAR:
+            bytes = 1;
+            break;
+        case Type::INT32_T:
+            bytes = 4;
+            break;
+        case Type::INT64_T:
+        case Type::VOID:
+        case default:
+            bytes = 8;
+            break;
+    }
+    globalFunctionTableIterator->second->offsetContext -= bytes * size;
+
 } //----- Fin de decreaseContextOffset
 
 int SymbolTable::computeScopeSize(const string & name) const {

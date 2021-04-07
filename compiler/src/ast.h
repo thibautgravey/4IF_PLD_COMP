@@ -81,6 +81,23 @@ class Var : public Expr {
     string name;
 };
 
+//---------- Interface de la classe <Array> ----------------
+class Array : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    string GetName();
+    virtual string GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    Array(int line, string name, int length)
+        : Expr(line), name(name), length(length){};
+
+    virtual ~Array() = default;
+
+  protected:
+    string name;
+    int length;
+};
+
 //---------- Interface de la classe <ConstLiteral> ----------------
 class ConstLiteral : public Expr {
   public:

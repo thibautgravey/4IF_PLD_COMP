@@ -371,11 +371,6 @@ antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx)
 antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
     Function * ret = new Function(ctx->start->getLine(), ctx->ID()->getText(), currentScope);
 
-    vector<Expr *> params;
-    if (ctx->expr_list()) {
-        params = visit(ctx->expr_list()).as<vector<Expr *>>();
-    }
-
     ret->SetParams(params);
 
     if (program->GetSymbolTable().LookUpFunction(ctx->ID()->getText())) {
@@ -491,6 +486,100 @@ antlrcpp::Any ASTGenerator::visitExpr_list(ifccParser::Expr_listContext * ctx) {
     return params;
 } //----- Fin de visitExpr_list
 
+antlrcpp::Any ASTGenerator::visitArray(ifccParser::ArrayContext * ctx) {
+
+    Expr * op = (Expr *)visit(ctx->expr());
+    if (!checkExpr(op)) {
+        return (Expr *)nullptr;
+    }
+
+    //TO DO : mettre a jour méthodes tablea des symboles pour les tableaux
+
+    /*
+    if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText())) {
+        ret = new Var(ctx->start->getLine(), ctx->ID()->getText());
+        //program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText());
+    } else {
+        program->SetErrorFlag(true);
+        cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+    }
+    */
+}
+
+antlrcpp::Any ASTGenerator::visitArray_decl(ifccParser::Array_declContext * ctx) {
+    vector<Expr *> values;
+    type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+
+    int64_t size = -1;
+
+    if (ctx->const()) {
+        size = ctx->const();
+    }
+
+    if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), type, ctx->start->getLine(), currentScope, size)) {
+
+        // Si affectation en même temps
+        if (ctx->expr_list()) {
+
+            values = visit(ctx->expr_list()).as<vector<Expr *>>();
+
+            for (int i = values.size(); i < size; i++)
+                values.push_back(new ConstLiteral(ctx->start->getLine(), values.at(i), currentScope));
+            if (values.size() > size) {
+                for (int i = values.size(); i > size; i--)
+                    values.pop_back();
+                cerr << "Ligne " << ctx->start->getLine() << " : Taille du tableau trop faible ligne " << endl; //warning et supprimer les valeurs en trop
+            }
+        }
+
+        Array * array;
+        if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
+            array = new Array(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope), values, size);
+            program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+        } else {
+            program->SetErrorFlag(true);
+            cerr << "array " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+        }
+
+    } else {
+        program->SetErrorFlag(true);
+    }
+    return values;
+
+    if (program->GetSymbolTable().DefineVariable(currentFunction, ctx->ID()->getText(), lastDeclaredType, ctx->start->getLine(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope))) {
+
+        if (ctx->expr()) {
+            Expr * expr = (Expr *)visit(ctx->expr());
+            if (!checkExpr(expr)) {
+                return {};
+            }
+
+            Var * var;
+            if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
+                var = new Var(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+                program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            } else {
+                program->SetErrorFlag(true);
+                cerr << "variable " + ctx->ID()->getText() + " does not exist in contextVariableTable from " + currentFunction << endl;
+            }
+
+            ret.push_back(((Expr *)new OpBin(ctx->start->getLine(), ((Expr *)var), expr, EQ, currentScope)));
+        }
+
+        for (int i = 0; i < ctx->inline_var_decl().size(); i++) {
+            Expr * inlineExpr = (Expr *)visit(ctx->inline_var_decl(i));
+            if (inlineExpr != nullptr) {
+                ret.push_back(inlineExpr);
+            }
+        }
+    } else {
+        program->SetErrorFlag(true);
+    }
+    return ret;
+}
+
+antlrcpp::Any ASTGenerator::visitArray_aff(ifccParser::Array_affContext * ctx) {
+}
 antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
 
     // Création de l'expression

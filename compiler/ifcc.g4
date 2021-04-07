@@ -8,7 +8,7 @@ def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
 line:
 	var_decl
-	| tab_decl
+	| array_decl
 	| expr ';'
 	| return_stmt
 	| ifblock
@@ -21,7 +21,7 @@ param: TYPE ID;
 
 var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
 
-tab_decl: TYPE ID '[' CONST? ']' ('=' '{' expr_list '}')? ';';
+array_decl: TYPE ID '[' CONST? ']' ('=' '{' expr_list '}')? ';';
 
 inline_var_decl: (',' ID ('=' expr)?);
 
@@ -36,7 +36,7 @@ whileblock: ('while' '(' expr ')' (line | block));
 block: '{' line* '}';
 
 expr:
-	ID '[' expr ']'						# tab
+	ID '[' expr ']'						# array
 	| (CONST | CHAR | ID)				# literal
 	| '(' expr ')'						# par
 	| ID '(' expr_list? ')'				# function

@@ -46,6 +46,7 @@ struct ContextVariable {
     int declaredLine;
     int offset = 0;
     bool used = false;
+    uint size = 1; // 1 : variable, >=0 : array
 };
 
 struct ContextTable {
@@ -72,7 +73,7 @@ class SymbolTable {
     //----------------------------------------------------- Méthodes publiques
     bool DefineFunction(const string & name, Type type, vector<FunctionParam *> params, int declaredLine);
 
-    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope);
+    bool DefineVariable(const string & function, const string & name, Type type, int declaredLine, const string & scope, int size = 1);
 
     bool LookUpVariable(const string & function, const string & name, const string & scope) const;
 
@@ -87,6 +88,7 @@ class SymbolTable {
     string GetVariableScope(const string & function, const string & name, const string & scope) const;
 
     bool IsUsedVariable(const string & function, const string & name, const string & scope) const;
+    int GetArrayElementOffset(const string & function, const string & name, int index, const string) const;
 
     void UnusedVariableAnalysis() const;
 
@@ -127,7 +129,7 @@ class SymbolTable {
 
     struct ContextTable * getFunction(const string & function) const;
 
-    void decreaseContextOffset(const string & function);
+    void decreaseContextOffset(const string & function, const Type & type, uint size = 1);
 
     int computeScopeSize(const string & name) const;
 
