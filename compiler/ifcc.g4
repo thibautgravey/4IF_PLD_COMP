@@ -7,7 +7,7 @@ prog: def_func+;
 def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
 line:
-	var_decl
+	var_decl ';'
 	| expr ';'
 	| return_stmt
 	| ifblock
@@ -19,7 +19,7 @@ param_list: param (',' param)*;
 
 param: TYPE ID;
 
-var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
+var_decl: TYPE ID ('=' expr)? (inline_var_decl)*;
 
 inline_var_decl: (',' ID ('=' expr)?);
 
