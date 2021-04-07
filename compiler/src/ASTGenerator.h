@@ -12,6 +12,7 @@
 #include "antlr4-runtime.h"
 #include "ifccBaseVisitor.h"
 #include <map>
+#include <stdint.h>
 
 #include "ast.h"
 
@@ -108,6 +109,7 @@ class ASTGenerator : public ifccBaseVisitor {
     bool checkExpr(Expr * expr);
     void expandScope();
     void reduceScope();
+    bool isLiteral(Expr * expr, int64_t & value);
 
     //----------------------------------------------------- Attributs protégés
 
