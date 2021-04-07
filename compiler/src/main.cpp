@@ -26,7 +26,7 @@ int main(int argn, const char ** argv) {
     ifccParser parser(&tokens);
     tree::ParseTree * tree = parser.axiom();
 
-    //TODO : Check error from the parser
+    //Check error from the parser
 
     int lexerErrors = lexer.getNumberOfSyntaxErrors();
     int parserErrors = parser.getNumberOfSyntaxErrors();
@@ -34,7 +34,7 @@ int main(int argn, const char ** argv) {
     if (lexerErrors || parserErrors)
         return EXIT_FAILURE;
 
-    //TODO : Create a real ASTVisitor/ASTGenerator and generate an AST with first static analysis
+    //Create a real ASTVisitor/ASTGenerator and generate an AST with first static analysis
 
     ASTGenerator astGenerator;
 
@@ -44,13 +44,13 @@ int main(int argn, const char ** argv) {
         return EXIT_FAILURE;
     }
 
-    //TODO : Other static analysis
+    //Other static analysis
 
     program->UnusedVariableAnalysis();
     program->UnusedFunctionAnalysis();
     program->FunctionReturnAnalysis();
 
-    //TODO : Create an IR and generate ASM
+    //Create an IR and generate ASM
     IR * ir = program->GenerateIR();
 
     //Create the output path
@@ -83,7 +83,7 @@ int main(int argn, const char ** argv) {
         ir->GenerateAsmX86(cout);
     }
 
-    //TODO : Generate an exec file with a an "as file.s -o file.o" and then link using gcc
+    //Generate an exec file with a an "as file.s -o file.o" and then link using gcc
 
     delete (ir);
 
