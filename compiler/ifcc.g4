@@ -6,7 +6,13 @@ prog: def_func+;
 
 def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
-line: var_decl | expr ';' | return_stmt | ifblock | whileblock | block;
+line:
+	var_decl
+	| expr ';'
+	| return_stmt
+	| ifblock
+	| whileblock
+	| block;
 
 param_list: param (',' param)*;
 
