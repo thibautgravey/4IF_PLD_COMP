@@ -34,7 +34,6 @@ enum Type {
 typedef struct fp {
     Type type;
     string name;
-    // TODO: voir pour avoir une valeur par défaut ?
     fp(Type t, string n)
         : type(t), name(n){};
 } FunctionParam;

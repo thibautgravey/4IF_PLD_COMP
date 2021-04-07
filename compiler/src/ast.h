@@ -330,6 +330,27 @@ class WhileInstr : public Instr {
     BlockInstr * whileBlock;
 };
 
+class ForInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    vector<Expr *> GetInitExprs();
+    Expr * GetConditionnalExpr();
+    vector<Expr *> GetUpdateExprs();
+    BlockInstr * GetForBlock();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    ForInstr(int line, vector<Expr *> init, Expr * cond, vector<Expr *> update, BlockInstr * block, string scope)
+        : Instr(line, scope), initExprs(init), conditionnalExpr(cond), updateExprs(update), forBlock(block){};
+
+    virtual ~ForInstr();
+
+  protected:
+    vector<Expr *> initExprs;
+    Expr * conditionnalExpr;
+    vector<Expr *> updateExprs;
+    BlockInstr * forBlock;
+};
+
 //---------- Interface de la classe <Program> ----------------
 class Program : public Node {
   public:

@@ -25,7 +25,6 @@ using namespace std;
 void IRInstr::gen_asm_X86(ostream & o) {
 
     string p1, p2, p3;
-    // TODO : voir si on peut améliorer
 
     if (this->op != call) {
         switch (this->params.size()) {
@@ -365,6 +364,7 @@ void CFG::gen_asm_X86(ostream & o) {
                 break;
             }
         }
+
         if ((*it)->exit_false == nullptr) {
             if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
                 o << "        jmp      " << (*it)->exit_true->label << endl;
@@ -388,7 +388,6 @@ void CFG::gen_asm_X86(ostream & o) {
     gen_asm_epilogue_X86(o, this->bbs[this->bbs.size() - 1]);
 } //fin de gen_asm_x86(CFG)
 
-//TODO
 void CFG::gen_asm_ARM(ostream & o) {
     BasicBlock * lastbb = this->bbs.back();
     this->bbs.pop_back();
@@ -498,7 +497,6 @@ bool CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
     return jump;
 } //fin de gen_asm_prologue
 
-//TODO
 void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
     o << bb->label << ":" << endl;
     o << "        push    {r7, lr}" << endl; //si main : push    {r7, lr}
@@ -521,7 +519,6 @@ void CFG::gen_asm_epilogue_X86(ostream & o, BasicBlock * bb) {
     o << "        ret" << endl;
 } //fin de gen_asm_epilogue_X86
 
-//TODO
 void CFG::gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb) {
 
     int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
@@ -571,7 +568,6 @@ void IR::GenerateAsmX86(ostream & o) {
         cfg->gen_asm_X86(o);
         o << endl;
     }
-    //TODO? ajouter épilogue asm
 } //----- Fin de GenerateAsmX86
 
 void IR::GenerateAsmARM(ostream & o) {

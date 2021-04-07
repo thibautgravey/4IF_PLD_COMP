@@ -391,29 +391,25 @@ BlockInstr * WhileInstr::GetWhileBlock() {
 }
 
 void WhileInstr::GenerateIR(CFG * cfg) {
-    BasicBlock *whileBB, *endwhile;
+    BasicBlock *testBB, *whileBB, *endwhile;
 
-    // Génération IR test while et enregistrement du résultat
-    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
-
-    // Création du BB de fin de while
+    //Création des BB
+    testBB = new BasicBlock(cfg, cfg->new_BB_name());
+    whileBB = new BasicBlock(cfg, cfg->new_BB_name());
     endwhile = new BasicBlock(cfg, cfg->new_BB_name());
 
-    // Création du BB pour le whileBlock
-    whileBB = new BasicBlock(cfg, cfg->new_BB_name());
-    cfg->GetCurrentBB()->exit_true = whileBB;
+    cfg->GetCurrentBB()->exit_true = testBB;
 
+    // Ajout des instructions test
+    cfg->add_bb(testBB);
+    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = whileBB;
     cfg->GetCurrentBB()->exit_false = endwhile;
 
     // Ajout des instructions whileBB
     cfg->add_bb(whileBB);
     whileBlock->GenerateIR(cfg);
-    cfg->GetCurrentBB()->exit_true = whileBB;
-
-    cfg->GetCurrentBB()->exit_false = endwhile;
-
-    // Génération IR test while et enregistrement du résultat
-    cfg->GetCurrentBB()->test_var_name = whileExpr->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = testBB;
 
     cfg->add_bb(endwhile);
 }
@@ -423,6 +419,76 @@ WhileInstr::~WhileInstr() {
     delete (whileBlock);
 
 } //----- Fin de ~WhileInstr
+
+//---------------//
+//   ForInstr    //
+//---------------//
+
+vector<Expr *> ForInstr::GetInitExprs() {
+    return initExprs;
+}
+
+Expr * ForInstr::GetConditionnalExpr() {
+    return conditionnalExpr;
+}
+
+vector<Expr *> ForInstr::GetUpdateExprs() {
+    return updateExprs;
+}
+
+BlockInstr * ForInstr::GetForBlock() {
+    return forBlock;
+}
+
+void ForInstr::GenerateIR(CFG * cfg) {
+    BasicBlock *enterForBB, *testBB, *forBB, *endFor;
+
+    //Création des BB
+    enterForBB = new BasicBlock(cfg, cfg->new_BB_name());
+    forBB = new BasicBlock(cfg, cfg->new_BB_name());
+    testBB = new BasicBlock(cfg, cfg->new_BB_name());
+    endFor = new BasicBlock(cfg, cfg->new_BB_name());
+
+    cfg->GetCurrentBB()->exit_true = enterForBB;
+
+    // Génération IR init for
+    cfg->add_bb(enterForBB);
+    for (Expr * e : initExprs) {
+        e->GenerateIR(cfg);
+    }
+    cfg->GetCurrentBB()->exit_true = testBB;
+
+    // Génération IR expression conditionnelle
+    cfg->add_bb(testBB);
+    cfg->GetCurrentBB()->test_var_name = conditionnalExpr->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = forBB;
+    cfg->GetCurrentBB()->exit_false = endFor;
+
+    // Ajout des instructions forBB
+    cfg->add_bb(forBB);
+    forBlock->GenerateIR(cfg);
+    for (Expr * e : updateExprs) {
+        e->GenerateIR(cfg);
+    }
+    cfg->GetCurrentBB()->exit_true = testBB;
+
+    // Ajout du bb de sortie
+    cfg->add_bb(endFor);
+}
+
+ForInstr::~ForInstr() {
+    for (Expr * e : initExprs) {
+        delete (e);
+    }
+
+    delete (conditionnalExpr);
+
+    for (Expr * e : updateExprs) {
+        delete (e);
+    }
+
+    delete (forBlock);
+}
 
 //----------------//
 //   BlockInstr   //
@@ -497,8 +563,6 @@ IR * Program::GenerateIR() {
     IR * ir = new IR();
 
     for (Instr * instr : this->listInstr) {
-        // TODO: deplacer tout ce code dans GenerateIR de DefFuncInstr (besoin d'un CFG contenant tout les autres CFG ?)
-
         // Normally all instructions in listInstr are def function instruction
         DefFuncInstr * defFuncInstr = dynamic_cast<DefFuncInstr *>(instr);
 

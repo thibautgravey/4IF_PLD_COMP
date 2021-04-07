@@ -6,13 +6,20 @@ prog: def_func+;
 
 def_func: TYPE ID '(' param_list? ')' '{' line* '}';
 
-line: var_decl | expr ';' | return_stmt | ifblock | whileblock | block;
+line:
+	var_decl ';'
+	| expr ';'
+	| return_stmt
+	| ifblock
+	| whileblock
+	| forblock
+	| block;
 
 param_list: param (',' param)*;
 
 param: TYPE ID;
 
-var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
+var_decl: TYPE ID ('=' expr)? (inline_var_decl)*;
 
 inline_var_decl: (',' ID ('=' expr)?);
 
@@ -23,6 +30,13 @@ ifblock: ('if' '(' expr ')' (line | block) elseblock?);
 elseblock: 'else' (line | block | ifblock);
 
 whileblock: ('while' '(' expr ')' (line | block));
+
+forblock: (
+		'for' '(' (var_decl | expr_list)? ';' expr ';' expr_list? ')' (
+			line
+			| block
+		)
+	);
 
 block: '{' line* '}';
 
