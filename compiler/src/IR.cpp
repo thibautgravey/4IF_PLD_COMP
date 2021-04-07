@@ -137,8 +137,8 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        str     r3, " << p1 << endl;
             break;
         case copy:
-            o << "        ldr     r3, " << p1 << endl;
-            o << "        str     r3, " << p2 << endl;
+            o << "        ldr     r3, " << p2 << endl;
+            o << "        str     r3, " << p1 << endl;
             break;
         case add:
             o << "        ldr     r2, " << p2 << endl;
@@ -159,9 +159,9 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        str     r3, " << p1 << endl;
             break;
         case div:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
-            o << "        bl      __aeabi_idiv" << endl;
+            o << "        ldr     r0, " << p2 << endl;
+            o << "        ldr     r1, " << p3 << endl;
+            o << "        bl      __aeabi_idiv(PLT)" << endl;
             o << "        mov     r3, r0" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
@@ -335,13 +335,13 @@ void CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
 //TODO
 void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
     o << bb->label << ":" << endl;
-    o << "        push    {r7}" << endl; //si main : push    {r7, lr}
+    o << "        push    {r7, lr}" << endl; //si main : push    {r7, lr}
 
     int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
 
     // Round space to the nearest multiple of 4
-    if (spaceNeeded % 8) {
-        spaceNeeded = ((spaceNeeded / 8) + 1) * 8 + 4;
+    if (spaceNeeded % 4) {
+        spaceNeeded = ((spaceNeeded / 4) + 1) * 4;
     }
 
     o << "        sub     sp, sp, #" << spaceNeeded << endl;
@@ -362,16 +362,15 @@ void CFG::gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb) {
     int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
 
     // Round space to the nearest multiple of 4
-    if (spaceNeeded % 8) {
-        spaceNeeded = ((spaceNeeded / 8) + 1) * 8 + 4;
+    if (spaceNeeded % 4) {
+        spaceNeeded = ((spaceNeeded / 4) + 1) * 4;
     }
 
     o << bb->label << ":" << endl;
     o << "        mov     r0, r3" << endl;
     o << "        adds    r7, r7, #" << spaceNeeded << endl;
     o << "        mov     sp, r7" << endl;
-    o << "        ldr     r7, [sp], #4" << endl;
-    o << "        bx      lr" << endl;
+    o << "        pop	{r7, pc}" << endl;
 } //fin de gen_asm_epilogue_ARM
 
 string CFG::new_BB_name(const string & prefix) {
@@ -398,7 +397,7 @@ void IR::GenerateAsmX86(ostream & o) {
         cfg->gen_asm_X86(o);
         o << endl;
     }
-    //TODO? ajouter épilogue bdsm
+    //TODO? ajouter épilogue asm
 } //----- Fin de GenerateAsmX86
 
 void IR::GenerateAsmARM(ostream & o) {
@@ -408,7 +407,6 @@ void IR::GenerateAsmARM(ostream & o) {
         cfg->gen_asm_ARM(o);
         o << endl;
     }
-    //TODO? ajouter épilogue bdsm
 } //----- Fin de GenerateAsmARM
 
 void IR::AddCFG(CFG * newCFG) {
@@ -421,8 +419,9 @@ void IR::gen_asm_prologue_global_X86(ostream & o) {
 } //----- Fin de gen_asm_prologue_global_X86
 
 void IR::gen_asm_prologue_global_ARM(ostream & o) {
-    o << ".globl _start" << endl;
-    o << ".arm" << endl;
+    o << ".global	main" << endl;
+    o << ".syntax unified" << endl;
+    o << "main:" << endl;
 } //----- Fin de gen_asm_prologue_global_ARM
 
 //-------------------------------------------- Constructeurs - destructeur
