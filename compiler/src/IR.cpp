@@ -47,7 +47,12 @@ void IRInstr::gen_asm(ostream & o) {
 
     switch (this->op) {
         case ldconst:
-            o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
+            if (this->t == INT64_T) {
+                o << "        movabsq     " << p2 << ", %rax" << endl;
+                o << "        movq     %rax, " << p1 << endl;
+            } else {
+                o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
+            }
             break;
         case copy:
             if ((p2.at(0) == '%' && p1.at(0) != '%') || (p2.at(0) != '%' && p1.at(0) == '%')) {
@@ -100,7 +105,7 @@ void IRInstr::gen_asm(ostream & o) {
         case neg:
             o << "        " << getCmpInstr() << "     $0, " << p2 << endl;
             o << "        sete     %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
+            o << "        movzbl   %al, %eax" << endl;
             o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case opp:
@@ -191,54 +196,54 @@ void IRInstr::gen_asm(ostream & o) {
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        sete     %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_neq:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setne    %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_g:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setg     %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_ge:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setge    %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_l:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setl     %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cmp_le:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setle    %al" << endl;
-            o << "        movzbl   %al, " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
 
         case cdtAnd:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        and      " << p3 << ", " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cdtOr:
             o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        or       " << p3 << ", " << getReg1() << endl;
-            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case ret:
             o << "        " << getMovInstr() << "     " << p1 << ", " << getReg1() << endl;
