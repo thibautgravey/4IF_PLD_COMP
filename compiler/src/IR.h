@@ -68,6 +68,8 @@ class IRInstr {
     string getAndInstr();
     string getXorInstr();
     string getNegInstr();
+    string getReg1();
+    string getTmpReg();
 
     BasicBlock * bb; /**< The BB this instruction belongs to, which provides a pointer to the CFG this instruction belong to */
     Operation op;
