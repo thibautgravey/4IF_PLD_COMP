@@ -19,6 +19,23 @@ string Var::GenerateIR(CFG * cfg) {
     return this->scope + this->name;
 }
 
+//------- Réalisation de la classe <Array> ---
+string Array::GetName() {
+    return this->name;
+}
+
+int Array::GetLength() {
+    return length;
+}
+
+vector<Expr *> Array::GetValues() {
+    return values;
+}
+
+string Array::GenerateIR(CFG * cfg) {
+    return this->scope + this->name;
+}
+
 //------- Réalisation de la classe <ConstLiteral> ---
 int32_t ConstLiteral::GetValue() const {
     return this->value;

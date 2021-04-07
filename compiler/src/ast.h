@@ -86,16 +86,19 @@ class Array : public Expr {
   public:
     //----------------------------------------------------- Méthodes publiques
     string GetName();
+    int GetLength();
+    vector<Expr *> GetValues();
     virtual string GenerateIR(CFG * cfg);
     //-------------------------------------------- Constructeurs - destructeur
-    Array(int line, string name, int length)
-        : Expr(line), name(name), length(length){};
+    Array(int line, string name, string scope, vector<Expr *> values, int length)
+        : Expr(line, scope), name(name), values(values), length(length){};
 
     virtual ~Array() = default;
 
   protected:
     string name;
     int length;
+    vector<Expr *> values;
 };
 
 //---------- Interface de la classe <ConstLiteral> ----------------
@@ -371,4 +374,4 @@ class Program : public Node {
     bool errorFlag;
 };
 
-#endif
+#endifL
