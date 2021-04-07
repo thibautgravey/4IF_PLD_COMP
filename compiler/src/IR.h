@@ -58,7 +58,23 @@ class IRInstr {
 
     void gen_asm_ARM(ostream & o); /**< ARM assembly code generation for this IR instruction */
 
-  private:
+  protected:
+    string getMovInstr();
+    string getMovInstr(Type requestType);
+    string getAddInstr();
+    string getSubInstr();
+    string getCmpInstr();
+    string getMullInstr();
+    string getDivInstr();
+    string getOrInstr();
+    string getAndInstr();
+    string getXorInstr();
+    string getNegInstr();
+    string getReg1();
+    string getReg1(Type requestType);
+    string getTmpReg();
+    Type findRegType(string reg);
+
     BasicBlock * bb; /**< The BB this instruction belongs to, which provides a pointer to the CFG this instruction belong to */
     Operation op;
     Type t;
@@ -133,7 +149,7 @@ class CFG {
     void gen_asm_X86(ostream & o);
     void gen_asm_ARM(ostream & o);
 
-    string IR_reg_to_asm_X86(string reg, string scope); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
+    string IR_reg_to_asm_X86(string reg, string scope, Type type); /**< helper method: inputs a IR reg or input variable, returns e.g. "-24(%rbp)" for the proper value of 24 */
     string IR_reg_to_asm_ARM(string reg, string scope);
 
     bool gen_asm_prologue_X86(ostream & o, BasicBlock * bb);

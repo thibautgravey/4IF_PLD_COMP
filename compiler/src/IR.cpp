@@ -10,6 +10,8 @@
 
 //-------------------------------------------------------- Include système
 #include <iostream>
+#include <sstream>
+#include <stdint.h>
 
 using namespace std;
 
@@ -25,175 +27,233 @@ using namespace std;
 void IRInstr::gen_asm_X86(ostream & o) {
 
     string p1, p2, p3;
+    Type t;
+    // TODO : voir si on peut améliorer
 
     if (this->op != call) {
         switch (this->params.size()) {
             case 3:
-                p3 = this->bb->cfg->IR_reg_to_asm_X86(this->params[2], this->bb->scope);
+                p3 = this->bb->cfg->IR_reg_to_asm_X86(this->params[2], this->bb->scope, this->t);
             case 2:
-                p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1], this->bb->scope);
+                p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1], this->bb->scope, this->t);
             case 1:
-                p1 = this->bb->cfg->IR_reg_to_asm_X86(this->params[0], this->bb->scope);
+                p1 = this->bb->cfg->IR_reg_to_asm_X86(this->params[0], this->bb->scope, this->t);
             default:
                 break;
         }
     } else {
         p1 = this->params[0];
-        p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1], this->bb->scope);
+        p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1], this->bb->scope, this->t);
     }
 
     switch (this->op) {
         case ldconst:
-            o << "        movq     " << p2 << ", " << p1 << endl;
+            if (this->t == INT64_T) {
+                o << "        movabsq     " << p2 << ", %rax" << endl;
+                o << "        movq     %rax, " << p1 << endl;
+            } else {
+                o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
+            }
             break;
         case copy:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            t = this->t;
+            if (p2.at(0) == '%') {
+                t = findRegType(p2);
+            }
+            o << "        " << getMovInstr(t) << "     " << p2 << ", " << getReg1(t) << endl;
+            o << "        " << getMovInstr() << "    " << getReg1() << ", " << p1 << endl;
             break;
         case add:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        addq     " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            if (p2 == "%rbp") {
+                o << "        movq     " << p2 << ", %rax" << endl;
+            } else {
+                o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            }
+            o << "        " << getAddInstr() << "     " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "    " << getReg1() << ", " << p1 << endl;
             break;
         case sub:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        subq     " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getSubInstr() << "     " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case mul:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        imulq    " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getMullInstr() << "     " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case div:
             if (p3[0] == '$') {
-                o << "        movq     " << p3 << ", %rcx" << endl;
-                p3 = "%rcx";
+                o << "        " << getMovInstr() << "     " << p3 << ", " << getTmpReg() << endl;
+                p3 = getTmpReg();
             }
-            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
             o << "        cltd     " << endl;
-            o << "        idivq    " << p3 << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getDivInstr() << "    " << p3 << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case orB:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        orq      " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getOrInstr() << "      " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case andB:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        andq     " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getAndInstr() << "     " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case xorB:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        xorq     " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getXorInstr() << "     " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case neg:
-            o << "        cmpq     $0, " << p2 << endl;
+            o << "        " << getCmpInstr() << "     $0, " << p2 << endl;
             o << "        sete     %al" << endl;
-            o << "        movzbq   %al, %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        movzbl   %al, %eax" << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case opp:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        negq     %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getNegInstr() << "     " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << getReg1() << ", " << p1 << endl;
             break;
         case rmem:
-            o << "        movq     " << p2 << ", " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << p1 << endl;
             break;
         case wmem:
-            o << "        movq     " << p1 << ", %rax" << endl;
-            o << "        movq     " << p2 << ", %rbx" << endl;
-            o << "        movq     %rbx, (%rax)" << endl;
+            o << "        " << getMovInstr() << "     " << p1 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getTmpReg() << endl;
+            o << "        " << getMovInstr() << "     " << getTmpReg() << ", (" << getReg1() << ")" << endl;
             break;
         case call: {
-            // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
             for (int i = 2; i < params.size(); i++) {
-                p3 = this->bb->cfg->IR_reg_to_asm_X86(this->params[i], this->bb->scope);
+                p3 = this->bb->cfg->IR_reg_to_asm_X86(this->params[i], this->bb->scope, this->t);
+                Type paramType;
+                if (this->bb->cfg->GetSymbolTable()->LookUpFunction(p1)) {
+                    // fonction interne --> Type des paramètres de la fonction appelé
+                    paramType = this->bb->cfg->GetSymbolTable()->GetFunctionParams(p1)[i - 2]->type;
+                } else {
+                    // fonction externe --> Type des paramètres dans l'appelant
+                    if (this->bb->cfg->GetSymbolTable()->LookUpVariable(this->bb->cfg->GetName(), this->params[i], this->bb->scope)) {
+                        // passage de paramètre via une variable
+                        paramType = this->bb->cfg->GetSymbolTable()->GetVariableType(this->bb->cfg->GetName(), this->params[i], this->bb->scope);
+                    } else {
+                        // passage direct de valeur
+                        int64_t value;
+                        istringstream tmpSS(this->params[i]);
+                        tmpSS >> value;
+                        if (value > INT32_MAX) {
+                            paramType = INT64_T;
+                        } else {
+                            paramType = INT32_T;
+                        }
+                    }
+                }
+
+                if (paramType == CHAR) {
+                    paramType = INT32_T;
+                }
+
                 string dest;
                 switch (i - 2) {
                     case 0:
-                        dest = "%rdi";
+                        if (paramType == INT64_T)
+                            dest = "%rdi";
+                        else
+                            dest = "%edi";
                         break;
                     case 1:
-                        dest = "%rsi";
+                        if (paramType == INT64_T)
+                            dest = "%rsi";
+                        else
+                            dest = "%esi";
                         break;
                     case 2:
-                        dest = "%rdx";
+                        if (paramType == INT64_T)
+                            dest = "%rdx";
+                        else
+                            dest = "%edx";
                         break;
                     case 3:
-                        dest = "%rcx";
+                        if (paramType == INT64_T)
+                            dest = "%rcx";
+                        else
+                            dest = "%ecx";
                         break;
                     case 4:
-                        dest = "%r8";
+                        if (paramType == INT64_T)
+                            dest = "%r8";
+                        else
+                            dest = "%r8d";
                         break;
                     case 5:
-                        dest = "%r9";
+                        if (paramType == INT64_T)
+                            dest = "%r9";
+                        else
+                            dest = "%r9d";
                         break;
                 }
-                o << "        movq    " << p3 << ", " << dest << endl;
+                o << "        " << getMovInstr(paramType) << "    " << p3 << ", " << dest << endl;
             }
             o << "        call    " << p1 << endl;
             break;
         }
         case cmp_eq:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        cmpq     " << p3 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        sete     %al" << endl;
             o << "        movzbq   %al, %rax" << endl;
             o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_neq:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        cmpq     " << p3 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setne    %al" << endl;
             o << "        movzbq   %al, %rax" << endl;
             o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_g:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        cmpq     " << p3 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setg     %al" << endl;
             o << "        movzbq   %al, %rax" << endl;
             o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_ge:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        cmpq     " << p3 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setge    %al" << endl;
             o << "        movzbq   %al, %rax" << endl;
             o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_l:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        cmpq     " << p3 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setl     %al" << endl;
             o << "        movzbq   %al, %rax" << endl;
             o << "        movq     %rax, " << p1 << endl;
             break;
         case cmp_le:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        cmpq     " << p3 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        " << getCmpInstr() << "     " << p3 << ", " << getReg1() << endl;
             o << "        setle    %al" << endl;
             o << "        movzbq   %al, %rax" << endl;
             o << "        movq     %rax, " << p1 << endl;
             break;
 
         case cdtAnd:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        and      " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        and      " << p3 << ", " << getReg1() << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case cdtOr:
-            o << "        movq     " << p2 << ", %rax" << endl;
-            o << "        or       " << p3 << ", %rax" << endl;
-            o << "        movq     %rax, " << p1 << endl;
+            o << "        " << getMovInstr() << "     " << p2 << ", " << getReg1() << endl;
+            o << "        or       " << p3 << ", " << getReg1() << endl;
+            o << "        movl     %eax, " << p1 << endl;
             break;
         case ret:
-            o << "        movq     " << p1 << ", %rax" << endl;
+            o << "        " << getMovInstr() << "     " << p1 << ", " << getReg1() << endl;
             o << "        jmp      " << bb->cfg->bb_epilogue->label << endl;
             break;
 
@@ -374,7 +434,8 @@ void CFG::gen_asm_X86(ostream & o) {
             }
 
         } else {
-            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope) << endl;
+            Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
+            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
             o << "        jne      " << (*it)->exit_false->label << endl;
 
             if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
@@ -409,26 +470,50 @@ void CFG::gen_asm_ARM(ostream & o) {
     gen_asm_epilogue_ARM(o, lastbb);
 } //fin de gen_asm_ARM(CFG)
 
-string CFG::IR_reg_to_asm_X86(string reg, string scope) {
+string CFG::IR_reg_to_asm_X86(string reg, string scope, Type type) {
 
     string ret;
 
     if (reg == "reg1") {
-        ret = "%rax";
+        if (type == Type::INT64_T)
+            ret = "%rax";
+        else
+            ret = "%eax";
     } else if (reg == "reg2") {
-        ret = "%rbx";
+        if (type == Type::INT64_T)
+            ret = "%rbx";
+        else
+            ret = "%ebx";
     } else if (reg == "paramReg1") {
-        ret = "%rdi";
+        if (type == Type::INT64_T)
+            ret = "%rdi";
+        else
+            ret = "%edi";
     } else if (reg == "paramReg2") {
-        ret = "%rsi";
+        if (type == Type::INT64_T)
+            ret = "%rsi";
+        else
+            ret = "%esi";
     } else if (reg == "paramReg3") {
-        ret = "%rdx";
+        if (type == Type::INT64_T)
+            ret = "%rdx";
+        else
+            ret = "%edx";
     } else if (reg == "paramReg4") {
-        ret = "%rcx";
+        if (type == Type::INT64_T)
+            ret = "%rcx";
+        else
+            ret = "%ecx";
     } else if (reg == "paramReg5") {
-        ret = "%r8";
+        if (type == Type::INT64_T)
+            ret = "%r8";
+        else
+            ret = "%r8d";
     } else if (reg == "paramReg6") {
-        ret = "%r9";
+        if (type == Type::INT64_T)
+            ret = "%r9";
+        else
+            ret = "%r9d";
     } else if (reg == "base_pointer") {
         ret = "%rbp";
     } else {
@@ -618,3 +703,286 @@ BasicBlock::BasicBlock(CFG * cfg, string entry_label, string scope) {
 //------------------------------------------------------------------ PRIVE
 
 //----------------------------------------------------- Méthodes privées
+string IRInstr::getMovInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "movl";
+            break;
+        case Type::INT64_T:
+            instr = "movq";
+            break;
+        case Type::CHAR:
+            instr = "movb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrMov";
+            break;
+    }
+    return instr;
+} //--------- Fin de getMovInstr
+
+string IRInstr::getMovInstr(Type requestType) {
+    string instr;
+    switch (requestType) {
+        case Type::INT32_T:
+            instr = "movl";
+            break;
+        case Type::INT64_T:
+            instr = "movq";
+            break;
+        case Type::CHAR:
+            instr = "movb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrMov";
+            break;
+    }
+    return instr;
+} //--------- Fin de getMovInstr
+
+string IRInstr::getAddInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "addl";
+            break;
+        case Type::INT64_T:
+            instr = "addq";
+            break;
+        case Type::CHAR:
+            instr = "addb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrAdd";
+            break;
+    }
+    return instr;
+} //--------- Fin de getAddInstr
+
+string IRInstr::getSubInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "subl";
+            break;
+        case Type::INT64_T:
+            instr = "subq";
+            break;
+        case Type::CHAR:
+            instr = "subb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrSub";
+            break;
+    }
+    return instr;
+} //--------- Fin de getSubInstr
+
+string IRInstr::getCmpInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "cmpl";
+            break;
+        case Type::INT64_T:
+            instr = "cmpq";
+            break;
+        case Type::CHAR:
+            instr = "cmpb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrCmp";
+            break;
+    }
+    return instr;
+} //--------- Fin de getCmpInstr
+
+string IRInstr::getMullInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "imull";
+            break;
+        case Type::INT64_T:
+            instr = "imulq";
+            break;
+        case Type::CHAR:
+            instr = "imulb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrMull";
+            break;
+    }
+    return instr;
+} //--------- Fin de getMullInstr
+
+string IRInstr::getDivInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "idivl";
+            break;
+        case Type::INT64_T:
+            instr = "idivq";
+            break;
+        case Type::CHAR:
+            instr = "idivb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrDiv";
+            break;
+    }
+    return instr;
+} //--------- Fin de getDivInstr
+
+string IRInstr::getOrInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "orl";
+            break;
+        case Type::INT64_T:
+            instr = "orq";
+            break;
+        case Type::CHAR:
+            instr = "orb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrOr";
+            break;
+    }
+    return instr;
+} //--------- Fin de getOrInstr
+
+string IRInstr::getAndInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "andl";
+            break;
+        case Type::INT64_T:
+            instr = "andb";
+            break;
+        case Type::CHAR:
+            instr = "andq";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrAnd";
+            break;
+    }
+    return instr;
+} //--------- Fin de getAndInstr
+
+string IRInstr::getXorInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "xorl";
+            break;
+        case Type::INT64_T:
+            instr = "xorq";
+            break;
+        case Type::CHAR:
+            instr = "xorb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrXor";
+            break;
+    }
+    return instr;
+} //--------- Fin de getXorInstr
+
+string IRInstr::getNegInstr() {
+    string instr;
+    switch (this->t) {
+        case Type::INT32_T:
+            instr = "negl";
+            break;
+        case Type::INT64_T:
+            instr = "negq";
+            break;
+        case Type::CHAR:
+            instr = "negb";
+            break;
+        default:
+            instr = "UndefinedTypeForInstrNeg";
+            break;
+    }
+    return instr;
+} //--------- Fin de getNegInstr
+
+string IRInstr::getReg1() {
+    string reg;
+    switch (this->t) {
+        case Type::INT32_T:
+            reg = "%eax";
+            break;
+        case Type::INT64_T:
+            reg = "%rax";
+            break;
+        case Type::CHAR:
+            reg = "%al";
+            break;
+        default:
+            reg = "UndefinedTypeForReg1";
+            break;
+    }
+    return reg;
+} //--------- Fin de getReg1
+
+string IRInstr::getReg1(Type requestType) {
+    string reg;
+    switch (requestType) {
+        case Type::INT32_T:
+            reg = "%eax";
+            break;
+        case Type::INT64_T:
+            reg = "%rax";
+            break;
+        case Type::CHAR:
+            reg = "%al";
+            break;
+        default:
+            reg = "UndefinedTypeForReg1";
+            break;
+    }
+    return reg;
+} //--------- Fin de getReg1
+
+string IRInstr::getTmpReg() {
+    string reg;
+    switch (this->t) {
+        case Type::INT32_T:
+            reg = "%r10d";
+            break;
+        case Type::INT64_T:
+            reg = "%r10";
+            break;
+        case Type::CHAR:
+            reg = "%r10b";
+            break;
+        default:
+            reg = "UndefinedTypeForTmpReg";
+            break;
+    }
+    return reg;
+} //--------- Fin de getTmpReg
+
+Type IRInstr::findRegType(string reg) {
+    if (reg.at(1) == 'r') {
+        if (reg.at(2) == '8' || reg.at(2) == '9') {
+            if (reg.size() == 3) {
+                return INT64_T;
+            } else {
+                return INT32_T;
+            }
+        } else {
+            return INT64_T;
+        }
+    } else if (reg.at(1) == 'e') {
+        return INT32_T;
+    } else {
+        return CHAR;
+    }
+} //--------- Fin de findRegType

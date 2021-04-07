@@ -9,6 +9,7 @@
 //---------------------------------------------------------------- INCLUDE
 
 //-------------------------------------------------------- Include système
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -351,7 +352,9 @@ struct ContextVariable * SymbolTable::getVariable(const string & function, const
         }
     }
 
-    printError("variable " + name + " does not exist in contextVariableTable from " + function + " with scope " + scope);
+    if (!all_of(name.begin(), name.end(), [](char c) { return isdigit(c) || (c == '-'); }))
+        printError("variable " + name + " does not exist in contextVariableTable from " + function + " with scope " + scope);
+
     return nullptr;
 } //----- Fin de getVariable
 

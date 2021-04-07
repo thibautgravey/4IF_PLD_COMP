@@ -66,7 +66,7 @@ expr_list: expr (',' expr)*;
 
 TYPE: 'int32_t' | 'int64_t' | 'char' | 'void';
 
-CONST: [0-9]+;
+CONST: '-'?[0-9]+;
 CHAR: '\'' . '\'';
 OP_UNAIRE_NOT: '!';
 OP_DIV: '/';
