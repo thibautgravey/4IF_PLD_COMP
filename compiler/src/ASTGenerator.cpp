@@ -586,15 +586,6 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
 }
 
 antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
-    // Création de la liste d'expression d'initialisation (1)
-
-    //Création de l'expression de la condition (2)
-    Expr * exprConditionnelle = (Expr *)visit(ctx->expr());
-    if (!checkExpr(exprConditionnelle)) {
-        return (Instr *)nullptr;
-    }
-
-    //Création de la liste d'expression des mises à jour (3)
 
     // Récupération des intructions du FOR
     BlockInstr * forBlock;
@@ -607,9 +598,35 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
         forBlock = (BlockInstr *)visit(ctx->block());
     }
 
+    //On se place dans le scope du for pour générer les expressions dans le bon scope
+    currentScope = forBlock->GetScope();
+
+    // Création de la liste d'expression d'initialisation (1)
+    vector<Expr *> initExprs;
+    if (ctx->var_decl()) {
+        initExprs = visit(ctx->var_decl()).as<vector<Expr *>>();
+    } else if (ctx->expr_list(0)) {
+        initExprs = visit(ctx->expr_list(0)).as<vector<Expr *>>();
+    }
+
+    //Création de l'expression de la condition (2)
+    Expr * conditionalExpr = (Expr *)visit(ctx->expr());
+    if (!checkExpr(conditionalExpr)) {
+        return (Instr *)nullptr;
+    }
+
+    //Création de la liste d'expression des mises à jour (3)
+    vector<Expr *> updateExprs;
+    if (ctx->expr_list(1)) {
+        updateExprs = visit(ctx->expr_list(1)).as<vector<Expr *>>();
+    }
+
+    //On réduit le scope à nouveau
+    reduceScope();
+
     // TODO : en cas d'évaluation directe, voir pour les delete
 
-    ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(exprConditionnelle);
+    ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(conditionalExpr);
     if (constExpr) {
         if (constExpr->GetValue() == 0) {
             return (Instr *)nullptr;
@@ -619,7 +636,7 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     }
 
     // Création du forInstr
-    Instr * forInstr = new ForInstr(ctx->start->getLine(), exprWhile, whileblock, currentScope);
+    Instr * forInstr = new ForInstr(ctx->start->getLine(), initExprs, conditionalExpr, updateExprs, forBlock, currentScope);
 
     return forInstr;
 }
