@@ -32,7 +32,7 @@ elseblock: 'else' (line | block | ifblock);
 whileblock: ('while' '(' expr ')' (line | block));
 
 forblock: (
-		'for' '(' expr_list? ';' expr ';' expr_list? ')' (
+		'for' '(' (var_decl | expr_list)? ';' expr ';' expr_list? ')' (
 			line
 			| block
 		)
