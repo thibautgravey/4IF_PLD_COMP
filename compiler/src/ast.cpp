@@ -426,6 +426,44 @@ WhileInstr::~WhileInstr() {
 
 } //----- Fin de ~WhileInstr
 
+//---------------//
+//   ForInstr    //
+//---------------//
+
+vector<Expr *> ForInstr::GetInitExprs() {
+    return initExprs;
+}
+
+Expr * ForInstr::GetConditionnalExpr() {
+    return conditionnalExpr;
+}
+
+vector<Expr *> ForInstr::GetUpdateExprs() {
+    return updateExprs;
+}
+
+BlockInstr * ForInstr::GetForBlock() {
+    return forBlock;
+}
+
+void ForInstr::GenerateIR(CFG * cfg) {
+    //TODO
+}
+
+ForInstr::~ForInstr() {
+    for (Expr * e : initExprs) {
+        delete (e);
+    }
+
+    delete (conditionnalExpr);
+
+    for (Expr * e : updateExprs) {
+        delete (e);
+    }
+
+    delete (forBlock);
+}
+
 //----------------//
 //   BlockInstr   //
 //----------------//

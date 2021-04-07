@@ -64,8 +64,11 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
     } else if (ctx->ifblock()) {
         instr = (Instr *)visit(ctx->ifblock());
     } else if (ctx->whileblock()) {
-        instr = (Instr *)visit(ctx->whileblock());
         //TO DO : breaks and continue (in while and for ) !
+        instr = (Instr *)visit(ctx->whileblock());
+    } else if (ctx->forblock()) {
+        //TO DO : breaks and continue (in while and for ) !
+        instr = (Instr *)visit(ctx->forblock());
     } else if (ctx->block()) {
         instr = (Instr *)visit(ctx->block()).as<BlockInstr *>();
     }
@@ -583,7 +586,42 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
 }
 
 antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
-    return nullptr;
+    // Création de la liste d'expression d'initialisation (1)
+
+    //Création de l'expression de la condition (2)
+    Expr * exprConditionnelle = (Expr *)visit(ctx->expr());
+    if (!checkExpr(exprConditionnelle)) {
+        return (Instr *)nullptr;
+    }
+
+    //Création de la liste d'expression des mises à jour (3)
+
+    // Récupération des intructions du FOR
+    BlockInstr * forBlock;
+    if (ctx->line()) {
+        //TODO : ajouter vérification instruction non nulle
+        Instr * instr = visit(ctx->line());
+        forBlock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+        forBlock->AddInstr(instr);
+    } else {
+        forBlock = (BlockInstr *)visit(ctx->block());
+    }
+
+    // TODO : en cas d'évaluation directe, voir pour les delete
+
+    ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(exprConditionnelle);
+    if (constExpr) {
+        if (constExpr->GetValue() == 0) {
+            return (Instr *)nullptr;
+        } else {
+            // TODO : voir quoi faire en cas de boucle infinie
+        }
+    }
+
+    // Création du forInstr
+    Instr * forInstr = new ForInstr(ctx->start->getLine(), exprWhile, whileblock, currentScope);
+
+    return forInstr;
 }
 
 antlrcpp::Any ASTGenerator::visitBlock(ifccParser::BlockContext * ctx) {
