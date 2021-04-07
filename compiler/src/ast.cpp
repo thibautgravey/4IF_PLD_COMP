@@ -447,7 +447,40 @@ BlockInstr * ForInstr::GetForBlock() {
 }
 
 void ForInstr::GenerateIR(CFG * cfg) {
-    //TODO
+    BasicBlock *enterForBB, *testBB, *forBB, *endFor;
+
+    //Création des BB
+    enterForBB = new BasicBlock(cfg, cfg->new_BB_name());
+    forBB = new BasicBlock(cfg, cfg->new_BB_name());
+    testBB = new BasicBlock(cfg, cfg->new_BB_name());
+    endFor = new BasicBlock(cfg, cfg->new_BB_name());
+
+    //Gestion des liens
+    cfg->GetCurrentBB()->exit_true = enterForBB;
+    enterForBB->exit_true = testBB;
+    testBB->exit_true = forBB;
+    testBB->exit_false = endFor;
+    forBB->exit_true = testBB;
+
+    // Génération IR init for
+    cfg->add_bb(enterForBB);
+    for (Expr * e : initExprs) {
+        e->GenerateIR(cfg);
+    }
+
+    // Génération IR expression conditionnelle
+    cfg->add_bb(testBB);
+    cfg->GetCurrentBB()->test_var_name = conditionnalExpr->GenerateIR(cfg);
+
+    // Ajout des instructions forBB
+    cfg->add_bb(forBB);
+    forBlock->GenerateIR(cfg);
+    for (Expr * e : updateExprs) {
+        e->GenerateIR(cfg);
+    }
+
+    // Ajout du bb de sortie
+    cfg->add_bb(endFor);
 }
 
 ForInstr::~ForInstr() {
