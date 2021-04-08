@@ -503,8 +503,12 @@ antlrcpp::Any ASTGenerator::visitArray(ifccParser::ArrayContext * ctx) {
     ExprArrayRvalue* exprArrayRvalue;
     int line = ctx->start->getLine();
 
+    BinaryOperator mult = MULT;
+    Expr * size = new ConstLiteral(line, -8, currentScope);
+    Expr * pos2 = new OpBin(line,pos,size,MULT,currentScope);
+
     if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
-        exprArrayRvalue = new ExprArrayRvalue(line, varname, pos, currentScope);
+        exprArrayRvalue = new ExprArrayRvalue(line, varname, pos2, currentScope);
         program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
     } else {
         program->SetErrorFlag(true);
@@ -515,11 +519,17 @@ antlrcpp::Any ASTGenerator::visitArray(ifccParser::ArrayContext * ctx) {
 }
 
 antlrcpp::Any ASTGenerator::visitArray_element_aff(ifccParser::Array_element_affContext * ctx) {
+    string varname = ctx->ID()->getText();
+    int line = ctx->start->getLine();
+    
     //  Position 
     Expr * pos = (Expr *)visit(ctx->expr(0));
     if (!checkExpr(pos)) {
         return (Expr *)nullptr;
     }
+    BinaryOperator mult = MULT;
+    Expr * size = new ConstLiteral(line, -8, currentScope);
+    Expr * pos2 = new OpBin(line,pos,size,MULT,currentScope);
 
     // rValue
     Expr * rValue = (Expr *)visit(ctx->expr(1));
@@ -528,12 +538,10 @@ antlrcpp::Any ASTGenerator::visitArray_element_aff(ifccParser::Array_element_aff
     }
 
     // leftValue
-    string varname = ctx->ID()->getText();
-    int line = ctx->start->getLine();
     ExprArrayLvalue *lvalue;
 
     if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
-        lvalue = new ExprArrayLvalue(line, varname, pos, currentScope);
+        lvalue = new ExprArrayLvalue(line, varname, pos2, currentScope);
         program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
     } else {
         program->SetErrorFlag(true);

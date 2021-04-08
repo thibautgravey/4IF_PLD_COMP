@@ -38,7 +38,7 @@ string ExprArrayRvalue::GenerateIR(CFG * cfg) {
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, { tempVar, to_string ( offset ) }, this->scope);
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, tempExpr, tempVar}, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::rmem,Type::INT32_T, {tempVar2, tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::rmem,Type::INT32_T, {tempVar,tempVar2}, this->scope);
     return tempVar;
 }
 
