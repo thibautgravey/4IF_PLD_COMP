@@ -98,7 +98,6 @@ antlrcpp::Any ASTGenerator::visitVar_decl(ifccParser::Var_declContext * ctx) {
 
             if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
                 lValue = new ExprVarLvalue(line, varname, currentScope);
-                program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
             } else {
                 program->SetErrorFlag(true);
                 cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
@@ -134,7 +133,6 @@ antlrcpp::Any ASTGenerator::visitInline_var_decl(ifccParser::Inline_var_declCont
 
             if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
                 lValue = new ExprVarLvalue(line, varname, currentScope);
-                program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
             } else {
                 program->SetErrorFlag(true);
                 cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
@@ -165,7 +163,6 @@ antlrcpp::Any ASTGenerator::visitVar_aff(ifccParser::Var_affContext * ctx) {
 
     if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
         lValue = new ExprVarLvalue(line, varname, scope);
-        program->GetSymbolTable().SetUsedVariable(currentFunction, varname, scope);
     } else {
         program->SetErrorFlag(true);
         cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
