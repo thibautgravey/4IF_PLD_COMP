@@ -63,7 +63,7 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
         if (expr == nullptr) {
             return (Instr *)nullptr;
         }
-        instr = (Instr *)new ExprInstr(ctx->start->getLine(), visit(ctx->expr()), currentScope);
+        instr = (Instr *)new ExprInstr(ctx->start->getLine(), expr, currentScope);
     } else if (ctx->ifblock()) {
         instr = (Instr *)visit(ctx->ifblock());
     } else if (ctx->whileblock()) {
@@ -215,23 +215,30 @@ antlrcpp::Any ASTGenerator::visitLess_or_add(ifccParser::Less_or_addContext * ct
 
     if (binaryOperator == PLUS) {
         if (op1Lit && val1 == 0) {
+            delete (op1);
             return op2;
         } else {
             if (op2Lit && val2 == 0) {
+                delete (op2);
                 return op1;
             }
         }
     }
 
     if (binaryOperator == MINUS && (op2Lit && val2 == 0)) {
+        delete (op2);
         return op1;
     }
 
     if (op1Lit && op2Lit) {
 
         if (binaryOperator == MINUS) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 - val2, currentScope);
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 + val2, currentScope);
         }
     }
@@ -261,22 +268,29 @@ antlrcpp::Any ASTGenerator::visitDiv_or_mult(ifccParser::Div_or_multContext * ct
 
     if (binaryOperator == MULT) {
         if (op1Lit && val1 == 1) {
+            delete (op1);
             return op2;
         } else {
             if (op2Lit && val2 == 1) {
+                delete (op2);
                 return op1;
             }
         }
     }
 
     if (binaryOperator == DIV && (op2Lit && val2 == 1)) {
+        delete (op2);
         return op1;
     }
 
     if (op1Lit && op2Lit) {
         if (binaryOperator == DIV) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 / val2, currentScope);
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 * val2, currentScope);
         }
     }
@@ -302,6 +316,8 @@ antlrcpp::Any ASTGenerator::visitOr(ifccParser::OrContext * ctx) {
     bool op2Lit = isLiteral(op2, val2);
 
     if (op1Lit && op2Lit) {
+        delete (op1);
+        delete (op2);
         return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 | val2, currentScope);
     }
 
@@ -323,6 +339,8 @@ antlrcpp::Any ASTGenerator::visitAnd(ifccParser::AndContext * ctx) {
     bool op2Lit = isLiteral(op2, val2);
 
     if (op1Lit && op2Lit) {
+        delete (op1);
+        delete (op2);
         return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 & val2, currentScope);
     }
 
@@ -344,6 +362,8 @@ antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
     bool op2Lit = isLiteral(op2, val2);
 
     if (op1Lit && op2Lit) {
+        delete (op1);
+        delete (op2);
         return (Expr *)new ConstLiteral(ctx->start->getLine(), val1 ^ val2, currentScope);
     }
 
@@ -391,13 +411,16 @@ antlrcpp::Any ASTGenerator::visitOpp_or_not(ifccParser::Opp_or_notContext * ctx)
 
     if (unitOperator == OPP) {
         if (opLit) {
+            delete (op);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), -val, currentScope);
         }
     } else if (unitOperator == NOT) {
         if (opLit) {
             if (val == 0) {
+                delete (op);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
             } else {
+                delete (op);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
             }
         }
@@ -560,8 +583,12 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
 
     if (exprLit) {
         if (val == 0) {
+            delete (ifblock);
+            delete (exprIf);
             return (Instr *)elseblock;
         } else {
+            delete (elseblock);
+            delete (exprIf);
             return (Instr *)ifblock;
         }
     } else {
@@ -616,6 +643,8 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     bool exprLit = isLiteral(exprWhile, val);
     if (exprLit) {
         if (val == 0) {
+            delete (whileblock);
+            delete (exprWhile);
             return (Instr *)nullptr;
         } else {
             // TODO : voir quoi faire en cas de boucle infinie
@@ -737,20 +766,30 @@ antlrcpp::Any ASTGenerator::visitCdtand(ifccParser::CdtandContext * ctx) {
 
     if (op1Lit && op2Lit) {
         if (val1 != 0 && val2 != 0) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
         }
     } else if (op1Lit && !op2Lit) {
         if (val1 != 0) {
+            delete (op1);
             return op2;
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
         }
     } else if (op2Lit && !op1Lit) {
         if (val2 != 0) {
+            delete (op2);
             return op1;
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
         }
     }
@@ -773,20 +812,30 @@ antlrcpp::Any ASTGenerator::visitCdtor(ifccParser::CdtorContext * ctx) {
 
     if (op1Lit && op2Lit) {
         if (val1 != 0 || val2 != 0) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
         }
     } else if (op1Lit && !op2Lit) {
         if (val1 != 0) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
         } else {
+            delete (op1);
             return op2;
         }
     } else if (op2Lit && !op1Lit) {
         if (val2 != 0) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
         } else {
+            delete (op2);
             return op1;
         }
     }
@@ -809,8 +858,12 @@ antlrcpp::Any ASTGenerator::visitEqual(ifccParser::EqualContext * ctx) {
 
     if (op1Lit && op2Lit) {
         if (val1 == val2) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
         }
     }
@@ -833,8 +886,12 @@ antlrcpp::Any ASTGenerator::visitNotequal(ifccParser::NotequalContext * ctx) {
 
     if (op1Lit && op2Lit) {
         if (val1 != val2) {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
         } else {
+            delete (op1);
+            delete (op2);
             return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
         }
     }
@@ -870,26 +927,42 @@ antlrcpp::Any ASTGenerator::visitGreater_equal_lesser_equal(ifccParser::Greater_
     if (op1Lit && op2Lit) {
         if (binaryOperator == GREATERE) {
             if (val1 >= val2) {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
             } else {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
             }
         } else if (binaryOperator == GREATER) {
             if (val1 > val2) {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
             } else {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
             }
         } else if (binaryOperator == LESSE) {
             if (val1 <= val2) {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
             } else {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
             }
         } else if (binaryOperator == LESS) {
             if (val1 < val2) {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 1, currentScope);
             } else {
+                delete (op1);
+                delete (op2);
                 return (Expr *)new ConstLiteral(ctx->start->getLine(), 0, currentScope);
             }
         }
