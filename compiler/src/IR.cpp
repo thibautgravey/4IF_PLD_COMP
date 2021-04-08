@@ -103,7 +103,9 @@ void IRInstr::gen_asm_X86(ostream & o) {
             o << "        movq     %rax, " << p1 << endl;
             break;
         case rmem:
-            o << "        movq     " << p2 << ", " << p1 << endl;
+            o << "        movq     " << p1 << ", %rax" << endl;
+            o << "        movq     (%rax), %r10" << endl;
+            o << "        movq     %r10, " << p2 << endl;
             break;
         case wmem:
             o << "        movq     " << p1 << ", %rax" << endl;
