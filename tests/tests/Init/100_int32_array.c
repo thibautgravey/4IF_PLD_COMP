@@ -6,7 +6,7 @@ char main() {
     int32_t b[32];
     int32_t c[] = {3,5678};
 
-    int32_t i = 32;
+    int64_t i = 32;
 
     while (i > 0) {
         i = i - 1;

@@ -7,7 +7,7 @@ char main() {
     char c[] = {123,3};
     //char d[] = "Hey!";
 
-    char i = 64;
+    int64_t i = 64;
 
     while (i > 0) {
         i = i - 1;
