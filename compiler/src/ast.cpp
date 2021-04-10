@@ -19,9 +19,9 @@ string ExprArrayLvalue::GenerateIR(CFG * cfg) {
     string tempExpr = this->pos->GenerateIR(cfg);
     int offset = cfg->GetSymbolTable()->GetVariableOffset(cfg->GetName(), this->name, this->scope);
     string tempVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, { tempVar, to_string ( offset ) }, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, tempExpr, tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tempVar, to_string(offset)}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tempVar, tempExpr, tempVar}, this->scope);
     return tempVar;
 }
 
@@ -35,11 +35,11 @@ string ExprArrayRvalue::GenerateIR(CFG * cfg) {
     int offset = cfg->GetSymbolTable()->GetVariableOffset(cfg->GetName(), this->name, this->scope);
     string tempVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
     string tempVar2 = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, { tempVar, to_string ( offset ) }, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, tempExpr, tempVar}, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::rmem,Type::INT32_T, {tempVar2, tempVar}, this->scope);
-    return tempVar;
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tempVar, to_string(offset)}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tempVar, tempExpr, tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::rmem, Type::INT32_T, {tempVar, tempVar2}, this->scope);
+    return tempVar2;
 }
 
 //------- Réalisation de la classe <ExprVarRvalue> ---
@@ -59,23 +59,22 @@ string ExprVarLvalue::GetName() {
 string ExprVarLvalue::GenerateIR(CFG * cfg) {
     int offset = cfg->GetSymbolTable()->GetVariableOffset(cfg->GetName(), this->name, this->scope);
     string tempVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, { tempVar, to_string ( offset ) }, this->scope);
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add,Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {tempVar, to_string(offset)}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT32_T, {tempVar, "base_pointer", tempVar}, this->scope);
     return tempVar;
 }
-
 
 //------- Réalisation de la classe <InstrArrayMultiAffect> ---
 string InstrArrayMultiAffect::GetName() {
     return this->name;
 }
 
-vector<Expr*> InstrArrayMultiAffect::GetValues(){
+vector<Expr *> InstrArrayMultiAffect::GetValues() {
     return this->values;
 }
 
 void InstrArrayMultiAffect::GenerateIR(CFG * cfg) {
-    for ( Expr * e : values) {
+    for (Expr * e : values) {
         e->GenerateIR(cfg);
     }
 }
@@ -269,7 +268,6 @@ void ReturnInstr::GenerateIR(CFG * cfg) {
 
 Expr * ExprAffectation::GetLValue() {
     return this->lValue;
-
 }
 
 Expr * ExprAffectation::GetRValue() {
@@ -287,7 +285,7 @@ string ExprAffectation::GenerateIR(CFG * cfg) {
 
     string leftVarName = lValue->GenerateIR(cfg);
 
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::wmem, Type::INT32_T, { leftVarName, rightVarName }, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::wmem, Type::INT32_T, {leftVarName, rightVarName}, this->scope);
 
     return rightVarName;
 }

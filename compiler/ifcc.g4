@@ -21,7 +21,9 @@ param: TYPE ID;
 
 var_decl: TYPE ID ('=' expr)? (inline_var_decl)* ';';
 
-array_decl: TYPE ID '[' CONST? ']' ('=' '{' expr_list '}')? ';';
+array_decl:
+	TYPE ID '[' ']' '=' '{' expr_list '}' ';'				# array_decl_no_size
+	| TYPE ID '[' CONST ']' ('=' '{' expr_list '}')? ';'	# array_decl_size;
 
 inline_var_decl: (',' ID ('=' expr)?);
 
@@ -57,7 +59,8 @@ expr:
 	| expr OP_LOGICAL_AND expr		# cdtand
 	| expr OP_LOGICAL_OR expr		# cdtor
 	| ID OP_EQUAL expr				# var_aff
-	| ID OP_EQUAL '{' expr_list '}'	# array_aff;
+	| ID OP_EQUAL '{' expr_list '}'	# array_aff
+	| ID '[' expr ']' OP_EQUAL expr	# array_element_aff;
 
 expr_list: expr (',' expr)*;
 
