@@ -97,7 +97,6 @@ class ExprVarLvalue : public Expr {
     string name;
 };
 
-
 //---------- Interface de la classe <ConstLiteral> ----------------
 class ConstLiteral : public Expr {
   public:
@@ -233,7 +232,7 @@ class ExprAffectation : public Expr {
 
     //-------------------------------------------- Constructeurs - destructeur
     ExprAffectation(Expr * lValue, Expr * rValue, int line, string scope)
-        : Expr(line, scope), lValue(lValue), rValue(rValue) {};
+        : Expr(line, scope), lValue(lValue), rValue(rValue){};
 
     virtual ~ExprAffectation();
 
@@ -350,6 +349,34 @@ class ForInstr : public Instr {
     Expr * conditionnalExpr;
     vector<Expr *> updateExprs;
     BlockInstr * forBlock;
+};
+
+class BreakInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual void GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    BreakInstr(int line, string scope)
+        : Instr(line, scope) {}
+
+    virtual ~BreakInstr() = default;
+
+  protected:
+};
+
+class ContinueInstr : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    virtual void GenerateIR(CFG * cfg);
+
+    //-------------------------------------------- Constructeurs - destructeur
+    ContinueInstr(int line, string scope)
+        : Instr(line, scope) {}
+
+    virtual ~ContinueInstr() = default;
+
+  protected:
 };
 
 //---------- Interface de la classe <Program> ----------------

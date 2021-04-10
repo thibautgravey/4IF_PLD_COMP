@@ -29,7 +29,12 @@ void IRInstr::gen_asm_X86(ostream & o) {
     string p1, p2, p3;
     Type t;
 
-    if (this->op != call) {
+    if (this->op == call) {
+        p1 = this->params[0];
+        p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1], this->bb->scope, this->t);
+    } else if (this->op == jmp) {
+        p1 = this->params[0];
+    } else {
         switch (this->params.size()) {
             case 3:
                 p3 = this->bb->cfg->IR_reg_to_asm_X86(this->params[2], this->bb->scope, this->t);
@@ -40,9 +45,6 @@ void IRInstr::gen_asm_X86(ostream & o) {
             default:
                 break;
         }
-    } else {
-        p1 = this->params[0];
-        p2 = this->bb->cfg->IR_reg_to_asm_X86(this->params[1], this->bb->scope, this->t);
     }
 
     switch (this->op) {
@@ -255,6 +257,8 @@ void IRInstr::gen_asm_X86(ostream & o) {
             o << "        " << getMovInstr() << "       " << p1 << ", " << getReg1() << endl;
             o << "        jmp        " << bb->cfg->bb_epilogue->label << endl;
             break;
+        case jmp:
+            o << "        jmp        " << p1 << endl;
 
         default:
             break;
@@ -542,6 +546,7 @@ void CFG::gen_asm_X86(ostream & o) {
     vector<BasicBlock *>::iterator it2;
 
     bool use_block_label = false;
+    /*
     for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
         if (delete_jump == false) {
             o << (*it)->label << ":" << endl;
@@ -587,6 +592,26 @@ void CFG::gen_asm_X86(ostream & o) {
             } else {
                 delete_jump = true;
             }
+        }
+    }
+    */
+
+    for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
+        o << (*it)->label << ":" << endl;
+
+        for (IRInstr * instr : (*it)->instrs) {
+            instr->gen_asm_X86(o);
+        }
+
+        if ((*it)->exit_false == nullptr) {
+            o << "        jmp        " << (*it)->exit_true->label << endl;
+
+        } else {
+            Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
+            o << "        cmpl       $1, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
+            o << "        jne        " << (*it)->exit_false->label << endl;
+
+            o << "        jmp        " << (*it)->exit_true->label << endl;
         }
     }
 
@@ -862,6 +887,30 @@ SymbolTable * CFG::GetSymbolTable() {
 string CFG::GetName() {
     return this->cfgName;
 }
+
+string CFG::GetCurrentLoopEntryLabel() {
+    return this->currentLoopEntryLabels.back();
+} //----- Fin de GetCurrentLoopEntryLabel
+
+void CFG::AddCurrentLoopEntryLabel(string label) {
+    this->currentLoopEntryLabels.push_back(label);
+} //----- Fin de AddCurrentLoopEntryLabel
+
+void CFG::RemoveLastCurrentLoopEntryLabel() {
+    this->currentLoopEntryLabels.pop_back();
+} //----- Fin de RemoveLastCurrentLoopEntryLabel
+
+string CFG::GetCurrentLoopEndLabel() {
+    return this->currentLoopEndLabels.back();
+} //----- Fin de GetCurrentLoopEndLabel
+
+void CFG::AddCurrentLoopEndLabel(string label) {
+    this->currentLoopEndLabels.push_back(label);
+} //----- Fin de AddCurrentLoopEndLabel
+
+void CFG::RemoveLastCurrentLoopEndLabel() {
+    this->currentLoopEndLabels.pop_back();
+} //----- Fin de RemoveLastCurrentLoopEndLabel
 
 CFG::~CFG() {
     for (BasicBlock * bb : bbs) {

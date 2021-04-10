@@ -47,7 +47,8 @@ class IRInstr {
         cmp_g,
         cmp_l,
         cmp_le,
-        ret
+        ret,
+        jmp
     } Operation;
 
     /**  constructor */
@@ -162,6 +163,12 @@ class CFG {
     BasicBlock * GetCurrentBB();
     SymbolTable * GetSymbolTable();
     string GetName();
+    string GetCurrentLoopEntryLabel();
+    void AddCurrentLoopEntryLabel(string label);
+    void RemoveLastCurrentLoopEntryLabel();
+    string GetCurrentLoopEndLabel();
+    void AddCurrentLoopEndLabel(string label);
+    void RemoveLastCurrentLoopEndLabel();
 
     // basic block management
     string new_BB_name(const string & prefix = "");
@@ -176,6 +183,8 @@ class CFG {
     BasicBlock * current_bb;
     SymbolTable * symbolTable;
     string cfgName;
+    vector<string> currentLoopEntryLabels;
+    vector<string> currentLoopEndLabels;
 };
 
 class IR {

@@ -416,6 +416,9 @@ void WhileInstr::GenerateIR(CFG * cfg) {
     whileBB = new BasicBlock(cfg, cfg->new_BB_name());
     endwhile = new BasicBlock(cfg, cfg->new_BB_name());
 
+    cfg->AddCurrentLoopEntryLabel(testBB->label);
+    cfg->AddCurrentLoopEndLabel(endwhile->label);
+
     cfg->GetCurrentBB()->exit_true = testBB;
 
     // Ajout des instructions test
@@ -430,6 +433,9 @@ void WhileInstr::GenerateIR(CFG * cfg) {
     cfg->GetCurrentBB()->exit_true = testBB;
 
     cfg->add_bb(endwhile);
+
+    cfg->RemoveLastCurrentLoopEntryLabel();
+    cfg->RemoveLastCurrentLoopEndLabel();
 }
 
 WhileInstr::~WhileInstr() {
@@ -459,13 +465,17 @@ BlockInstr * ForInstr::GetForBlock() {
 }
 
 void ForInstr::GenerateIR(CFG * cfg) {
-    BasicBlock *enterForBB, *testBB, *forBB, *endFor;
+    BasicBlock *enterForBB, *testBB, *forBB, *endFor, *updateBB;
 
     //Création des BB
     enterForBB = new BasicBlock(cfg, cfg->new_BB_name());
     forBB = new BasicBlock(cfg, cfg->new_BB_name());
     testBB = new BasicBlock(cfg, cfg->new_BB_name());
     endFor = new BasicBlock(cfg, cfg->new_BB_name());
+    updateBB = new BasicBlock(cfg, cfg->new_BB_name());
+
+    cfg->AddCurrentLoopEntryLabel(updateBB->label);
+    cfg->AddCurrentLoopEndLabel(endFor->label);
 
     cfg->GetCurrentBB()->exit_true = enterForBB;
 
@@ -485,6 +495,9 @@ void ForInstr::GenerateIR(CFG * cfg) {
     // Ajout des instructions forBB
     cfg->add_bb(forBB);
     forBlock->GenerateIR(cfg);
+    cfg->GetCurrentBB()->exit_true = updateBB;
+
+    cfg->add_bb(updateBB);
     for (Expr * e : updateExprs) {
         e->GenerateIR(cfg);
     }
@@ -492,6 +505,9 @@ void ForInstr::GenerateIR(CFG * cfg) {
 
     // Ajout du bb de sortie
     cfg->add_bb(endFor);
+
+    cfg->RemoveLastCurrentLoopEntryLabel();
+    cfg->RemoveLastCurrentLoopEndLabel();
 }
 
 ForInstr::~ForInstr() {
@@ -506,6 +522,14 @@ ForInstr::~ForInstr() {
     }
 
     delete (forBlock);
+}
+
+void BreakInstr::GenerateIR(CFG * cfg) {
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::jmp, VOID, {cfg->GetCurrentLoopEndLabel()}, this->scope);
+}
+
+void ContinueInstr::GenerateIR(CFG * cfg) {
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::jmp, VOID, {cfg->GetCurrentLoopEntryLabel()}, this->scope);
 }
 
 //----------------//

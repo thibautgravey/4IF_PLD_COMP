@@ -13,7 +13,9 @@ line:
 	| ifblock
 	| whileblock
 	| forblock
-	| block;
+	| block
+	| BREAK ';'
+	| CONTINUE ';';
 
 param_list: param (',' param)*;
 
@@ -85,6 +87,8 @@ OP_LESSER_EQUAL: '<=';
 OP_LESSER: '<';
 OP_LOGICAL_AND: '&&';
 OP_LOGICAL_OR: '||';
+BREAK: 'break';
+CONTINUE: 'continue';
 
 ID: [_a-zA-Z][_a-zA-Z0-9]*;
 
