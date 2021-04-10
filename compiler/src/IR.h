@@ -58,6 +58,8 @@ class IRInstr {
 
     void gen_asm_ARM(ostream & o); /**< ARM assembly code generation for this IR instruction */
 
+    bool param_is_number(string p);
+
   protected:
     string getMovInstr();
     string getMovInstr(Type requestType);
