@@ -2,7 +2,7 @@
 
 int32_t main()
 {
-    int32_t ret;
+    int32_t ret = 0;
     int32_t a = 1;
     ret = ret + a;
     {
