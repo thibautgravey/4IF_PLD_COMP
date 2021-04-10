@@ -521,7 +521,6 @@ antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
 
 antlrcpp::Any ASTGenerator::visitParam_list(ifccParser::Param_listContext * ctx) {
     vector<FunctionParam *> params;
-    //vector<Param *> params;
 
     for (int i = 0; i < ctx->param().size(); i++) {
         params.push_back(visit(ctx->param(i)));
@@ -533,7 +532,6 @@ antlrcpp::Any ASTGenerator::visitParam_list(ifccParser::Param_listContext * ctx)
 antlrcpp::Any ASTGenerator::visitParam(ifccParser::ParamContext * ctx) {
     Type type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
     return new FunctionParam(type, ctx->ID()->getText());
-    //return new Param(ctx->start->getLine(), ctx->ID()->getText(), type);
 } //----- Fin de visitParam
 
 antlrcpp::Any ASTGenerator::visitExpr_list(ifccParser::Expr_listContext * ctx) {
@@ -630,7 +628,7 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
         whileblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
         whileblock->AddInstr(instr);
         reduceScope();
-    } else { //
+    } else {
         whileblock = (BlockInstr *)visit(ctx->block());
     }
 
