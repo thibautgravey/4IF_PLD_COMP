@@ -94,7 +94,9 @@ class ASTGenerator : public ifccBaseVisitor {
 
     virtual antlrcpp::Any visitArray(ifccParser::ArrayContext * ctx) override;
 
-    virtual antlrcpp::Any visitArray_decl(ifccParser::Array_declContext * ctx) override;
+    virtual antlrcpp::Any visitArray_decl_size(ifccParser::Array_decl_sizeContext * ctx) override;
+
+    virtual antlrcpp::Any visitArray_decl_no_size(ifccParser::Array_decl_no_sizeContext * ctx) override;
 
     virtual antlrcpp::Any visitArray_aff(ifccParser::Array_affContext * ctx) override;
 
