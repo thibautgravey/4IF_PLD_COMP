@@ -376,11 +376,12 @@ void CFG::gen_asm_X86(ostream & o) {
             }
 
         } else {
-            o << "        cmpl     $1, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope) << endl;
-            o << "        jne      " << (*it)->exit_false->label << endl;
-
-            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
-                o << "        jmp      " << (*it)->exit_true->label << endl;
+            o << "        cmpq     $0, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope) << endl;
+            o << "        jne      " << (*it)->exit_true->label << endl;
+            //o << "        jmp      " << (*it)->exit_false->label << endl;
+            
+            if ((*(it + 1))->label != (*it)->exit_false->label || use_block_label) {
+                o << "        jmp      " << (*it)->exit_false->label << endl;
             } else {
                 delete_jump = true;
             }

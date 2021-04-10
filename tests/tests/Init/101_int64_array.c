@@ -8,8 +8,7 @@ char main() {
 
     int64_t i = 32;
 
-    while (i > 0) {
-        i = i - 1;
+    while (i = i - 1) {
         b[i] = i-27;
     }
 
