@@ -710,6 +710,8 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(conditionalExpr);
     if (constExpr) {
         if (constExpr->GetValue() == 0) {
+            delete (forBlock);
+            delete (conditionalExpr);
             return (Instr *)nullptr;
         } else {
             // TODO : voir quoi faire en cas de boucle infinie
