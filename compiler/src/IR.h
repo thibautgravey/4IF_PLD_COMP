@@ -153,7 +153,7 @@ class CFG {
     string IR_reg_to_asm_ARM(string reg, string scope);
 
     bool gen_asm_prologue_X86(ostream & o, BasicBlock * bb);
-    void gen_asm_prologue_ARM(ostream & o, BasicBlock * bb);
+    bool gen_asm_prologue_ARM(ostream & o, BasicBlock * bb);
 
     void gen_asm_epilogue_X86(ostream & o, BasicBlock * bb);
     void gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb);
