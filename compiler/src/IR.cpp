@@ -267,6 +267,13 @@ void IRInstr::gen_asm_X86(ostream & o) {
             break;
     }
 } //fin de gen_asm_X86(Ir_Instr)
+bool IRInstr::param_is_number(string p) {
+    for (int i = 0; i < p.size(); i++) {
+        if (!(isdigit(p[i]) || p[i] == '-'))
+            return false;
+    }
+    return true;
+}
 
 void IRInstr::gen_asm_ARM(ostream & o) {
 
@@ -293,54 +300,132 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        str     r3, " << p1 << endl;
             break;
         case copy:
-            o << "        ldr     r3, " << p2 << endl;
-            o << "        str     r3, " << p1 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r3, #" << p2 << endl;
+                o << "        str     r3, " << p1 << endl;
+            } else {
+                o << "        ldr     r3, " << p2 << endl;
+                o << "        str     r3, " << p1 << endl;
+            }
             break;
         case add:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
-            o << "        add     r3, r2, r3" << endl;
-            o << "        str     r3, " << p1 << endl;
+            if (p2 == "base_pointer") {
+                if (param_is_number(p3)) {
+                    o << "        movs    r3, #" << p3 << endl;
+                } else {
+                    o << "        ldr     r3, " << p3 << endl;
+                    //Invert sign bc of x86 negativ offset
+                    o << "        neg     r3, r3" << endl;
+                }
+                o << "        add     r3, r7, r3" << endl;
+                o << "        str     r3, " << p1 << endl;
+
+            } else {
+                if (param_is_number(p2)) {
+                    o << "        movs    r2, #" << p2 << endl;
+                } else {
+                    o << "        ldr     r2, " << p2 << endl;
+                }
+                if (param_is_number(p3)) {
+                    o << "        movs    r3, #" << p3 << endl;
+                } else {
+                    o << "        ldr     r3, " << p3 << endl;
+                }
+                o << "        add     r3, r2, r3" << endl;
+                o << "        str     r3, " << p1 << endl;
+            }
             break;
         case sub:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r2, #" << p2 << endl;
+            } else {
+                o << "        ldr     r2, " << p2 << endl;
+            }
+            if (param_is_number(p3)) {
+                o << "        movs    r3, #" << p3 << endl;
+            } else {
+                o << "        ldr     r3, " << p3 << endl;
+            }
             o << "        subs    r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case mul:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r2, #" << p2 << endl;
+            } else {
+                o << "        ldr     r2, " << p2 << endl;
+            }
+            if (param_is_number(p3)) {
+                o << "        movs    r3, #" << p3 << endl;
+            } else {
+                o << "        ldr     r3, " << p3 << endl;
+            }
             o << "        mul     r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case div:
-            o << "        ldr     r0, " << p2 << endl;
-            o << "        ldr     r1, " << p3 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r0, #" << p2 << endl;
+            } else {
+                o << "        ldr     r0, " << p2 << endl;
+            }
+            if (param_is_number(p3)) {
+                o << "        movs    r1, #" << p3 << endl;
+            } else {
+                o << "        ldr     r1, " << p3 << endl;
+            }
             o << "        bl      __aeabi_idiv(PLT)" << endl;
             o << "        mov     r3, r0" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case orB:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r2, #" << p2 << endl;
+            } else {
+                o << "        ldr     r2, " << p2 << endl;
+            }
+            if (param_is_number(p3)) {
+                o << "        movs    r3, #" << p3 << endl;
+            } else {
+                o << "        ldr     r3, " << p3 << endl;
+            }
             o << "        orrs    r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case andB:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r2, #" << p2 << endl;
+            } else {
+                o << "        ldr     r2, " << p2 << endl;
+            }
+            if (param_is_number(p3)) {
+                o << "        movs    r3, #" << p3 << endl;
+            } else {
+                o << "        ldr     r3, " << p3 << endl;
+            }
             o << "        ands     r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case xorB:
-            o << "        ldr     r2, " << p2 << endl;
-            o << "        ldr     r3, " << p3 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r2, #" << p2 << endl;
+            } else {
+                o << "        ldr     r2, " << p2 << endl;
+            }
+            if (param_is_number(p3)) {
+                o << "        movs    r3, #" << p3 << endl;
+            } else {
+                o << "        ldr     r3, " << p3 << endl;
+            }
             o << "        eors     r3, r2, r3" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
         case neg:
-            o << "        ldr     r3, " << p2 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r3, #" << p2 << endl;
+            } else {
+                o << "        ldr     r3, " << p2 << endl;
+            }
             o << "        cmp     r3, #0" << endl;
             o << "        ite     eq" << endl;
             o << "        moveq   r3, #1" << endl;
@@ -349,7 +434,11 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        str     r3, " << p1 << endl;
             break;
         case opp:
-            o << "        ldr     r3, " << p2 << endl;
+            if (param_is_number(p2)) {
+                o << "        movs    r3, #" << p2 << endl;
+            } else {
+                o << "        ldr     r3, " << p2 << endl;
+            }
             o << "        rsbs     r3, r3, #0" << endl;
             o << "        str     r3, " << p1 << endl;
             break;
@@ -357,22 +446,78 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        rmem" << endl;
             break;
         case wmem:
-            o << "wmem NOT IMPLEMENDTED" << endl;
+            if (param_is_number(p2)) {
+                o << "        movs     r3, #" << p2 << endl;
+                o << "        ldr     r2, " << p1 << endl;
+                o << "        str     r3, [r2]" << endl;
+            } else {
+                o << "        ldr     r3, " << p2 << endl;
+                o << "        ldr     r2, " << p1 << endl;
+                o << "        str     r3, [r2]" << endl;
+            }
             break;
-        case call:
+        // begin to change
+        case call: {
+            // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
+            for (int i = 2; i < params.size(); i++) {
+                p3 = this->bb->cfg->IR_reg_to_asm_ARM(this->params[i], this->bb->scope);
+                string dest;
+                switch (i - 2) {
+                    case 0:
+                        dest = "r0";
+                        break;
+                    case 1:
+                        dest = "r1";
+                        break;
+                    case 2:
+                        dest = "r2";
+                        break;
+                    case 3:
+                        dest = "r3";
+                        break;
+                }
+                if (param_is_number(p3)) {
+                    o << "        movs    " << dest << ", #" << p3 << endl;
+                } else {
+                    o << "        ldr     " << dest << ", " << p3 << endl;
+                }
+            }
             o << "        bl    " << p1 << endl;
+            o << "        mov     r3, r0" << endl;
+            o << "        str     r3, " << p2 << endl;
             break;
+        }
         case cmp_eq:
-            o << "cmp_eq NOT IMPLEMENDTED" << endl;
+            o << "  cmp_eq NOT IMPLEMENDTED" << endl;
+            break;
+        case cmp_neq:
+            o << "  cmp_neq NOT IMPLEMENDTED" << endl;
+            break;
+        case cmp_g:
+            o << "  cmp_g NOT IMPLEMENDTED" << endl;
+            break;
+        case cmp_ge:
+            o << "  cmp_ge NOT IMPLEMENDTED" << endl;
             break;
         case cmp_l:
-            o << "cmp_lt NOT IMPLEMENDTED" << endl;
+            o << "  cmp_l NOT IMPLEMENDTED" << endl;
             break;
         case cmp_le:
-            o << "cmp_eq NOT IMPLEMENDTED" << endl;
+            o << "  cmp_le NOT IMPLEMENDTED" << endl;
             break;
+        case cdtAnd:
+            o << " cdtAnd  NOT IMPLEMENDTED" << endl;
+            break;
+        case cdtOr:
+            o << "  cdtOr NOT IMPLEMENDTED" << endl;
+            break;
+            //end to change
         case ret:
-            o << "        ldr     r3, " << p1 << endl;
+            if (param_is_number(p1)) {
+                o << "        movs    r3, #" << p1 << endl;
+            } else {
+                o << "        ldr     r3, " << p1 << endl;
+            }
             break;
         default:
             break;
@@ -492,24 +637,76 @@ void CFG::gen_asm_X86(ostream & o) {
 } //fin de gen_asm_x86(CFG)
 
 void CFG::gen_asm_ARM(ostream & o) {
-    BasicBlock * lastbb = this->bbs.back();
-    this->bbs.pop_back();
-    gen_asm_prologue_ARM(o, this->bbs[0]);
-    this->bbs.erase(this->bbs.begin());
-    for (BasicBlock * bb : this->bbs) {
-        o << bb->label << ":" << endl;
-        for (IRInstr * instr : bb->instrs) {
+    bool delete_jump = gen_asm_prologue_ARM(o, this->bbs[0]);
+
+    vector<BasicBlock *>::iterator it;
+    vector<BasicBlock *>::iterator it2;
+
+    bool use_block_label = false;
+    for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
+        if (delete_jump == false) {
+            o << (*it)->label << ":" << endl;
+        } else {
+            delete_jump = false;
+        }
+
+        for (IRInstr * instr : (*it)->instrs) {
             instr->gen_asm_ARM(o);
         }
-        if (bb->exit_false == nullptr) {
-            o << "        b " << bb->exit_true->label << endl;
+
+        use_block_label = false;
+
+        for (it2 = this->bbs.begin() + 1; it2 != (it); it2++) {
+            if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
+                use_block_label = true;
+                break;
+            }
+        }
+
+        for (it2 = it + 1; it2 != (this->bbs.end() - 1); it2++) {
+            if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
+                use_block_label = true;
+                break;
+            }
+        }
+        if ((*it)->exit_false == nullptr) {
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        bl      " << (*it)->exit_true->label << endl;
+
+            } else {
+                delete_jump = true;
+            }
+
         } else {
-            o << "        beq " << bb->exit_true->label << endl;
-            o << "        b " << bb->exit_false->label << endl;
+            o << "        cmp     $1, " << (*it)->cfg->IR_reg_to_asm_ARM((*it)->test_var_name, (*it)->scope) << endl;
+            o << "        bne      " << (*it)->exit_false->label << endl;
+
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        bl      " << (*it)->exit_true->label << endl;
+            } else {
+                delete_jump = true;
+            }
         }
     }
 
-    gen_asm_epilogue_ARM(o, lastbb);
+    // BasicBlock * lastbb = this->bbs.back();
+    // this->bbs.pop_back();
+    // gen_asm_prologue_ARM(o, this->bbs[0]);
+    // this->bbs.erase(this->bbs.begin());
+    // for (BasicBlock * bb : this->bbs) {
+    //     o << bb->label << ":" << endl;
+    //     for (IRInstr * instr : bb->instrs) {
+    //         instr->gen_asm_ARM(o);
+    //     }
+    //     if (bb->exit_false == nullptr) {
+    //         o << "        b " << bb->exit_true->label << endl;
+    //     } else {
+    //         o << "        beq " << bb->exit_true->label << endl;
+    //         o << "        b " << bb->exit_false->label << endl;
+    //     }
+    // }
+
+    gen_asm_epilogue_ARM(o, this->bbs[this->bbs.size() - 1]);
 } //fin de gen_asm_ARM(CFG)
 
 string CFG::IR_reg_to_asm_X86(string reg, string scope, Type type) {
@@ -575,12 +772,22 @@ string CFG::IR_reg_to_asm_ARM(string reg, string scope) {
     string ret;
 
     if (reg == "reg1") {
-        ret = "r3";
+        ret = 'r3';
     } else if (reg == "reg2") {
+        ret = 'r0';
+    } else if (reg == "paramReg1") {
         ret = "r0";
+    } else if (reg == "paramReg2") {
+        ret = "r1";
+    } else if (reg == "paramReg3") {
+        ret = "r2";
+    } else if (reg == "paramReg4") {
+        ret = "r3";
+    } else if (reg == "base_pointer") {
+        ret = "base_pointer";
     } else {
-        if (this->symbolTable->LookUpVariable("main", reg, scope)) {
-            int offset = -(this->symbolTable->GetVariableOffset("main", reg, scope));
+        if (this->symbolTable->LookUpVariable(cfgName, reg, scope)) {
+            int offset = -(this->symbolTable->GetVariableOffset(cfgName, reg, scope));
             ret = "[r7, #" + to_string(offset) + "]";
         } else {
             ret = reg;
@@ -624,11 +831,26 @@ bool CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
     return jump;
 } //fin de gen_asm_prologue
 
-void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
-    o << bb->label << ":" << endl;
+//TODO
+bool CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
+    bool jump = true;
+    vector<BasicBlock *>::iterator it2;
+    for (it2 = this->bbs.begin() + 1; it2 != (this->bbs.end() - 1); it2++) {
+        if ((*it2)->exit_true == bb->exit_true || (*it2)->exit_false == bb->exit_true) {
+            jump = false;
+            break;
+        }
+    }
+
+    o << "        .global " << cfgName << endl
+      << endl;
+    o << cfgName << ":" << endl;
+    if (jump == false) {
+        o << bb->label << ":" << endl;
+    }
     o << "        push    {r7, lr}" << endl; //si main : push    {r7, lr}
 
-    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction("main");
+    int spaceNeeded = this->symbolTable->CalculateSpaceForFunction(cfgName);
 
     // Round space to the nearest multiple of 4
     if (spaceNeeded % 4) {
@@ -636,8 +858,10 @@ void CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
     }
     o << "        sub     sp, sp, #" << spaceNeeded << endl;
     o << "        add     r7, sp, #0" << endl;
-    // o << "        subq     $" << to_string(spaceNeeded) << ", %rsp" << endl;
-    // o << "        jmp " << bb->exit_true->label << endl;
+    if (jump == false) {
+        o << "        bl " << bb->exit_true->label << endl;
+    }
+    return jump;
 } //fin de gen_asm_prologue_ARM
 
 void CFG::gen_asm_epilogue_X86(ostream & o, BasicBlock * bb) {
@@ -740,9 +964,8 @@ void IR::gen_asm_prologue_global_X86(ostream & o) {
 } //----- Fin de gen_asm_prologue_global_X86
 
 void IR::gen_asm_prologue_global_ARM(ostream & o) {
-    o << ".global	main" << endl;
+    // o << ".global	main" << endl;
     o << ".syntax unified" << endl;
-    o << "main:" << endl;
 } //----- Fin de gen_asm_prologue_global_ARM
 
 IR::~IR() {

@@ -59,6 +59,8 @@ class IRInstr {
 
     void gen_asm_ARM(ostream & o); /**< ARM assembly code generation for this IR instruction */
 
+    bool param_is_number(string p);
+
   protected:
     string getMovInstr();
     string getMovInstr(Type requestType);
@@ -154,7 +156,7 @@ class CFG {
     string IR_reg_to_asm_ARM(string reg, string scope);
 
     bool gen_asm_prologue_X86(ostream & o, BasicBlock * bb);
-    void gen_asm_prologue_ARM(ostream & o, BasicBlock * bb);
+    bool gen_asm_prologue_ARM(ostream & o, BasicBlock * bb);
 
     void gen_asm_epilogue_X86(ostream & o, BasicBlock * bb);
     void gen_asm_epilogue_ARM(ostream & o, BasicBlock * bb);
