@@ -74,6 +74,20 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
         instr = (Instr *)visit(ctx->forblock());
     } else if (ctx->block()) {
         instr = (Instr *)visit(ctx->block()).as<BlockInstr *>();
+    } else if (ctx->BREAK()) {
+        if (inLoop) {
+            instr = (Instr *)new BreakInstr(ctx->start->getLine(), currentScope);
+        } else {
+            this->program->SetErrorFlag(true);
+            return (Instr *)nullptr;
+        }
+    } else if (ctx->CONTINUE()) {
+        if (inLoop) {
+            instr = (Instr *)new ContinueInstr(ctx->start->getLine(), currentScope);
+        } else {
+            this->program->SetErrorFlag(true);
+            return (Instr *)nullptr;
+        }
     }
 
     return instr;
@@ -626,6 +640,8 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     }
 
     // Récupération des intructions du WHILE
+    bool tmpInLoop = inLoop;
+    inLoop = true;
     BlockInstr * whileblock;
     if (ctx->line()) {
         expandScope();
@@ -638,6 +654,7 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     } else {
         whileblock = (BlockInstr *)visit(ctx->block());
     }
+    inLoop = tmpInLoop;
 
     int64_t val;
     bool exprLit = isLiteral(exprWhile, val);
@@ -694,6 +711,8 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     reduceScope();
 
     // Récupération des intructions du FOR
+    bool tmpInLoop = inLoop;
+    inLoop = true;
     BlockInstr * forBlock;
     if (ctx->line()) {
         expandScope();
@@ -706,6 +725,7 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     } else {
         forBlock = (BlockInstr *)visit(ctx->block());
     }
+    inLoop = tmpInLoop;
 
     ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(conditionalExpr);
     if (constExpr) {

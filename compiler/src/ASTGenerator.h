@@ -97,7 +97,7 @@ class ASTGenerator : public ifccBaseVisitor {
 
     //-------------------------------------------- Constructeurs - destructeur
     ASTGenerator()
-        : program(nullptr), lastDeclaredType(ERROR), currentScope("0") {}
+        : program(nullptr), lastDeclaredType(ERROR), currentScope("0"), inLoop(false) {}
     // Mode d'emploi :
     //
     // Contrat :
@@ -120,6 +120,7 @@ class ASTGenerator : public ifccBaseVisitor {
     string currentFunction;
     string currentScope;
     vector<int> scopeIndexIncrement;
+    bool inLoop;
 };
 //-------------------------------- Autres définitions dépendantes de <ASTGenerator>
 
