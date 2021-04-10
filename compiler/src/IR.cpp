@@ -772,9 +772,9 @@ string CFG::IR_reg_to_asm_ARM(string reg, string scope) {
     string ret;
 
     if (reg == "reg1") {
-        ret = 'r3';
+        ret = "r3";
     } else if (reg == "reg2") {
-        ret = 'r0';
+        ret = "r0";
     } else if (reg == "paramReg1") {
         ret = "r0";
     } else if (reg == "paramReg2") {
