@@ -4,7 +4,7 @@ char main() {
 
     char a[4] = {74,65,87,1};
     char b[64];
-    char c[] = {123,3};
+    int64_t c[] = {123,3};
     //char d[] = "Hey!";
 
     int64_t i = 64;
