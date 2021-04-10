@@ -501,7 +501,7 @@ antlrcpp::Any ASTGenerator::visitArray(ifccParser::ArrayContext * ctx) {
     int line = ctx->start->getLine();
 
     BinaryOperator mult = MULT;
-    Expr * size = new ConstLiteral(line, -8, currentScope);
+    Expr * size = new ConstLiteral(line, 8, currentScope);
     Expr * pos2 = new OpBin(line,pos,size,MULT,currentScope);
 
     if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
@@ -516,13 +516,16 @@ antlrcpp::Any ASTGenerator::visitArray(ifccParser::ArrayContext * ctx) {
 }
 
 antlrcpp::Any ASTGenerator::visitArray_element_aff(ifccParser::Array_element_affContext * ctx) {
+    string varname = ctx->ID()->getText();
+    int line = ctx->start->getLine();
+
     //  Position
     Expr * pos = (Expr *)visit(ctx->expr(0));
     if (!checkExpr(pos)) {
         return (Expr *)nullptr;
     }
     BinaryOperator mult = MULT;
-    Expr * size = new ConstLiteral(line, -8, currentScope);
+    Expr * size = new ConstLiteral(line, 8, currentScope);
     Expr * pos2 = new OpBin(line,pos,size,MULT,currentScope);
 
     // rValue
@@ -532,21 +535,17 @@ antlrcpp::Any ASTGenerator::visitArray_element_aff(ifccParser::Array_element_aff
     }
 
     // leftValue
-    string varname = ctx->ID()->getText();
-    int line = ctx->start->getLine();
-    ExprArrayLvalue * lvalue;
+    ExprArrayLvalue * lValue;
 
     if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
-        lvalue = new ExprArrayLvalue(line, varname, pos, currentScope);
+        lValue = new ExprArrayLvalue(line, varname, pos2, currentScope);
         program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope); //delete ?
     } else {
         program->SetErrorFlag(true);
         cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
     }
 
-    //dos not work : expr not used
-
-    return (Expr *)lvalue;
+    return (Expr *)new ExprAffectation(lValue, rValue, line, currentScope);
 }
 
 antlrcpp::Any ASTGenerator::visitArray_decl_no_size(ifccParser::Array_decl_no_sizeContext * ctx) {
@@ -563,7 +562,7 @@ antlrcpp::Any ASTGenerator::visitArray_decl_no_size(ifccParser::Array_decl_no_si
 
         for (int i = 0; i < values.size() && i < size; i++) {
             Expr * rValue = values.at(i);
-            Expr * pos = new ConstLiteral(line, -i * 8, currentScope); //pos negativ ?
+            Expr * pos = new ConstLiteral(line, i * 8, currentScope); //pos negativ ?
             Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
             affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
         }
@@ -592,7 +591,7 @@ antlrcpp::Any ASTGenerator::visitArray_decl_size(ifccParser::Array_decl_sizeCont
 
             for (int i = 0; i < values.size() && i < size; i++) {
                 Expr * rValue = values.at(i);
-                Expr * pos = new ConstLiteral(line, -i * 8, currentScope); //pos negativ ?
+                Expr * pos = new ConstLiteral(line, i * 8, currentScope); //pos negativ ?
                 Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
                 affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
             }
@@ -620,7 +619,7 @@ antlrcpp::Any ASTGenerator::visitArray_aff(ifccParser::Array_affContext * ctx) {
 
             for (int i = 0; i < values.size(); i++) {
                 Expr * rValue = values.at(i);
-                Expr * pos = new ConstLiteral(line, -i * 8, currentScope);
+                Expr * pos = new ConstLiteral(line, i * 8, currentScope);
                 Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
                 affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
             }
