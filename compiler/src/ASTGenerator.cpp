@@ -560,8 +560,10 @@ antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
     if (ctx->line()) {
         expandScope();
         Instr * instr = visit(ctx->line());
-        ifblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
-        ifblock->AddInstr(instr);
+        if (instr != nullptr) {
+            ifblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+            ifblock->AddInstr(instr);
+        }
         reduceScope();
     } else {
         ifblock = (BlockInstr *)visit(ctx->block());
@@ -598,15 +600,19 @@ antlrcpp::Any ASTGenerator::visitElseblock(ifccParser::ElseblockContext * ctx) {
     if (ctx->line()) {
         expandScope();
         Instr * instr = visit(ctx->line());
-        elseblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
-        elseblock->AddInstr(instr);
+        if (instr != nullptr) {
+            elseblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+            elseblock->AddInstr(instr);
+        }
         reduceScope();
     } else if (ctx->block()) {
         elseblock = (BlockInstr *)visit(ctx->block());
     } else {
         Instr * instr = visit(ctx->ifblock());
-        elseblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
-        elseblock->AddInstr(instr);
+        if (instr != nullptr) {
+            elseblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+            elseblock->AddInstr(instr);
+        }
     }
 
     return elseblock;
@@ -624,8 +630,10 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     if (ctx->line()) {
         expandScope();
         Instr * instr = visit(ctx->line());
-        whileblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
-        whileblock->AddInstr(instr);
+        if (instr != nullptr) {
+            whileblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+            whileblock->AddInstr(instr);
+        }
         reduceScope();
     } else {
         whileblock = (BlockInstr *)visit(ctx->block());
@@ -690,8 +698,10 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     if (ctx->line()) {
         expandScope();
         Instr * instr = visit(ctx->line());
-        forBlock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
-        forBlock->AddInstr(instr);
+        if (instr != nullptr) {
+            forBlock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
+            forBlock->AddInstr(instr);
+        }
         reduceScope();
     } else {
         forBlock = (BlockInstr *)visit(ctx->block());
