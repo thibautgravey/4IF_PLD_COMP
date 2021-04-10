@@ -10,7 +10,40 @@ string Expr::GetScope() const {
     return this->scope;
 }
 
-//------- Réalisation de la classe <Var> ---
+//------- Réalisation de la classe <ExprArrayLvalue> ---
+string ExprArrayLvalue::GetName() {
+    return this->name;
+}
+
+string ExprArrayLvalue::GenerateIR(CFG * cfg) {
+    string tempExpr = this->pos->GenerateIR(cfg);
+    int offset = cfg->GetSymbolTable()->GetVariableOffset(cfg->GetName(), this->name, this->scope);
+    string tempVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT64_T, {tempVar, to_string(offset)}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT64_T, {tempVar, "base_pointer", tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT64_T, {tempVar, tempExpr, tempVar}, this->scope);
+    return tempVar;
+}
+
+//------- Réalisation de la classe <ExprArrayRvalue> ---
+string ExprArrayRvalue::GetName() {
+    return this->name;
+}
+
+string ExprArrayRvalue::GenerateIR(CFG * cfg) {
+    string tempExpr = this->pos->GenerateIR(cfg);
+    Type type = cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), this->name, this->scope);
+    int offset = cfg->GetSymbolTable()->GetVariableOffset(cfg->GetName(), this->name, this->scope);
+    string tempVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT64_T, this->scope);
+    string tempVar2 = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), type, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT64_T, {tempVar, to_string(offset)}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT64_T, {tempVar, "base_pointer", tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT64_T, {tempVar, tempExpr, tempVar}, this->scope);
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::rmem, type, {tempVar2, tempVar}, this->scope);
+    return tempVar2;
+}
+
+//------- Réalisation de la classe <ExprVarRvalue> ---
 string ExprVarRvalue::GetName() {
     return this->name;
 }
@@ -19,7 +52,7 @@ string ExprVarRvalue::GenerateIR(CFG * cfg) {
     return this->scope + this->name;
 }
 
-//------- Réalisation de la classe <Var> ---
+//------- Réalisation de la classe <ExprVarLvalue> ---
 string ExprVarLvalue::GetName() {
     return this->name;
 }
@@ -30,6 +63,21 @@ string ExprVarLvalue::GenerateIR(CFG * cfg) {
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT64_T, {tempVar, to_string(offset)}, this->scope);
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::add, Type::INT64_T, {tempVar, "base_pointer", tempVar}, this->scope);
     return tempVar;
+}
+
+//------- Réalisation de la classe <InstrArrayMultiAffect> ---
+string InstrArrayMultiAffect::GetName() {
+    return this->name;
+}
+
+vector<Expr *> InstrArrayMultiAffect::GetValues() {
+    return this->values;
+}
+
+void InstrArrayMultiAffect::GenerateIR(CFG * cfg) {
+    for (Expr * e : values) {
+        e->GenerateIR(cfg);
+    }
 }
 
 //------- Réalisation de la classe <ConstLiteral> ---
@@ -154,6 +202,7 @@ UnitOperator OpUn::GetOp() {
 }
 
 string OpUn::GenerateIR(CFG * cfg) {
+    // TODO : changer type
     string tmpVar1 = this->operand->GenerateIR(cfg);
     string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
     switch (this->op) {
@@ -255,21 +304,10 @@ string ExprAffectation::GenerateIR(CFG * cfg) {
     string rightVarName = rValue->GenerateIR(cfg);
 
     string leftVarName = lValue->GenerateIR(cfg);
-    //vector<string> params = { right, left };
 
     Type t = cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), leftVarName, this->GetScope());
 
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::wmem, t, {leftVarName, rightVarName}, this->scope);
-
-    /*
-    if (cfg->GetSymbolTable()->IsUsedVariable(cfg->GetName(), leftVarName, this->scope)) {
-        if (dynamic_cast<ConstLiteral *>(rValue)) {
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::ldconst, Type::INT32_T, {leftVarName, rightVarName}, this->scope);
-        } else
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {leftVarName, rightVarName}, this->scope);
-        }
-    }
-    */
 
     return rightVarName;
 }

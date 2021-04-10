@@ -8,9 +8,10 @@ char main() {
 
     int32_t i = 32;
 
-    while (i = i - 1) {
+    while (i > 0) {
+        i = i - 1;
         b[i] = i+9;
     }
 
-    return b[30]+a[c[0]];
+    return b[1]+a[c[0]];
 }

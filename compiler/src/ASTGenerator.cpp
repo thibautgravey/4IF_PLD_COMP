@@ -58,6 +58,8 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
             }
         }
         return retVecInstr;
+    } else if (ctx->array_decl()) {
+        instr = (Instr *)visit(ctx->array_decl());
     } else if (ctx->expr()) {
         Expr * expr = visit(ctx->expr());
         if (expr == nullptr) {
@@ -384,15 +386,26 @@ antlrcpp::Any ASTGenerator::visitXor(ifccParser::XorContext * ctx) {
 antlrcpp::Any ASTGenerator::visitLiteral(ifccParser::LiteralContext * ctx) {
     Expr * ret = nullptr;
     if (ctx->CONST()) {
-        int64_t value;
-        istringstream tmpSS(ctx->getText());
-        tmpSS >> value;
+        string tmpText = ctx->getText();
+        char * end;
+        int64_t value = strtoull(tmpText.c_str(), &end, 10);
         ret = new ConstLiteral(ctx->start->getLine(), value, currentScope);
     } else if (ctx->CHAR()) {
-        ret = new CharLiteral(ctx->start->getLine(), ctx->getText()[1], currentScope);
+        char value = ctx->getText()[1];
+        if (ctx->OP_LESS()) {
+            value = -value;
+        } else if (ctx->OP_UNAIRE_NOT()) {
+            value = !value;
+        }
+        ret = new CharLiteral(ctx->start->getLine(), value, currentScope);
     } else if (ctx->ID()) {
         if (program->GetSymbolTable().LookUpVariable(currentFunction, ctx->ID()->getText(), currentScope)) {
             ret = new ExprVarRvalue(ctx->start->getLine(), ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
+            if (ctx->OP_LESS()) {
+                ret = new OpUn(ctx->start->getLine(), ret, OPP, currentScope);
+            } else if (ctx->OP_UNAIRE_NOT()) {
+                ret = new OpUn(ctx->start->getLine(), ret, NOT, currentScope);
+            }
             program->GetSymbolTable().SetUsedVariable(currentFunction, ctx->ID()->getText(), program->GetSymbolTable().GetVariableScope(currentFunction, ctx->ID()->getText(), currentScope));
         } else {
             program->SetErrorFlag(true);
@@ -560,6 +573,167 @@ antlrcpp::Any ASTGenerator::visitExpr_list(ifccParser::Expr_listContext * ctx) {
 
     return params;
 } //----- Fin de visitExpr_list
+
+antlrcpp::Any ASTGenerator::visitArray(ifccParser::ArrayContext * ctx) {
+
+    Expr * pos = (Expr *)visit(ctx->expr());
+    if (!checkExpr(pos)) {
+        return (Expr *)nullptr;
+    }
+
+    string varname = ctx->ID()->getText();
+    ExprArrayRvalue * exprArrayRvalue;
+    int line = ctx->start->getLine();
+
+    BinaryOperator mult = MULT;
+    ConstLiteral * size = new ConstLiteral(line, 8, currentScope);
+    Expr * pos2;
+
+    int64_t valPos;
+    bool posConst = isLiteral(pos, valPos);
+
+    if (posConst) {
+        pos2 = new ConstLiteral(line, valPos * size->GetValue(), currentScope);
+        delete (size);
+    } else {
+        pos2 = new OpBin(line, pos, size, MULT, currentScope);
+    }
+
+    if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
+        exprArrayRvalue = new ExprArrayRvalue(line, varname, pos2, currentScope);
+        program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
+    } else {
+        program->SetErrorFlag(true);
+        cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
+    }
+
+    return (Expr *)exprArrayRvalue;
+}
+
+antlrcpp::Any ASTGenerator::visitArray_element_aff(ifccParser::Array_element_affContext * ctx) {
+    string varname = ctx->ID()->getText();
+    int line = ctx->start->getLine();
+
+    //  Position
+    Expr * pos = (Expr *)visit(ctx->expr(0));
+    if (!checkExpr(pos)) {
+        return (Expr *)nullptr;
+    }
+
+    BinaryOperator mult = MULT;
+    ConstLiteral * size = new ConstLiteral(line, 8, currentScope);
+    Expr * pos2;
+
+    int64_t valPos;
+    bool posConst = isLiteral(pos, valPos);
+
+    if (posConst) {
+        pos2 = new ConstLiteral(line, valPos * size->GetValue(), currentScope);
+        delete (size);
+    } else {
+        pos2 = new OpBin(line, pos, size, MULT, currentScope);
+    }
+
+    // rValue
+    Expr * rValue = (Expr *)visit(ctx->expr(1));
+    if (!checkExpr(rValue)) {
+        return (Expr *)nullptr;
+    }
+
+    // leftValue
+    ExprArrayLvalue * lValue;
+
+    if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
+        lValue = new ExprArrayLvalue(line, varname, pos2, currentScope);
+        program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope); //delete ?
+    } else {
+        program->SetErrorFlag(true);
+        cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
+    }
+
+    return (Expr *)new ExprAffectation(lValue, rValue, line, currentScope);
+}
+
+antlrcpp::Any ASTGenerator::visitArray_decl_no_size(ifccParser::Array_decl_no_sizeContext * ctx) {
+    string varname = ctx->ID()->getText();
+    int line = ctx->start->getLine();
+    Type type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+    vector<Expr *> affectations;
+
+    vector<Expr *> values = visit(ctx->expr_list()).as<vector<Expr *>>();
+
+    int64_t size = values.size();
+
+    if (program->GetSymbolTable().DefineVariable(currentFunction, varname, type, line, currentScope, size)) {
+
+        for (int i = 0; i < values.size() && i < size; i++) {
+            Expr * rValue = values.at(i);
+            Expr * pos = new ConstLiteral(line, i * 8, currentScope); //pos negativ ?
+            Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
+            affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
+        }
+
+        if (size < values.size()) {
+            //TODO : mettre un warning car pas assez de valeur pour remplir le tableau
+        } else if (size > values.size()) {
+            //TODO : rajouter des 0
+        }
+    }
+
+    return (Instr *)new InstrArrayMultiAffect(line, varname, affectations, currentScope);
+}
+
+antlrcpp::Any ASTGenerator::visitArray_decl_size(ifccParser::Array_decl_sizeContext * ctx) {
+    string varname = ctx->ID()->getText();
+    int line = ctx->start->getLine();
+    Type type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
+    vector<Expr *> affectations;
+
+    int64_t size = stoi(ctx->CONST()->getText());
+    if (program->GetSymbolTable().DefineVariable(currentFunction, varname, type, line, currentScope, size)) {
+        if (ctx->expr_list()) {
+
+            vector<Expr *> values = visit(ctx->expr_list()).as<vector<Expr *>>();
+
+            for (int i = 0; i < values.size() && i < size; i++) {
+                Expr * rValue = values.at(i);
+                Expr * pos = new ConstLiteral(line, i * 8, currentScope); //pos negativ ?
+                Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
+                affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
+            }
+
+            if (size < values.size()) {
+                //TODO : mettre un warning car pas assez de valeur pour remplir le tableau
+            } else if (size > values.size()) {
+                //TODO : rajouter des 0
+            }
+        }
+    }
+
+    return (Instr *)new InstrArrayMultiAffect(line, varname, affectations, currentScope);
+}
+
+antlrcpp::Any ASTGenerator::visitArray_aff(ifccParser::Array_affContext * ctx) {
+    string varname = ctx->ID()->getText();
+    int line = ctx->start->getLine();
+    vector<Expr *> affectations;
+
+    if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
+
+        if (ctx->expr_list()) {
+            vector<Expr *> values = visit(ctx->expr_list()).as<vector<Expr *>>();
+
+            for (int i = 0; i < values.size(); i++) {
+                Expr * rValue = values.at(i);
+                Expr * pos = new ConstLiteral(line, i * 8, currentScope);
+                Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
+                affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
+            }
+        }
+    }
+
+    return (Instr *)new InstrArrayMultiAffect(line, varname, affectations, currentScope);
+}
 
 antlrcpp::Any ASTGenerator::visitIfblock(ifccParser::IfblockContext * ctx) {
 

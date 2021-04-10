@@ -80,7 +80,8 @@ void IRInstr::gen_asm_X86(ostream & o) {
             break;
         case mul:
             o << "        " << getMovInstr() << "       " << p2 << ", " << getReg1() << endl;
-            o << "        " << getMullInstr() << "       " << p3 << ", " << getReg1() << endl;
+            o << "        " << getMovInstr() << "       " << p3 << ", " << getTmpReg() << endl;
+            o << "        " << getMullInstr() << "      " << getTmpReg() << endl;
             o << "        " << getMovInstr() << "       " << getReg1() << ", " << p1 << endl;
             break;
         case div:
@@ -120,7 +121,9 @@ void IRInstr::gen_asm_X86(ostream & o) {
             o << "        " << getMovInstr() << "       " << getReg1() << ", " << p1 << endl;
             break;
         case rmem:
-            o << "        " << getMovInstr() << "       " << p2 << ", " << p1 << endl;
+            o << "        movq     " << p2 << ", %rax" << endl;
+            o << "        movq     (%rax), %r10" << endl;
+            o << "        movq     %r10, " << p1 << endl;
             break;
         case wmem:
             o << "        " << getMovInstr() << "       " << p1 << ", " << getReg1() << endl;
@@ -439,11 +442,11 @@ void CFG::gen_asm_X86(ostream & o) {
 
         } else {
             Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
-            o << "        cmpl       $1, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
-            o << "        jne        " << (*it)->exit_false->label << endl;
+            o << "        cmpq       $0, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
+            o << "        jne        " << (*it)->exit_true->label << endl;
 
-            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
-                o << "        jmp        " << (*it)->exit_true->label << endl;
+            if ((*(it + 1))->label != (*it)->exit_false->label || use_block_label) {
+                o << "        jmp        " << (*it)->exit_false->label << endl;
             } else {
                 delete_jump = true;
             }
@@ -463,10 +466,25 @@ void CFG::gen_asm_X86(ostream & o) {
 
         } else {
             Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
-            o << "        cmpl       $1, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
-            o << "        jne        " << (*it)->exit_false->label << endl;
+            string cmpInstr;
+            switch (type) {
+                case CHAR:
+                    cmpInstr = "cmpb";
+                    break;
+                case INT32_T:
+                    cmpInstr = "cmpl";
+                    break;
+                case INT64_T:
+                    cmpInstr = "cmpq";
+                    break;
+                default:
+                    cmpInstr = "UndefinedTypeCmp";
+                    break;
+            }
+            o << "        " << cmpInstr << "       $0, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
+            o << "        jne        " << (*it)->exit_true->label << endl;
 
-            o << "        jmp        " << (*it)->exit_true->label << endl;
+            o << "        jmp        " << (*it)->exit_false->label << endl;
         }
     }
 

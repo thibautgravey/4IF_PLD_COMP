@@ -97,6 +97,41 @@ class ExprVarLvalue : public Expr {
     string name;
 };
 
+//---------- Interface de la classe <ExprArrayLvalue> ----------------
+class ExprArrayLvalue : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    string GetName();
+    virtual string GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    ExprArrayLvalue(int line, string name, Expr * pos, string scope)
+        : Expr(line, scope), name(name), pos(pos){};
+
+    virtual ~ExprArrayLvalue() = default;
+
+  protected:
+    Expr * pos;
+    string name;
+};
+
+//---------- Interface de la classe <Array> ----------------
+
+class ExprArrayRvalue : public Expr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    string GetName();
+    virtual string GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    ExprArrayRvalue(int line, string name, Expr * pos, string scope)
+        : Expr(line, scope), name(name), pos(pos){};
+
+    virtual ~ExprArrayRvalue() = default;
+
+  protected:
+    Expr * pos;
+    string name;
+};
+
 //---------- Interface de la classe <ConstLiteral> ----------------
 class ConstLiteral : public Expr {
   public:
@@ -254,6 +289,24 @@ class ExprInstr : public Instr {
 
   protected:
     Expr * expr;
+};
+
+//---------- Interface de la classe <InstrArrayMultiAffect> ----------------
+class InstrArrayMultiAffect : public Instr {
+  public:
+    //----------------------------------------------------- Méthodes publiques
+    string GetName();
+    vector<Expr *> GetValues();
+    virtual void GenerateIR(CFG * cfg);
+    //-------------------------------------------- Constructeurs - destructeur
+    InstrArrayMultiAffect(int line, string name, vector<Expr *> values, string scope)
+        : Instr(line, scope), values(values), name(name){};
+
+    virtual ~InstrArrayMultiAffect() = default;
+
+  protected:
+    vector<Expr *> values;
+    string name;
 };
 
 //---------- Interface de la classe <DefFuncInstr> ----------------
