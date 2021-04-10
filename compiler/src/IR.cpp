@@ -28,7 +28,6 @@ void IRInstr::gen_asm_X86(ostream & o) {
 
     string p1, p2, p3;
     Type t;
-    // TODO : voir si on peut améliorer
 
     if (this->op != call) {
         switch (this->params.size()) {

@@ -70,7 +70,6 @@ OpBin::~OpBin() {
 }
 
 string OpBin::GenerateIR(CFG * cfg) {
-    // TODO: changer les types
     string tmpVar1 = this->operand1->GenerateIR(cfg);
     string tmpVar2 = this->operand2->GenerateIR(cfg);
     Type t;
@@ -189,7 +188,6 @@ void Function::SetParams(vector<Expr *> params) {
 
 string Function::GenerateIR(CFG * cfg) {
     // TODO : a voir pour le type
-    // TODO : a voir pour la destination (pour l'instant : reg1)
     vector<string> paramsIRInstr = {this->name, "reg1"};
     for (Expr * param : this->params) {
         paramsIRInstr.push_back(param->GenerateIR(cfg));
@@ -205,7 +203,6 @@ string Function::GenerateIR(CFG * cfg) {
     string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpResVar, "reg1"}, this->scope);
 
-    // TODO: vérifier pour le registre
     return tmpResVar;
 }
 

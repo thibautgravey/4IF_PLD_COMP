@@ -622,7 +622,6 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     // Récupération des intructions du WHILE
     BlockInstr * whileblock;
     if (ctx->line()) {
-        //TO DO : ajouter vérification instruction non nulle
         expandScope();
         Instr * instr = visit(ctx->line());
         whileblock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
@@ -631,8 +630,6 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
     } else {
         whileblock = (BlockInstr *)visit(ctx->block());
     }
-
-    // TODO : en cas d'évaluation directe, voir pour les delete
 
     int64_t val;
     bool exprLit = isLiteral(exprWhile, val);
@@ -691,7 +688,6 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     // Récupération des intructions du FOR
     BlockInstr * forBlock;
     if (ctx->line()) {
-        //TODO : ajouter vérification instruction non nulle
         expandScope();
         Instr * instr = visit(ctx->line());
         forBlock = new BlockInstr(ctx->start->getLine(), instr->GetScope());
@@ -700,8 +696,6 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
     } else {
         forBlock = (BlockInstr *)visit(ctx->block());
     }
-
-    // TODO : en cas d'évaluation directe, voir pour les delete
 
     ConstLiteral * constExpr = dynamic_cast<ConstLiteral *>(conditionalExpr);
     if (constExpr) {
@@ -982,7 +976,6 @@ bool ASTGenerator::checkExpr(Expr * expr) {
         if (func && this->program->GetSymbolTable().GetFunctionType(func->GetName()) == VOID) {
             cerr << "Void value not ignored as it ought to be (function '" << func->GetName() << "')" << endl;
         } else {
-            // TODO : continuer vérification de type ?
             res = true;
         }
     }
