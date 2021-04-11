@@ -48,13 +48,13 @@ forblock: (
 block: '{' line* '}';
 
 expr:
-	ID '[' expr ']'						# array
-	| '(' expr ')'						# par
-	| ID '(' expr_list? ')'				# function
+	ID '[' expr ']'										# array
+	| '(' expr ')'										# par
+	| ID '(' expr_list? ')'								# function
 	| (OP_LESS | OP_UNAIRE_NOT)? (CONST | CHAR | ID)	# literal
-	| (OP_LESS | OP_UNAIRE_NOT) expr	# opp_or_not
-	| expr (OP_DIV | OP_MULT) expr		# div_or_mult
-	| expr (OP_LESS | OP_ADD) expr		# less_or_add
+	| (OP_LESS | OP_UNAIRE_NOT) expr					# opp_or_not
+	| expr (OP_DIV | OP_MULT) expr						# div_or_mult
+	| expr (OP_LESS | OP_ADD) expr						# less_or_add
 	| expr (
 		OP_GREATER_EQUAL
 		| OP_GREATER
@@ -69,7 +69,6 @@ expr:
 	| expr OP_LOGICAL_AND expr		# cdtand
 	| expr OP_LOGICAL_OR expr		# cdtor
 	| ID OP_EQUAL expr				# var_aff
-	| ID OP_EQUAL '{' expr_list '}'	# array_aff
 	| ID '[' expr ']' OP_EQUAL expr	# array_element_aff;
 
 expr_list: expr (',' expr)*;
