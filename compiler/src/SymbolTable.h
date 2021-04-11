@@ -28,7 +28,6 @@ enum Type {
     INT64_T,
     VOID,
     ERROR
-    // CHAR, LONG, DOUBLE, STRING
 };
 
 typedef struct fp {
@@ -87,6 +86,7 @@ class SymbolTable {
     string GetVariableScope(const string & function, const string & name, const string & scope) const;
 
     bool IsUsedVariable(const string & function, const string & name, const string & scope) const;
+
     int GetArrayElementOffset(const string & function, const string & name, int index, const string) const;
 
     void UnusedVariableAnalysis() const;

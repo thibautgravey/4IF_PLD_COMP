@@ -25,7 +25,6 @@ enum BinaryOperator {
     GREATERE,
     LESS,
     LESSE
-
 };
 
 enum UnitOperator {
