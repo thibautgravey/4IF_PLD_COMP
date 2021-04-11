@@ -375,27 +375,10 @@ struct ContextTable * SymbolTable::getFunction(const string & function) const {
     return globalFunctionTableIterator->second;
 } //----- Fin de getFunction
 
-// TODO: Il faut plu
 void SymbolTable::decreaseContextOffset(const string & function, const Type & type, uint size) {
     // In this function, we've already check the existence of the function
     auto globalFunctionTableIterator = globalFunctionTable.find(function);
     int bytes = 8;
-    /*switch (type) {
-        case Type::CHAR:
-            bytes = 1;
-            break;
-        case Type::INT32_T:
-            bytes = 4;
-            break;
-        case Type::INT64_T:
-        case Type::VOID:
-        default :
-            bytes = 8;
-            break;
-    }
-    int total = bytes * size; 
-    if ( total % 8 > 0)
-        total += 8 - total % 8;*/
     globalFunctionTableIterator->second->offsetContext -= bytes * size;
 
 } //----- Fin de decreaseContextOffset

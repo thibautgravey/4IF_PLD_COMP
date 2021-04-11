@@ -69,10 +69,8 @@ antlrcpp::Any ASTGenerator::visitLine(ifccParser::LineContext * ctx) {
     } else if (ctx->ifblock()) {
         instr = (Instr *)visit(ctx->ifblock());
     } else if (ctx->whileblock()) {
-        //TO DO : breaks and continue (in while and for ) !
         instr = (Instr *)visit(ctx->whileblock());
     } else if (ctx->forblock()) {
-        //TO DO : breaks and continue (in while and for ) !
         instr = (Instr *)visit(ctx->forblock());
     } else if (ctx->block()) {
         instr = (Instr *)visit(ctx->block()).as<BlockInstr *>();
@@ -481,9 +479,6 @@ antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
             return (Expr *)nullptr;
         }
 
-        // Check params types
-        // TODO
-
         program->GetSymbolTable().SetUsedFunction(ctx->ID()->getText());
     }
 
@@ -491,7 +486,6 @@ antlrcpp::Any ASTGenerator::visitFunction(ifccParser::FunctionContext * ctx) {
 } //----- Fin de visitFunction
 
 antlrcpp::Any ASTGenerator::visitDef_func(ifccParser::Def_funcContext * ctx) {
-    // TODO : modifier la grammaire pour accepter les déclarations de fonction avec juste "void" en arg
     string func_name = ctx->ID()->getText();
     Type func_type = program->GetSymbolTable().StringToType(ctx->TYPE()->getText());
     DefFuncInstr * def_func = nullptr;
@@ -668,7 +662,7 @@ antlrcpp::Any ASTGenerator::visitArray_decl_no_size(ifccParser::Array_decl_no_si
 
         for (int i = 0; i < values.size() && i < size; i++) {
             Expr * rValue = values.at(i);
-            Expr * pos = new ConstLiteral(line, i * 8, currentScope); //pos negativ ?
+            Expr * pos = new ConstLiteral(line, i * 8, currentScope);
             Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
             affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
         }
@@ -837,8 +831,6 @@ antlrcpp::Any ASTGenerator::visitWhileblock(ifccParser::WhileblockContext * ctx)
             delete (whileblock);
             delete (exprWhile);
             return (Instr *)nullptr;
-        } else {
-            // TODO : voir quoi faire en cas de boucle infinie
         }
     }
 
@@ -907,8 +899,6 @@ antlrcpp::Any ASTGenerator::visitForblock(ifccParser::ForblockContext * ctx) {
             delete (forBlock);
             delete (conditionalExpr);
             return (Instr *)nullptr;
-        } else {
-            // TODO : voir quoi faire en cas de boucle infinie
         }
     }
 

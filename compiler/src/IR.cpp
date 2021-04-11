@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdint.h>
+#include <unordered_set>
 
 using namespace std;
 
@@ -463,9 +464,8 @@ void IRInstr::gen_asm_ARM(ostream & o) {
                 o << "        str     r3, [r2]" << endl;
             }
             break;
-        // begin to change
         case call: {
-            // TODO : voir pour les registres de passages de paramètre : 32 ou 64 bits
+            /*
             for (int i = 2; i < params.size(); i++) {
                 p3 = this->bb->cfg->IR_reg_to_asm_ARM(this->params[i], this->bb->scope);
                 string dest;
@@ -492,31 +492,33 @@ void IRInstr::gen_asm_ARM(ostream & o) {
             o << "        bl    " << p1 << endl;
             o << "        mov     r3, r0" << endl;
             o << "        str     r3, " << p2 << endl;
+            */
+            o << "  call NOT IMPLEMENTED" << endl;
             break;
         }
         case cmp_eq:
-            o << "  cmp_eq NOT IMPLEMENDTED" << endl;
+            o << "  cmp_eq NOT IMPLEMENTED" << endl;
             break;
         case cmp_neq:
-            o << "  cmp_neq NOT IMPLEMENDTED" << endl;
+            o << "  cmp_neq NOT IMPLEMENTED" << endl;
             break;
         case cmp_g:
-            o << "  cmp_g NOT IMPLEMENDTED" << endl;
+            o << "  cmp_g NOT IMPLEMENTED" << endl;
             break;
         case cmp_ge:
-            o << "  cmp_ge NOT IMPLEMENDTED" << endl;
+            o << "  cmp_ge NOT IMPLEMENTED" << endl;
             break;
         case cmp_l:
-            o << "  cmp_l NOT IMPLEMENDTED" << endl;
+            o << "  cmp_l NOT IMPLEMENTED" << endl;
             break;
         case cmp_le:
-            o << "  cmp_le NOT IMPLEMENDTED" << endl;
+            o << "  cmp_le NOT IMPLEMENTED" << endl;
             break;
         case cdtAnd:
-            o << " cdtAnd  NOT IMPLEMENDTED" << endl;
+            o << " cdtAnd  NOT IMPLEMENTED" << endl;
             break;
         case cdtOr:
-            o << "  cdtOr NOT IMPLEMENDTED" << endl;
+            o << "  cdtOr NOT IMPLEMENTED" << endl;
             break;
             //end to change
         case ret:
@@ -835,7 +837,6 @@ bool CFG::gen_asm_prologue_X86(ostream & o, BasicBlock * bb) {
     return jump;
 } //fin de gen_asm_prologue
 
-//TODO
 bool CFG::gen_asm_prologue_ARM(ostream & o, BasicBlock * bb) {
     bool jump = true;
     vector<BasicBlock *>::iterator it2;
