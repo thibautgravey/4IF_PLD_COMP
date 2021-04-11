@@ -7,9 +7,9 @@ Link to our github repository : https://github.com/thibautgravey/4IF_PLD_COMP
 
 ## Folders
 
-`compiler/` : contains the Antlr4 grammar (ifcc.g4), the Makefile, the wrapper to use docker and the various compilation scripts.
-`compiler/src` : contains the source code (.h and .cpp files).
-`tests/` : contains all the files and scripts related to tests.
+`compiler/` : contains the Antlr4 grammar (ifcc.g4), the Makefile, the wrapper to use docker and the various compilation scripts.<br>
+`compiler/src` : contains the source code (.h and .cpp files).<br>
+`tests/` : contains all the files and scripts related to tests.<br>
 
 ## Prerequisites
 
@@ -29,11 +29,11 @@ First, you have to go in the `compiler/` folder.
 
 You can compile the project by running `make`.
 
-You can execute the compiler with `./ifcc INPUT_FILE [OUTPUT_FILE] [--as=ASSEMBLY_TYPE]
+You can execute the compiler with `./ifcc INPUT_FILE [OUTPUT_FILE] [--as=ASSEMBLY_TYPE]`
 
-INPUT_FILE : a path to .c file with the code you want to compile
-OUTPUT_FILE: a path to .s file, where the assembly code is going to be written (default: same name than INPUT_FILE, with .s extension)
-ASSEMBLY_TYPE: the assembly language you want to compile in. Supported : x86, arm. (default: x86)
+INPUT_FILE : a path to .c file with the code you want to compile<br>
+OUTPUT_FILE : a path to .s file, where the assembly code is going to be written (default: same name than INPUT_FILE, with .s extension)<br>
+ASSEMBLY_TYPE : the assembly language you want to compile in. Supported : x86, arm. (default: x86)<br>
 
 ## Tests
 
