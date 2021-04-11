@@ -202,7 +202,6 @@ UnitOperator OpUn::GetOp() {
 }
 
 string OpUn::GenerateIR(CFG * cfg) {
-    // TODO : changer type
     string tmpVar1 = this->operand->GenerateIR(cfg);
     Type type = cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpVar1, this->GetScope());
     string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), type, this->GetScope());
@@ -237,7 +236,6 @@ void Function::SetParams(vector<Expr *> params) {
 }
 
 string Function::GenerateIR(CFG * cfg) {
-    // TODO : a voir pour le type
     vector<string> paramsIRInstr = {this->name, "reg1"};
     for (Expr * param : this->params) {
         paramsIRInstr.push_back(param->GenerateIR(cfg));
@@ -250,8 +248,16 @@ string Function::GenerateIR(CFG * cfg) {
 
     cfg->GetCurrentBB()->add_IRInstr(IRInstr::call, Type::ERROR, paramsIRInstr, this->scope);
 
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
-    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, Type::INT32_T, {tmpResVar, "reg1"}, this->scope);
+    Type functionType = cfg->GetSymbolTable()->GetFunctionType(this->name);
+
+    if (functionType == ERROR || functionType == VOID) {
+        // ERROR peut être renvoyé dans le cas d'une fonction externe, et dans le cas de VOID
+        // on indique par défaut INT64_T
+        functionType = INT64_T;
+    }
+
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), functionType, this->GetScope());
+    cfg->GetCurrentBB()->add_IRInstr(IRInstr::copy, functionType, {tmpResVar, "reg1"}, this->scope);
 
     return tmpResVar;
 }
