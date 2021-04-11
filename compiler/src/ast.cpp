@@ -204,13 +204,14 @@ UnitOperator OpUn::GetOp() {
 string OpUn::GenerateIR(CFG * cfg) {
     // TODO : changer type
     string tmpVar1 = this->operand->GenerateIR(cfg);
-    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), Type::INT32_T, this->GetScope());
+    Type type = cfg->GetSymbolTable()->GetVariableType(cfg->GetName(), tmpVar1, this->GetScope());
+    string tmpResVar = cfg->GetSymbolTable()->CreateTempVar(cfg->GetName(), type, this->GetScope());
     switch (this->op) {
         case UnitOperator::NOT:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, Type::INT32_T, {tmpResVar, tmpVar1}, this->scope);
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::neg, type, {tmpResVar, tmpVar1}, this->scope);
             break;
         case UnitOperator::OPP:
-            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, Type::INT32_T, {tmpResVar, tmpVar1}, this->scope);
+            cfg->GetCurrentBB()->add_IRInstr(IRInstr::opp, type, {tmpResVar, tmpVar1}, this->scope);
             break;
         default:
             break;
