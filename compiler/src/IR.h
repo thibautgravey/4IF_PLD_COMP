@@ -57,6 +57,8 @@ class IRInstr {
     /** Actual code generation */
     void gen_asm_X86(ostream & o); /**< x86 assembly code generation for this IR instruction */
 
+    string fake_gen_asm_X86();
+
     void gen_asm_ARM(ostream & o); /**< ARM assembly code generation for this IR instruction */
 
     bool param_is_number(string p);

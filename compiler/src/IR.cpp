@@ -275,6 +275,13 @@ bool IRInstr::param_is_number(string p) {
     return true;
 }
 
+string IRInstr::fake_gen_asm_X86() {
+    if (this->op == jmp) {
+        return this->params[0];
+    }
+    return "";
+} //fin de gen_asm_X86(Ir_Instr)
+
 void IRInstr::gen_asm_ARM(ostream & o) {
 
     string p1, p2, p3;
@@ -599,15 +606,56 @@ void CFG::gen_asm_X86(ostream & o) {
     }
     */
 
+    unordered_set<string> labelsToKeep;
     for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
-        o << (*it)->label << ":" << endl;
+        for (IRInstr * instr : (*it)->instrs) {
+            string label = instr->fake_gen_asm_X86();
+            if (label != "") {
+                labelsToKeep.insert(label);
+            }
+        }
+    }
+
+    for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
+
+        if (delete_jump == false) {
+            o << (*it)->label << ":" << endl;
+        } else {
+            delete_jump = false;
+        }
 
         for (IRInstr * instr : (*it)->instrs) {
             instr->gen_asm_X86(o);
         }
 
+        use_block_label = false;
+
+        if (labelsToKeep.find((*it)->exit_true->label) != labelsToKeep.end()) {
+            use_block_label = true;
+        } else {
+            for (it2 = this->bbs.begin() + 1; it2 != (it); it2++) {
+                if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
+                    use_block_label = true;
+                    break;
+                }
+            }
+
+            for (it2 = it + 1; it2 != (this->bbs.end() - 1); it2++) {
+                if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
+                    use_block_label = true;
+                    break;
+                }
+            }
+        }
+
         if ((*it)->exit_false == nullptr) {
-            o << "        jmp        " << (*it)->exit_true->label << endl;
+
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        jmp        " << (*it)->exit_true->label << endl;
+
+            } else {
+                delete_jump = true;
+            }
 
         } else {
             Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
@@ -629,7 +677,11 @@ void CFG::gen_asm_X86(ostream & o) {
             o << "        " << cmpInstr << "       $0, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
             o << "        jne        " << (*it)->exit_true->label << endl;
 
-            o << "        jmp        " << (*it)->exit_false->label << endl;
+            if ((*(it + 1))->label != (*it)->exit_false->label || use_block_label) {
+                o << "        jmp        " << (*it)->exit_false->label << endl;
+            } else {
+                delete_jump = true;
+            }
         }
     }
 
