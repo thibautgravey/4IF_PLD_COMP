@@ -583,6 +583,7 @@ void CFG::gen_asm_X86(ostream & o) {
 
         if (labelsToKeep.find((*it)->exit_true->label) != labelsToKeep.end()) {
             use_block_label = true;
+
         } else {
             for (it2 = this->bbs.begin() + 1; it2 != (it); it2++) {
                 if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
@@ -626,10 +627,10 @@ void CFG::gen_asm_X86(ostream & o) {
                     break;
             }
             o << "        " << cmpInstr << "       $0, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
-            o << "        jne        " << (*it)->exit_true->label << endl;
+            o << "        je         " << (*it)->exit_false->label << endl;
 
-            if ((*(it + 1))->label != (*it)->exit_false->label || use_block_label) {
-                o << "        jmp        " << (*it)->exit_false->label << endl;
+            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
+                o << "        jmp        " << (*it)->exit_true->label << endl;
             } else {
                 delete_jump = true;
             }
