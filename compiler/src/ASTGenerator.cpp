@@ -639,7 +639,7 @@ antlrcpp::Any ASTGenerator::visitArray_element_aff(ifccParser::Array_element_aff
 
     if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
         lValue = new ExprArrayLvalue(line, varname, pos2, currentScope);
-        program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope); //delete ?
+        program->GetSymbolTable().SetUsedVariable(currentFunction, varname, currentScope);
     } else {
         program->SetErrorFlag(true);
         cerr << "variable " + varname + " does not exist in contextVariableTable from " + currentFunction << endl;
@@ -691,7 +691,7 @@ antlrcpp::Any ASTGenerator::visitArray_decl_size(ifccParser::Array_decl_sizeCont
 
             for (int i = 0; i < values.size() && i < size; i++) {
                 Expr * rValue = values.at(i);
-                Expr * pos = new ConstLiteral(line, i * 8, currentScope); //pos negativ ?
+                Expr * pos = new ConstLiteral(line, i * 8, currentScope);
                 Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
                 affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
             }
