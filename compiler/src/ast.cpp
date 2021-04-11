@@ -361,7 +361,6 @@ void DefFuncInstr::GenerateIR(CFG * cfg) {
     cfg->add_bb(body);
     cfg->bb_epilogue = output;
 
-    // TODO: recuperer les variables passees en arguments pour plus que 6
     vector<FunctionParam *> functionParams = cfg->GetSymbolTable()->GetFunctionParams(cfg->GetName());
     for (int i = 0; i < functionParams.size(); i++) {
         string reg = "paramReg" + to_string(i + 1);
@@ -586,15 +585,9 @@ vector<Instr *> BlockInstr::GetListInstr() {
 }
 
 void BlockInstr::GenerateIR(CFG * cfg) {
-
-    // TODO: change scope at the begining and the end of the block
-    //cfg->enterblock();
-
     for (Instr * instr : listInstr) {
         instr->GenerateIR(cfg);
     }
-
-    //cfg->leaveblock();
 }
 
 void BlockInstr::AddInstr(Instr * instr) {
