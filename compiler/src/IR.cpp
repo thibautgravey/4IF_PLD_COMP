@@ -556,55 +556,6 @@ void CFG::gen_asm_X86(ostream & o) {
     vector<BasicBlock *>::iterator it2;
 
     bool use_block_label = false;
-    /*
-    for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
-        if (delete_jump == false) {
-            o << (*it)->label << ":" << endl;
-        } else {
-            delete_jump = false;
-        }
-
-        for (IRInstr * instr : (*it)->instrs) {
-            instr->gen_asm_X86(o);
-        }
-
-        use_block_label = false;
-
-        for (it2 = this->bbs.begin() + 1; it2 != (it); it2++) {
-            if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
-                use_block_label = true;
-                break;
-            }
-        }
-
-        for (it2 = it + 1; it2 != (this->bbs.end() - 1); it2++) {
-            if ((*it2)->exit_true == (*it)->exit_true || (*it2)->exit_false == (*it)->exit_true) {
-                use_block_label = true;
-                break;
-            }
-        }
-
-        if ((*it)->exit_false == nullptr) {
-            if ((*(it + 1))->label != (*it)->exit_true->label || use_block_label) {
-                o << "        jmp        " << (*it)->exit_true->label << endl;
-
-            } else {
-                delete_jump = true;
-            }
-
-        } else {
-            Type type = (*it)->cfg->GetSymbolTable()->GetVariableType((*it)->cfg->GetName(), (*it)->test_var_name, (*it)->scope);
-            o << "        cmpq       $0, " << (*it)->cfg->IR_reg_to_asm_X86((*it)->test_var_name, (*it)->scope, type) << endl;
-            o << "        jne        " << (*it)->exit_true->label << endl;
-
-            if ((*(it + 1))->label != (*it)->exit_false->label || use_block_label) {
-                o << "        jmp        " << (*it)->exit_false->label << endl;
-            } else {
-                delete_jump = true;
-            }
-        }
-    }
-    */
 
     unordered_set<string> labelsToKeep;
     for (it = this->bbs.begin() + 1; it != (this->bbs.end() - 1); it++) {
