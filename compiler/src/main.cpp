@@ -13,10 +13,58 @@ using namespace std;
 
 int main(int argn, const char ** argv) {
     stringstream in;
+    if (argn < 2) {
+        cerr << "You have to specify an input file.\nUsage : ./ifcc INPUT_FILE [OUTPUT_FILE] [--as=ASSEMBLY_TYPE]" << endl;
+        return EXIT_FAILURE;
+    }
+
     if (argn >= 2) {
         ifstream lecture(argv[1]);
         in << lecture.rdbuf();
     }
+
+    string assemblyType = "x86";
+    bool assemblyTypeSpecified = false;
+    string outputPath = string(argv[1]);
+    size_t dotPosition = outputPath.find('.');
+    if (dotPosition != string::npos) {
+        outputPath.erase(outputPath.find('.'));
+    }
+    outputPath.append(".s");
+
+    if (argn >= 5) {
+        cerr << "You have specified too many arguments.\nUsage : ./ifcc INPUT_FILE [OUTPUT_FILE] [--as=ASSEMBLY_TYPE]" << endl;
+        return EXIT_FAILURE;
+    } else {
+        for (int i = 2; i < argn; i++) {
+            if (string(argv[i]) == "--as=ARM" || string(argv[i]) == "--as=arm") {
+                if (!assemblyTypeSpecified) {
+                    assemblyType = "arm";
+                    assemblyTypeSpecified = true;
+                } else {
+                    cerr << "You have specified 2 assembly types.\nUsage : ./ifcc INPUT_FILE [OUTPUT_FILE] [--as=ASSEMBLY_TYPE]" << endl;
+                    return EXIT_FAILURE;
+                }
+
+            } else if (string(argv[i]) == "--as=X86" || string(argv[i]) == "--as=x86") {
+                if (!assemblyTypeSpecified) {
+                    assemblyType = "x86";
+                    assemblyTypeSpecified = true;
+                } else {
+                    cerr << "You have specified 2 assembly types.\nUsage : ./ifcc INPUT_FILE [OUTPUT_FILE] [--as=ASSEMBLY_TYPE]" << endl;
+                    return EXIT_FAILURE;
+                }
+            } else {
+                outputPath = string(argv[i]);
+                size_t dotPosition = outputPath.find('.');
+                if (dotPosition != string::npos) {
+                    outputPath.erase(outputPath.find('.'));
+                }
+                outputPath.append(".s");
+            }
+        }
+    }
+
     ANTLRInputStream input(in.str());
     ifccLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
@@ -53,34 +101,16 @@ int main(int argn, const char ** argv) {
     //Create an IR and generate ASM
     IR * ir = program->GenerateIR();
 
-    //Create the output path
-    string outPath(argv[1]);
-    if (argn >= 3) {
-        outPath = string(argv[2]);
-
-        size_t dotPosition = outPath.find('.');
-        if (dotPosition != string::npos) {
-            outPath.erase(outPath.find('.'));
-        }
-        outPath.append(".s");
-
-        ofstream out(outPath);
-        if (out.bad()) {
-            cerr << "An error occured when writing Generated ASM to " + outPath << endl;
-        } else {
-            if (argn == 4) {
-                if (string(argv[3]) == "--as=ARM" || string(argv[3]) == "--as=arm") {
-                    ir->GenerateAsmARM(out);
-                } else {
-                    ir->GenerateAsmX86(out);
-                }
-            } else {
-                ir->GenerateAsmX86(out);
-            }
-            out.close();
-        }
+    ofstream out(outputPath);
+    if (out.bad()) {
+        cerr << "An error occured when writing Generated ASM to " + outputPath << endl;
     } else {
-        ir->GenerateAsmX86(cout);
+        if (assemblyType == "x86") {
+            ir->GenerateAsmX86(out);
+        } else {
+            ir->GenerateAsmARM(out);
+        }
+        out.close();
     }
 
     //Generate an exec file with a an "as file.s -o file.o" and then link using gcc
