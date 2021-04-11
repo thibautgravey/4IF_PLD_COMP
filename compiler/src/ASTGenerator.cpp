@@ -666,12 +666,6 @@ antlrcpp::Any ASTGenerator::visitArray_decl_no_size(ifccParser::Array_decl_no_si
             Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
             affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
         }
-
-        if (size < values.size()) {
-            //TODO : mettre un warning car pas assez de valeur pour remplir le tableau
-        } else if (size > values.size()) {
-            //TODO : rajouter des 0
-        }
     }
 
     return (Instr *)new InstrArrayMultiAffect(line, varname, affectations, currentScope);
@@ -697,31 +691,16 @@ antlrcpp::Any ASTGenerator::visitArray_decl_size(ifccParser::Array_decl_sizeCont
             }
 
             if (size < values.size()) {
+                cerr << "Warning : excess elements in array initializer  for" << varname << " in " << currentFunction << endl;
+
                 //TODO : mettre un warning car pas assez de valeur pour remplir le tableau
             } else if (size > values.size()) {
-                //TODO : rajouter des 0
-            }
-        }
-    }
-
-    return (Instr *)new InstrArrayMultiAffect(line, varname, affectations, currentScope);
-}
-
-antlrcpp::Any ASTGenerator::visitArray_aff(ifccParser::Array_affContext * ctx) {
-    string varname = ctx->ID()->getText();
-    int line = ctx->start->getLine();
-    vector<Expr *> affectations;
-
-    if (program->GetSymbolTable().LookUpVariable(currentFunction, varname, currentScope)) {
-
-        if (ctx->expr_list()) {
-            vector<Expr *> values = visit(ctx->expr_list()).as<vector<Expr *>>();
-
-            for (int i = 0; i < values.size(); i++) {
-                Expr * rValue = values.at(i);
-                Expr * pos = new ConstLiteral(line, i * 8, currentScope);
-                Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
-                affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
+                for (int i = values.size(); i < size; i++) {
+                    Expr * rValue = new ConstLiteral(line, 0, currentScope);
+                    Expr * pos = new ConstLiteral(line, i * 8, currentScope);
+                    Expr * lValue = new ExprArrayLvalue(line, varname, pos, currentScope);
+                    affectations.push_back(new ExprAffectation(lValue, rValue, line, currentScope));
+                }
             }
         }
     }
