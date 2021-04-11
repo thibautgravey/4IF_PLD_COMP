@@ -15,9 +15,9 @@ Link to our github repository : https://github.com/thibautgravey/4IF_PLD_COMP
 
 You have to override the antlr directories in the Makefile with you local installation :
 
-`ANTLR4_BINDIR=/usr/bin`
-`ANTLR4_INCDIR=/shares/public/tp/ANTLR4-CPP/antlr4-runtime `
-`ANTLR4_LIBDIR=/shares/public/tp/ANTLR4-CPP/lib`
+`ANTLR4_BINDIR=/usr/bin`<br>
+`ANTLR4_INCDIR=/shares/public/tp/ANTLR4-CPP/antlr4-runtime `<br>
+`ANTLR4_LIBDIR=/shares/public/tp/ANTLR4-CPP/lib`<br>
 
 The above example should work in the IF machines of rooms 208 and 219.
 
